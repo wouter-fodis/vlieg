@@ -399,7 +399,10 @@ function evaluateOverhead(){
   cands.sort((a,b)=>a.score-b.score);
 
   // huidige toestel vasthouden zolang het nog binnen de straal is (geen geflipper)
-  let pick = cands.find(c=>c.p.hex===current && c.inside) || cands[0] || null;
+  // Huidig toestel vasthouden zolang het nog meedoet; alleen wisselen als het
+  // andere toestel minstens 8 s eerder boven je is (anders flipperen ze heen en weer).
+  const cur = cands.find(c=>c.p.hex===current), best = cands[0] || null;
+  let pick = cur && (cur.inside || !best || best.enter > cur.enter - 8) ? cur : best;
 
   if (!pick){ if (current){ current=null; shownHex=null; showIdle(); } return; }
   const p = pick.p;
@@ -554,7 +557,50 @@ async function countryFacts(iso){
 
 const fmtBig = n => new Intl.NumberFormat('nl-NL', {notation:'compact', maximumFractionDigits:1}).format(n);
 const fmtInt = n => new Intl.NumberFormat('nl-NL', {maximumFractionDigits:0}).format(n);
-function renderFacts(f, bm){
+/* ---------- Wisselkoersen (Frankfurter) ---------- */
+let fxPromise = null;
+function parseRates(j){
+  // v2-formaat is tolerant gelezen: kaart {EUR:..} of lijst [{quote, rate}]
+  const out = {};
+  const list = Array.isArray(j) ? j : Array.isArray(j?.rates) ? j.rates : null;
+  if (list) list.forEach(r => { const q = r.quote || r.currency || r.code; if (q && r.rate != null) out[String(q).toUpperCase()] = +r.rate; });
+  else if (j?.rates && typeof j.rates === 'object') Object.entries(j.rates).forEach(([k,v]) => out[k.toUpperCase()] = +v);
+  return out;
+}
+function loadRates(){       // koersen t.o.v. 1 euro
+  if (!fxPromise) fxPromise = (async () => {
+    let rates = {};
+    try { rates = parseRates(await getJSON('https://api.frankfurter.dev/v2/rates?base=EUR')); } catch(e){}
+    if (!Object.keys(rates).length){
+      try { rates = parseRates(await getJSON('https://api.frankfurter.dev/v1/latest?base=EUR')); } catch(e){}
+    }
+    rates.EUR = 1;
+    if (Object.keys(rates).length < 2){ fxPromise = null; return null; }
+    return rates;
+  })();
+  return fxPromise;
+}
+
+/* ---------- Wereldbank-indicatoren ---------- */
+const WB = {pop:'SP.POP.TOTL', gdp:'NY.GDP.MKTP.CD', gdppc:'NY.GDP.PCAP.CD', life:'SP.DYN.LE00.IN', net:'IT.NET.USER.ZS'};
+const wbCache = new Map();
+async function worldBank(iso3){
+  if (!iso3) return null;
+  if (wbCache.has(iso3)) return wbCache.get(iso3);
+  const out = {};
+  await Promise.all(Object.entries(WB).map(async ([k, ind]) => {
+    try {
+      const j = await getJSON(`https://api.worldbank.org/v2/country/${iso3}/indicator/${ind}?format=json&mrnev=1`);
+      const r = Array.isArray(j) && Array.isArray(j[1]) ? j[1].find(x => x.value != null) : null;
+      if (r) out[k] = {n: +r.value, year: String(r.date)};
+    } catch(e){}
+  }));
+  const res = Object.keys(out).length ? out : null;
+  wbCache.set(iso3, res);
+  return res;
+}
+
+function renderFacts(f, bm, wb, fx){
   const dl = $('cFacts'); dl.innerHTML = '';
   const add = (label, value, note) => {
     if (value == null || value === '') return;
@@ -563,21 +609,36 @@ function renderFacts(f, bm){
     if (note){ const sm = document.createElement('small'); sm.textContent = ` ${note}`; dd.append(sm); }
     const wrap = document.createElement('div'); wrap.append(dt, dd); dl.append(wrap);
   };
-  if (f){
-    add('Hoofdstad', f.cap);
-    add('Inwoners', f.pop && fmtBig(f.pop.n), f.pop?.year);
+  // Wereldbank-cijfers gaan voor; Wikidata is de reserve
+  const pop = wb?.pop || f?.pop, gdp = wb?.gdp || f?.gdp, gdppc = wb?.gdppc || f?.gdppc;
+  const EUR = '\u20ac';
+  const eur = usd => fx?.USD ? usd / fx.USD : null;       // 1 EUR = fx.USD dollar
+  const money = usd => { const e = eur(usd); return e != null ? `${EUR} ${fmtBig(e)}` : `$ ${fmtBig(usd)}`; };
+  const moneyInt = usd => { const e = eur(usd); return e != null ? `${EUR} ${fmtInt(e)}` : `$ ${fmtInt(usd)}`; };
+  if (f || wb){
+    add('Hoofdstad', f?.cap);
+    add('Inwoners', pop && fmtBig(pop.n), pop?.year);
     add('Opgericht', f.inc != null ? (f.inc < 0 ? `${-f.inc} v.Chr.` : String(f.inc)) : null);
-    add('Oppervlakte', f.area && `${fmtInt(f.area.n)} km\u00b2`);
-    add('Bbp', f.gdp && `$ ${fmtBig(f.gdp.n)}`, f.gdp?.year);
-    add('Bbp per inwoner', f.gdppc && `$ ${fmtInt(f.gdppc.n)}`, f.gdppc?.year);
-    add('Munt', f.cur.join(', '));
+    add('Oppervlakte', f?.area && `${fmtInt(f.area.n)} km\u00b2`);
+    add('Bbp', gdp && money(gdp.n), gdp?.year);
+    add('Bbp per inwoner', gdppc && moneyInt(gdppc.n), gdppc?.year);
+    add('Levensverwachting', wb?.life && `${Math.round(wb.life.n)} jaar`, wb?.life?.year);
+    add('Online', wb?.net && `${Math.round(wb.net.n)}%`, wb?.net ? `van de bevolking, ${wb.net.year}` : '');
+    const cur = (f?.cur || []).filter(c => c !== 'EUR');
+    add('Munt', (f?.cur || []).join(', '));
+    if (fx && cur.length && fx[cur[0]]){
+      const r = fx[cur[0]];
+      add('Wisselkoers', `${EUR} 1 = ${r >= 100 ? fmtInt(r) : r.toFixed(r >= 10 ? 1 : 2).replace('.',',')} ${cur[0]}`, 'vandaag');
+    }
   }
   if (bm){
     const d = bm.date ? new Date(bm.date).toLocaleDateString('nl-NL', {month:'short', year:'numeric'}) : '';
-    add('Big Mac', `$ ${bm.price.toFixed(2).replace('.',',')}`, d);
+    const be = eur(bm.price), nl = fx?.USD && window._bmNL ? window._bmNL / fx.USD : null;
+    add('Big Mac', be != null ? `${EUR} ${be.toFixed(2).replace('.',',')}` : `$ ${bm.price.toFixed(2).replace('.',',')}`,
+        nl != null ? `${be > nl ? 'duurder' : 'goedkoper'} dan hier (${EUR} ${nl.toFixed(2).replace('.',',')}), ${d}` : d);
     if (!isNaN(bm.raw)) add('Big Mac-index', Math.abs(bm.raw) < 0.005 ? 'referentie ($)'
       : `${Math.round(Math.abs(bm.raw)*100)}% ${bm.raw < 0 ? 'ondergewaardeerd' : 'overgewaardeerd'}`, 't.o.v. dollar');
-    if (f?.gdppc) add('Big Macs per inwoner', fmtInt(f.gdppc.n / bm.price), 'per jaar, bbp \u00f7 prijs');
+    if (gdppc) add('Big Macs per inwoner', fmtInt(gdppc.n / bm.price), 'per jaar, bbp \u00f7 prijs');
   }
   dl.hidden = !dl.children.length;
 }
@@ -586,7 +647,9 @@ async function showCountry(t, hex){
   const box = $('country');
   if (!t?.iso){ box.hidden = true; return; }
   const ISO = (t.iso||'').toUpperCase();
-  const [info, d, f, bmMap] = await Promise.all([countryInfo(t.iso), democracyScore(ISO), countryFacts(ISO), loadBigMac()]);
+  const [info, d, f, bmMap, fx] = await Promise.all([countryInfo(t.iso), democracyScore(ISO), countryFacts(ISO), loadBigMac(), loadRates()]);
+  const wb = await worldBank(info?.iso3);
+  if (current !== hex) return;
   if (current !== hex) return;                   // inmiddels ander toestel
   if (!info){ box.hidden = true; return; }
 
@@ -616,7 +679,8 @@ async function showCountry(t, hex){
   }
   // Big Mac: eigen land, of de eurozone als het land de euro heeft
   const bm = bmMap ? (bmMap.get(info.iso3) || (f?.cur.includes('EUR') ? bmMap.get('EUZ') : null)) : null;
-  renderFacts(f, bm);
+  if (bmMap) window._bmNL = (bmMap.get('EUZ') || {}).price;   // eurozone = 'hier'
+  renderFacts(f, bm, wb, fx);
   box.hidden = false;
 }
 
@@ -634,7 +698,7 @@ function prefetchRoutes(){
     .filter(p=>p.callsign && p.alt>0 && p.alt<MAX_ALT_FT && p.d<12 && !routeCache.has(p.callsign))
     .sort((a,b)=>a.d-b.d).slice(0,4);
   todo.forEach(p => getRoute(p.callsign).then(r => {
-    const t = anthemTarget(r); if (t){ countryInfo(t.iso); democracyScore((t.iso||'').toUpperCase()); countryFacts((t.iso||'').toUpperCase()); if (soundOn) findAnthem(t.country); }
+    const t = anthemTarget(r); if (t){ countryInfo(t.iso); democracyScore((t.iso||'').toUpperCase()); countryFacts((t.iso||'').toUpperCase()); countryInfo(t.iso).then(i => worldBank(i?.iso3)); if (soundOn) findAnthem(t.country); }
   }));
 }
 
@@ -696,7 +760,9 @@ function showRoute(p, route){
 }
 function addHistory(p, route){
   const t=anthemTarget(route);
-  history.unshift({cs:p.callsign||p.hex, flag:flagOf(t?.iso), where: route ? `${route.origin?.municipality||'?'} \u2192 ${route.destination?.municipality||'?'}` : 'Route onbekend', time:new Date()});
+  const prev = history.findIndex(h => h.hex === p.hex);
+  if (prev >= 0) history.splice(prev, 1);
+  history.unshift({hex:p.hex, cs:p.callsign||p.hex, flag:flagOf(t?.iso), where: route ? `${route.origin?.municipality||'?'} \u2192 ${route.destination?.municipality||'?'}` : 'Route onbekend', time:new Date()});
   history.length = Math.min(history.length, 8);
   const ol=$('history'); ol.innerHTML='';
   history.forEach(h=>{
@@ -925,6 +991,7 @@ function stopAnthem(){ soundOn = false; updateMix(); }
 /* ---------- Go ---------- */
 requestAnimationFrame(loop);
 loadBigMac();
+loadRates();
 useGps();   // standaard: mijn locatie (valt terug op Polderbaan)
 </script>
 </body>

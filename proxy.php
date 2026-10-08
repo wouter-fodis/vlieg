@@ -10,6 +10,8 @@ $allowed = [
     'query.wikidata.org'         => 86400,  // leiders, democratie-index, landenfeiten
     'nominatim.openstreetmap.org'=> 86400,  // plaatsnaam bij je GPS-locatie
     'raw.githubusercontent.com'  => 86400,  // Big Mac-index (CSV van The Economist)
+    'api.frankfurter.dev'        => 3600,   // wisselkoersen (dagelijks bijgewerkt)
+    'api.worldbank.org'          => 86400,  // inwoners, bbp, levensverwachting
 ];
 
 header('Cache-Control: no-store');
