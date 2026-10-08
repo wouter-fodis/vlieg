@@ -109,7 +109,7 @@
 
   <form class="custom" id="customForm" hidden>
     <input id="customInput" type="text" autocomplete="off" enterkeyhint="search"
-      placeholder="Adres, plaats of coördinaten (bijv. Heathrow of 52.36, 4.71)" aria-label="Locatie invoeren">
+      placeholder="Adres, plaats of co&#246;rdinaten (bijv. Heathrow of 52.36, 4.71)" aria-label="Locatie invoeren">
     <button class="btn primary" type="submit">Zoek</button>
   </form>
 
@@ -129,7 +129,7 @@
       <div class="crole" id="cRole"></div>
       <div class="cname" id="cName"></div>
       <div class="demo" id="cDemo">
-        <div class="demo-head"><span>Democratie-index</span><strong id="cScore">–</strong></div>
+        <div class="demo-head"><span>Democratie-index</span><strong id="cScore">&#8211;</strong></div>
         <div class="ladder"><div class="ladder-fill" id="cBar" style="width:0"></div><i style="left:40%"></i><i style="left:60%"></i><i style="left:80%"></i></div>
         <div class="demo-cat" id="cCat"></div>
         <div class="demo-src" id="cSrc"></div>
@@ -139,11 +139,11 @@
   </section>
 
   <dl class="facts" id="facts" hidden>
-    <div class="fact"><dt>Hoogte</dt><dd id="fAlt">–</dd></div>
-    <div class="fact"><dt>Boven je</dt><dd id="fEta">–</dd></div>
-    <div class="fact"><dt>Afstand</dt><dd id="fDist">–</dd></div>
-    <div class="fact"><dt>Snelheid</dt><dd id="fSpd">–</dd></div>
-    <div class="fact"><dt>Toestel</dt><dd id="fType">–</dd></div>
+    <div class="fact"><dt>Hoogte</dt><dd id="fAlt">&#8211;</dd></div>
+    <div class="fact"><dt>Boven je</dt><dd id="fEta">&#8211;</dd></div>
+    <div class="fact"><dt>Afstand</dt><dd id="fDist">&#8211;</dd></div>
+    <div class="fact"><dt>Snelheid</dt><dd id="fSpd">&#8211;</dd></div>
+    <div class="fact"><dt>Toestel</dt><dd id="fType">&#8211;</dd></div>
   </dl>
 
   <div class="anthem" style="margin-top:16px">
@@ -167,7 +167,7 @@
 
 <script>
 /* ---------- Config ---------- */
-// Coördinaten zijn benaderingen van plekken bij de baankoppen.
+// Co\u00f6rdinaten zijn benaderingen van plekken bij de baankoppen.
 const SPOTS = [
   {id:'polderbaan', name:'Polderbaan noord (18R/36L)', lat:52.3600, lon:4.7115},
   {id:'zwanenburg', name:'Zwanenburgbaan noord (18C/36C)', lat:52.3340, lon:4.7400},
@@ -201,7 +201,7 @@ const history = [];
 const $ = id => document.getElementById(id);
 const spotSel = $('spot'), audio = $('audio');
 spotSel.add(new Option('Mijn locatie', 'gps'));
-spotSel.add(new Option('Zelf invoeren…', 'custom'));
+spotSel.add(new Option('Zelf invoeren\u2026', 'custom'));
 SPOTS.forEach(s => spotSel.add(new Option(s.name, s.id)));
 
 spotSel.onchange = () => {
@@ -233,11 +233,11 @@ async function showHere(){
   const map = `https://www.openstreetmap.org/?mlat=${h.lat}&mlon=${h.lon}#map=15/${h.lat}/${h.lon}`;
   const render = place => {
     el.innerHTML = '';
-    const b = document.createElement('strong'); b.textContent = `📍 ${place}`;
+    const b = document.createElement('strong'); b.textContent = `\ud83d\udccd ${place}`;
     const a = document.createElement('a'); a.href = map; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'kaart';
     const extra = h.id === 'gps'
-      ? ` · ${coords}${h.acc ? ` (±${Math.round(h.acc)} m)` : ''} · ${nearest.d.toFixed(1).replace('.',',')} km van ${nearest.sp.name.split(' (')[0]} · `
-      : ` · ${coords} · `;
+      ? ` \u00b7 ${coords}${h.acc ? ` (\u00b1${Math.round(h.acc)} m)` : ''} \u00b7 ${nearest.d.toFixed(1).replace('.',',')} km van ${nearest.sp.name.split(' (')[0]} \u00b7 `
+      : ` \u00b7 ${coords} \u00b7 `;
     el.append(b, extra, a);
   };
   if (h.id !== 'gps'){ render(h.name); return; }   // vaste of zelf ingevoerde plek
@@ -263,18 +263,18 @@ $('customForm').onsubmit = async e => {
   e.preventDefault();
   const q = $('customInput').value.trim();
   if (!q) return;
-  // coördinaten: "52.36, 4.71" of "52,36 4,71"
+  // co\u00f6rdinaten: "52.36, 4.71" of "52,36 4,71"
   const m = q.match(/^\s*(-?\d{1,2}(?:[.,]\d+)?)\s*[,; ]\s*(-?\d{1,3}(?:[.,]\d+)?)\s*$/);
   if (m){
     const lat = parseFloat(m[1].replace(',','.')), lon = parseFloat(m[2].replace(',','.'));
-    if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return setCustom(lat, lon, 'Eigen coördinaten');
+    if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return setCustom(lat, lon, 'Eigen co\u00f6rdinaten');
   }
-  setStatus(`Zoeken naar “${q}”…`);
+  setStatus(`Zoeken naar \u201c${q}\u201d\u2026`);
   try {
     const r = await getJSON(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=nl&q=${encodeURIComponent(q)}`);
-    if (!r.length) return setStatus(`Niets gevonden voor “${q}”. Probeer een andere naam of coördinaten.`, true);
+    if (!r.length) return setStatus(`Niets gevonden voor \u201c${q}\u201d. Probeer een andere naam of co\u00f6rdinaten.`, true);
     setCustom(parseFloat(r[0].lat), parseFloat(r[0].lon), r[0].display_name.split(',').slice(0,2).join(',').trim());
-  } catch(err){ setStatus('Zoeken lukt nu niet. Probeer coördinaten, bijv. 52.36, 4.71.', true); }
+  } catch(err){ setStatus('Zoeken lukt nu niet. Probeer co\u00f6rdinaten, bijv. 52.36, 4.71.', true); }
 };
 
 function useGps(){
@@ -286,7 +286,7 @@ function useGps(){
   };
   if (!navigator.geolocation) return fallback('Je browser geeft geen locatie door. Kies een plek uit de lijst.');
   spotSel.value = 'gps';
-  setStatus('Locatie opvragen…');
+  setStatus('Locatie opvragen\u2026');
   navigator.geolocation.getCurrentPosition(p => {
     here = {id:'gps', name:'Mijn locatie', lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy};
     showHere();
@@ -344,8 +344,8 @@ async function doTick(){
   if (!data) {
     failCount++;
     render();
-    // Eén of twee missers zijn normaal; pas na drie op rij rood tonen.
-    if (failCount < 3) return setStatus(`Even geen update, opnieuw proberen… (${lastError})`);
+    // E\u00e9n of twee missers zijn normaal; pas na drie op rij rood tonen.
+    if (failCount < 3) return setStatus(`Even geen update, opnieuw proberen\u2026 (${lastError})`);
     return setStatus(`Vluchtdata al ${failCount} keer niet bereikbaar. Laatste fout: ${lastError}`, true);
   }
   failCount = 0;
@@ -360,7 +360,7 @@ async function doTick(){
     alt:altFt(p),
     t0:performance.now() - (feedAge + (p.seen_pos||0))*1000
   }));
-  setStatus(`${lastPlanes.length} vliegtuigen binnen ${Math.round(FETCH_NM*1.852)} km · bijgewerkt ${new Date().toLocaleTimeString('nl-NL')}`);
+  setStatus(`${lastPlanes.length} vliegtuigen binnen ${Math.round(FETCH_NM*1.852)} km \u00b7 bijgewerkt ${new Date().toLocaleTimeString('nl-NL')}`);
   prefetchRoutes();
   evaluateOverhead();
   render();
@@ -409,7 +409,7 @@ function evaluateOverhead(){
     shownHex = p.hex;
     const hit = routeCache.get(p.callsign);
     if (hit !== undefined){ onNewPlane(p, hit); }
-    else { $('route').textContent = 'Route opzoeken…'; $('flag').textContent='';
+    else { $('route').textContent = 'Route opzoeken\u2026'; $('flag').textContent='';
            getRoute(p.callsign).then(r => { if (current===p.hex) onNewPlane(p, r); }); }
   }
 }
@@ -567,7 +567,7 @@ function renderFacts(f, bm){
     add('Hoofdstad', f.cap);
     add('Inwoners', f.pop && fmtBig(f.pop.n), f.pop?.year);
     add('Opgericht', f.inc != null ? (f.inc < 0 ? `${-f.inc} v.Chr.` : String(f.inc)) : null);
-    add('Oppervlakte', f.area && `${fmtInt(f.area.n)} km²`);
+    add('Oppervlakte', f.area && `${fmtInt(f.area.n)} km\u00b2`);
     add('Bbp', f.gdp && `$ ${fmtBig(f.gdp.n)}`, f.gdp?.year);
     add('Bbp per inwoner', f.gdppc && `$ ${fmtInt(f.gdppc.n)}`, f.gdppc?.year);
     add('Munt', f.cur.join(', '));
@@ -577,7 +577,7 @@ function renderFacts(f, bm){
     add('Big Mac', `$ ${bm.price.toFixed(2).replace('.',',')}`, d);
     if (!isNaN(bm.raw)) add('Big Mac-index', Math.abs(bm.raw) < 0.005 ? 'referentie ($)'
       : `${Math.round(Math.abs(bm.raw)*100)}% ${bm.raw < 0 ? 'ondergewaardeerd' : 'overgewaardeerd'}`, 't.o.v. dollar');
-    if (f?.gdppc) add('Big Macs per inwoner', fmtInt(f.gdppc.n / bm.price), 'per jaar, bbp ÷ prijs');
+    if (f?.gdppc) add('Big Macs per inwoner', fmtInt(f.gdppc.n / bm.price), 'per jaar, bbp \u00f7 prijs');
   }
   dl.hidden = !dl.children.length;
 }
@@ -650,7 +650,7 @@ async function getRoute(cs){
   return route;
 }
 
-/* "Bestemming" voor het volkslied: vertrekkers → bestemming, landers op Schiphol → herkomst */
+/* "Bestemming" voor het volkslied: vertrekkers \u2192 bestemming, landers op Schiphol \u2192 herkomst */
 function anthemTarget(route){
   if (!route) return null;
   const o=route.origin, d=route.destination;
@@ -673,22 +673,22 @@ function showPlane(p, pick){
   $('facts').hidden=false;
   const st = pick.st;
   $('fEta').textContent = pick.inside
-    ? (st.tcpa > 2 ? `nu · dichtst over ${Math.round(st.tcpa)} s` : 'nu')
+    ? (st.tcpa > 2 ? `nu \u00b7 dichtst over ${Math.round(st.tcpa)} s` : 'nu')
     : `over ${Math.max(1, Math.round(pick.enter))} s`;
   $('fAlt').textContent = `${Math.round(p.alt*0.3048).toLocaleString('nl-NL')} m`;
   $('fDist').textContent = `${st.d.toFixed(1).replace('.',',')} km`;
-  $('fSpd').textContent = p.gs ? `${Math.round(p.gs*1.852)} km/u` : '–';
-  $('fType').textContent = [p.t, p.r].filter(Boolean).join(' · ') || '–';
+  $('fSpd').textContent = p.gs ? `${Math.round(p.gs*1.852)} km/u` : '\u2013';
+  $('fType').textContent = [p.t, p.r].filter(Boolean).join(' \u00b7 ') || '\u2013';
 }
 function showRoute(p, route){
   const el=$('route');
   if (!route){ el.textContent = p.callsign ? 'Route onbekend' : 'Geen vluchtnummer uitgezonden'; $('flag').textContent=''; return; }
   const o=route.origin, d=route.destination, t=anthemTarget(route);
-  const airline = route.airline?.name ? ` · ${route.airline.name}` : '';
+  const airline = route.airline?.name ? ` \u00b7 ${route.airline.name}` : '';
   el.innerHTML = '';
   const s = document.createElement('span');
   s.textContent = `${o?.municipality||o?.iata_code||'?'} `;
-  const a = document.createElement('span'); a.className='arrow'; a.textContent='→';
+  const a = document.createElement('span'); a.className='arrow'; a.textContent='\u2192';
   const e = document.createElement('span');
   e.textContent = ` ${d?.municipality||d?.iata_code||'?'}${airline}`;
   el.append(s,a,e);
@@ -696,7 +696,7 @@ function showRoute(p, route){
 }
 function addHistory(p, route){
   const t=anthemTarget(route);
-  history.unshift({cs:p.callsign||p.hex, flag:flagOf(t?.iso), where: route ? `${route.origin?.municipality||'?'} → ${route.destination?.municipality||'?'}` : 'Route onbekend', time:new Date()});
+  history.unshift({cs:p.callsign||p.hex, flag:flagOf(t?.iso), where: route ? `${route.origin?.municipality||'?'} \u2192 ${route.destination?.municipality||'?'}` : 'Route onbekend', time:new Date()});
   history.length = Math.min(history.length, 8);
   const ol=$('history'); ol.innerHTML='';
   history.forEach(h=>{
@@ -711,7 +711,7 @@ function addHistory(p, route){
 
 /* ---------- Radar met vloeiende beweging ----------
    Tussen twee updates rekenen we elke frame door waar het toestel nu is
-   (positie + snelheid × verstreken tijd, in de vliegrichting). Komt er nieuwe
+   (positie + snelheid \u00d7 verstreken tijd, in de vliegrichting). Komt er nieuwe
    data, dan glijdt het icoon in ~0,6 s naar de nieuwe plek in plaats van te springen. */
 const display = new Map();      // hex -> {x, y, hdg, trail:[]}  (km t.o.v. jou, x=oost, y=noord)
 let lastFrame = performance.now();
@@ -810,7 +810,7 @@ async function findAnthem(country){
 }
 
 /* ---------- Mixer: volksliederen op afstand mengen ----------
-   Elk laag vliegend toestel binnen 1,6× je straal krijgt een gewicht:
+   Elk laag vliegend toestel binnen 1,6\u00d7 je straal krijgt een gewicht:
    aan de rand van de straal 35 %, recht boven je 100 %, daarbuiten loopt het af naar 0.
    Per land telt het zwaarste toestel; de 3 zwaarste landen spelen tegelijk (in een lus),
    elk op zijn eigen volume. Komt er een toestel aan terwijl een ander wegvliegt, dan
