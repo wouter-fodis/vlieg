@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wat vliegt er over?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --asphalt:#2b2d2f;
+    --asphalt-2:#35383b;
+    --sign-black:#000;
+    --sign-yellow:#ffc20e;
+    --runway-white:#f2f2ec;
+    --mandatory-red:#c8102e;
+    --muted:#9a9c98;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--asphalt);color:var(--runway-white);font-family:Barlow,system-ui,sans-serif;font-size:16px;line-height:1.5}
+  main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+  h1{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:1.25rem;margin:0 0 14px;color:var(--muted);letter-spacing:.02em}
+  button,select,input{font:inherit}
+  :focus-visible{outline:3px solid var(--sign-yellow);outline-offset:2px}
+
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+  select,.btn{background:var(--asphalt-2);color:var(--runway-white);border:1px solid #4a4d50;border-radius:4px;padding:9px 12px;min-height:44px}
+  select{flex:1 1 220px}
+  .btn{cursor:pointer}
+  .btn.primary{background:var(--sign-yellow);color:#000;border-color:var(--sign-yellow);font-weight:500}
+
+  /* Airfield signage: black location sign + yellow direction sign */
+  .signs{display:flex;flex-direction:column;gap:0;margin-bottom:22px}
+  .sign-loc{background:var(--sign-black);border:4px solid var(--sign-yellow);border-radius:6px 6px 0 0;padding:14px 18px 10px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-height:128px}
+  .callsign{font-family:"Barlow Condensed",sans-serif;font-weight:700;color:var(--sign-yellow);font-size:clamp(3.4rem,15vw,6.5rem);line-height:1;letter-spacing:.01em;word-break:break-all}
+  .callsign.idle{font-size:clamp(1.8rem,7vw,2.6rem);font-weight:600;line-height:1.15}
+  .flag{font-size:clamp(2.6rem,11vw,4.5rem);line-height:1}
+  .sign-dir{background:var(--sign-yellow);color:#000;border-radius:0 0 6px 6px;padding:10px 18px;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:clamp(1.3rem,5.5vw,1.9rem);line-height:1.2;display:flex;gap:14px;align-items:center;flex-wrap:wrap;min-height:58px}
+  .sign-dir .arrow{font-size:1.2em}
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:2px;margin-top:2px}
+  .fact{background:var(--asphalt-2);padding:8px 12px}
+  .fact dt{color:var(--muted);font-size:.85rem}
+  .fact dd{margin:0;font-family:"Barlow Condensed",sans-serif;font-size:1.35rem;font-weight:500}
+
+  .anthem{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 22px;color:var(--runway-white)}
+  .anthem .title{flex:1 1 200px;color:var(--muted);font-size:.95rem}
+  .anthem .title strong{color:var(--runway-white);font-weight:500}
+
+  .radar-wrap{position:relative}
+  canvas{width:100%;aspect-ratio:1;display:block;background:#232527;border-radius:4px}
+  .radar-note{color:var(--muted);font-size:.85rem;margin-top:6px}
+
+  .status{margin:14px 0 0;font-size:.9rem;color:var(--muted)}
+  .status.error{background:var(--mandatory-red);color:#fff;padding:8px 12px;border-radius:4px}
+
+  h2{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:1.3rem;margin:28px 0 8px}
+  ol.history{list-style:none;margin:0;padding:0}
+  ol.history li{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid #3d4043}
+  ol.history .cs{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:1.2rem;min-width:90px;color:var(--sign-yellow)}
+  ol.history .t{margin-left:auto;color:var(--muted);font-size:.85rem}
+  .range{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.9rem;flex:1 1 100%}
+  .range input{flex:1;accent-color:var(--sign-yellow)}
+  [hidden]{display:none!important}
+  .custom{display:flex;flex-wrap:wrap;gap:8px;margin:-8px 0 18px}
+  .custom input{flex:1 1 240px;background:var(--asphalt-2);color:var(--runway-white);border:1px solid #4a4d50;border-radius:4px;padding:9px 12px;min-height:44px}
+  .custom input::placeholder{color:var(--muted)}
+  .here{margin:-8px 0 18px;color:var(--muted);font-size:.9rem}
+  .here strong{color:var(--runway-white);font-weight:500}
+  .here a{color:var(--sign-yellow)}
+  .cfacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:8px 14px;margin:12px 0 0}
+  .cfacts dt{color:var(--muted);font-size:.78rem}
+  .cfacts dd{margin:0;font-family:"Barlow Condensed",sans-serif;font-size:1.15rem;font-weight:500;line-height:1.2}
+  .cfacts dd small{font-family:Barlow,sans-serif;font-size:.72rem;color:var(--muted);font-weight:400}
+  .mixer{display:flex;flex-direction:column;gap:6px;margin:-10px 0 22px}
+  .mix-row{display:grid;grid-template-columns:minmax(0,10rem) 1fr 3ch;gap:10px;align-items:center;font-size:.95rem}
+  .mix-row .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mix-row .b{height:8px;background:#45484b;border-radius:4px;overflow:hidden}
+  .mix-row .b span{display:block;height:100%;background:var(--sign-yellow);border-radius:4px;transition:width .25s linear}
+  .mix-row .v{color:var(--muted);font-size:.85rem;text-align:right}
+  .country{display:flex;gap:14px;align-items:flex-start;background:var(--asphalt-2);padding:12px;border-radius:4px;margin:14px 0 0}
+  .country a{flex:0 0 auto;line-height:0}
+  .country img{width:96px;height:120px;object-fit:cover;object-position:50% 20%;border-radius:3px;background:#232527}
+  .cinfo{flex:1;min-width:0}
+  .crole{color:var(--muted);font-size:.85rem}
+  .cname{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:1.5rem;line-height:1.15;margin-bottom:10px}
+  .demo-head{display:flex;justify-content:space-between;align-items:baseline;font-size:.9rem;color:var(--muted)}
+  .demo-head strong{font-family:"Barlow Condensed",sans-serif;font-size:1.6rem;color:var(--sign-yellow);font-weight:700}
+  .ladder{position:relative;height:10px;background:#45484b;border-radius:5px;margin:4px 0 6px;overflow:hidden}
+  .ladder-fill{position:absolute;inset:0 auto 0 0;background:var(--sign-yellow);border-radius:5px;transition:width .6s ease}
+  .ladder i{position:absolute;top:0;bottom:0;width:2px;background:var(--asphalt-2)}
+  .demo-cat{font-size:.9rem}
+  .demo-src{font-size:.75rem;color:var(--muted);margin-top:4px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Wat vliegt er nu over?</h1>
+
+  <div class="controls">
+    <select id="spot" aria-label="Kies een plek"></select>
+    <button class="btn" id="gps" type="button">Gebruik mijn locatie</button>
+    <button class="btn primary" id="start" type="button">Start met geluid</button>
+    <label class="range">Boven je = binnen
+      <input id="radius" type="range" min="0.5" max="5" step="0.5" value="3">
+      <span id="radiusVal">3 km</span>
+    </label>
+  </div>
+
+  <form class="custom" id="customForm" hidden>
+    <input id="customInput" type="text" autocomplete="off" enterkeyhint="search"
+      placeholder="Adres, plaats of coördinaten (bijv. Heathrow of 52.36, 4.71)" aria-label="Locatie invoeren">
+    <button class="btn primary" type="submit">Zoek</button>
+  </form>
+
+  <p class="here" id="hereLine"></p>
+
+  <section class="signs" aria-live="polite">
+    <div class="sign-loc">
+      <div class="callsign idle" id="callsign">Wachten op een vliegtuig</div>
+      <div class="flag" id="flag" aria-hidden="true"></div>
+    </div>
+    <div class="sign-dir" id="route">Kies een plek bij een baan</div>
+  </section>
+
+  <section class="country" id="country" hidden aria-live="polite">
+    <a id="cLink" target="_blank" rel="noopener"><img id="cImg" alt=""></a>
+    <div class="cinfo">
+      <div class="crole" id="cRole"></div>
+      <div class="cname" id="cName"></div>
+      <div class="demo" id="cDemo">
+        <div class="demo-head"><span>Democratie-index</span><strong id="cScore">–</strong></div>
+        <div class="ladder"><div class="ladder-fill" id="cBar" style="width:0"></div><i style="left:40%"></i><i style="left:60%"></i><i style="left:80%"></i></div>
+        <div class="demo-cat" id="cCat"></div>
+        <div class="demo-src" id="cSrc"></div>
+      </div>
+      <dl class="cfacts" id="cFacts"></dl>
+    </div>
+  </section>
+
+  <dl class="facts" id="facts" hidden>
+    <div class="fact"><dt>Hoogte</dt><dd id="fAlt">–</dd></div>
+    <div class="fact"><dt>Boven je</dt><dd id="fEta">–</dd></div>
+    <div class="fact"><dt>Afstand</dt><dd id="fDist">–</dd></div>
+    <div class="fact"><dt>Snelheid</dt><dd id="fSpd">–</dd></div>
+    <div class="fact"><dt>Toestel</dt><dd id="fType">–</dd></div>
+  </dl>
+
+  <div class="anthem" style="margin-top:16px">
+    <div class="title" id="anthemTitle">Zet geluid aan: de volksliederen van alle vliegtuigen in de buurt worden gemixt, het dichtstbijzijnde het hardst.</div>
+    <button class="btn" id="play" type="button" hidden>Speel volkslied</button>
+    <button class="btn" id="stop" type="button" hidden>Stop</button>
+  </div>
+  <div class="mixer" id="mixer" aria-label="Mixer"></div>
+  <audio id="audio" preload="none"></audio>
+
+  <div class="radar-wrap">
+    <canvas id="radar" width="700" height="700" aria-label="Kaart met vliegtuigen in de buurt"></canvas>
+    <div class="radar-note">Ringen op 1, 5 en 10 km. Noord is boven.</div>
+  </div>
+
+  <p class="status" id="status">Nog niet gestart.</p>
+
+  <h2>Eerder overgekomen</h2>
+  <ol class="history" id="history"><li style="color:var(--muted)">Nog niets.</li></ol>
+</main>
+
+<script>
+/* ---------- Config ---------- */
+// Coördinaten zijn benaderingen van plekken bij de baankoppen.
+const SPOTS = [
+  {id:'polderbaan', name:'Polderbaan noord (18R/36L)', lat:52.3600, lon:4.7115},
+  {id:'zwanenburg', name:'Zwanenburgbaan noord (18C/36C)', lat:52.3340, lon:4.7400},
+  {id:'aalsmeer',   name:'Aalsmeerbaan zuid (18L/36R)',    lat:52.2860, lon:4.7770},
+  {id:'kaag',       name:'Kaagbaan zuidwest (06/24)',      lat:52.2850, lon:4.7280},
+  {id:'buitenv',    name:'Buitenveldertbaan oost (09/27)', lat:52.3185, lon:4.8030},
+];
+const FEEDS = [
+  (lat,lon,nm)=>`https://api.adsb.lol/v2/point/${lat}/${lon}/${nm}`,
+  (lat,lon,nm)=>`https://api.airplanes.live/v2/point/${lat}/${lon}/${nm}`,
+];
+const POLL_MS = 2000;
+const LOOKAHEAD_S = 40;      // toestel al tonen als het binnen zoveel seconden boven je is
+const FETCH_NM = 8;          // straal voor de radar
+const MAX_ALT_FT = 7000;     // hoger dan dit telt niet als "over je heen"
+const HOME_ICAO = 'EHAM';
+
+/* ---------- State ---------- */
+let here = {...SPOTS[0]};
+let radiusKm = 3;
+let timer = null;
+let feedIdx = 0;
+let current = null;          // hex van het vliegtuig dat nu boven je is
+let soundOn = false;
+let lastPlanes = [];
+const routeCache = new Map();
+const anthemCache = new Map();
+const history = [];
+
+/* ---------- DOM ---------- */
+const $ = id => document.getElementById(id);
+const spotSel = $('spot'), audio = $('audio');
+spotSel.add(new Option('Mijn locatie', 'gps'));
+spotSel.add(new Option('Zelf invoeren…', 'custom'));
+SPOTS.forEach(s => spotSel.add(new Option(s.name, s.id)));
+
+spotSel.onchange = () => {
+  $('customForm').hidden = spotSel.value !== 'custom';
+  if (spotSel.value === 'custom'){ $('customInput').focus(); return; }
+  if (spotSel.value === 'gps') return useGps();
+  here = {...SPOTS.find(s => s.id === spotSel.value)}; showHere();
+  current = null; tick();
+};
+$('gps').onclick = useGps;
+$('radius').oninput = e => { radiusKm = +e.target.value; $('radiusVal').textContent = `${radiusKm} km`; render(); };
+$('start').onclick = () => {
+  soundOn = !soundOn;
+  $('start').textContent = soundOn ? 'Geluid uit' : 'Start met geluid';
+  if (soundOn) unlockAudio();
+  if (!timer) startPolling();
+  updateMix();
+};
+$('play').onclick = () => { unlockAudio(); soundOn = true; $('start').textContent = 'Geluid uit'; $('play').hidden = true; decks.forEach(d=>d.el.src && d.country && d.el.play().catch(()=>{})); };
+$('stop').onclick = () => { soundOn = false; $('start').textContent = 'Start met geluid'; updateMix(); };
+
+
+/* ---------- Waar sta je? ---------- */
+const nf1 = new Intl.NumberFormat('nl-NL', {maximumFractionDigits:4, minimumFractionDigits:4});
+async function showHere(){
+  const el = $('hereLine'), h = here;
+  const nearest = SPOTS.map(sp => ({sp, d:distKm(h.lat,h.lon,sp.lat,sp.lon)})).sort((a,b)=>a.d-b.d)[0];
+  const coords = `${nf1.format(h.lat)}, ${nf1.format(h.lon)}`;
+  const map = `https://www.openstreetmap.org/?mlat=${h.lat}&mlon=${h.lon}#map=15/${h.lat}/${h.lon}`;
+  const render = place => {
+    el.innerHTML = '';
+    const b = document.createElement('strong'); b.textContent = `📍 ${place}`;
+    const a = document.createElement('a'); a.href = map; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'kaart';
+    const extra = h.id === 'gps'
+      ? ` · ${coords}${h.acc ? ` (±${Math.round(h.acc)} m)` : ''} · ${nearest.d.toFixed(1).replace('.',',')} km van ${nearest.sp.name.split(' (')[0]} · `
+      : ` · ${coords} · `;
+    el.append(b, extra, a);
+  };
+  if (h.id !== 'gps'){ render(h.name); return; }   // vaste of zelf ingevoerde plek
+  render('Mijn locatie');
+  try {
+    const j = await getJSON(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&accept-language=nl&lat=${h.lat.toFixed(4)}&lon=${h.lon.toFixed(4)}`);
+    if (here !== h) return;                       // inmiddels andere plek gekozen
+    const a = j.address || {};
+    const place = [a.road, a.village || a.town || a.city || a.suburb || a.municipality].filter(Boolean).join(', ');
+    if (place) render(place);
+  } catch(e){ /* dan blijft "Mijn locatie" staan */ }
+}
+
+/* ---------- Zelf een locatie invoeren ---------- */
+function setCustom(lat, lon, name){
+  here = {id:'custom', name, lat, lon};
+  spotSel.value = 'custom'; current = null;
+  try { localStorage.setItem('flyCustom', JSON.stringify(here)); } catch(e){}
+  showHere();
+  if (!timer) startPolling(); else tick();
+}
+$('customForm').onsubmit = async e => {
+  e.preventDefault();
+  const q = $('customInput').value.trim();
+  if (!q) return;
+  // coördinaten: "52.36, 4.71" of "52,36 4,71"
+  const m = q.match(/^\s*(-?\d{1,2}(?:[.,]\d+)?)\s*[,; ]\s*(-?\d{1,3}(?:[.,]\d+)?)\s*$/);
+  if (m){
+    const lat = parseFloat(m[1].replace(',','.')), lon = parseFloat(m[2].replace(',','.'));
+    if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return setCustom(lat, lon, 'Eigen coördinaten');
+  }
+  setStatus(`Zoeken naar “${q}”…`);
+  try {
+    const r = await getJSON(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=nl&q=${encodeURIComponent(q)}`);
+    if (!r.length) return setStatus(`Niets gevonden voor “${q}”. Probeer een andere naam of coördinaten.`, true);
+    setCustom(parseFloat(r[0].lat), parseFloat(r[0].lon), r[0].display_name.split(',').slice(0,2).join(',').trim());
+  } catch(err){ setStatus('Zoeken lukt nu niet. Probeer coördinaten, bijv. 52.36, 4.71.', true); }
+};
+
+function useGps(){
+  const fallback = msg => {
+    // geen GPS: terug naar de eerste vaste plek, zodat er toch iets te zien is
+    here = {...SPOTS[0]}; spotSel.value = SPOTS[0].id; current = null; showHere();
+    setStatus(msg, true);
+    if (!timer) startPolling(); else tick();
+  };
+  if (!navigator.geolocation) return fallback('Je browser geeft geen locatie door. Kies een plek uit de lijst.');
+  spotSel.value = 'gps';
+  setStatus('Locatie opvragen…');
+  navigator.geolocation.getCurrentPosition(p => {
+    here = {id:'gps', name:'Mijn locatie', lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy};
+    showHere();
+    spotSel.value = 'gps'; current = null;
+    if (!timer) startPolling(); else tick();
+  }, () => fallback('Locatie niet beschikbaar (geen toestemming?). Polderbaan gekozen; kies zelf een plek in de lijst.'),
+  {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
+}
+
+/* ---------- Helpers ---------- */
+function distKm(a1,o1,a2,o2){
+  const R=6371, r=Math.PI/180, dA=(a2-a1)*r, dO=(o2-o1)*r;
+  const h=Math.sin(dA/2)**2+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin(dO/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function bearing(a1,o1,a2,o2){
+  const r=Math.PI/180, y=Math.sin((o2-o1)*r)*Math.cos(a2*r);
+  const x=Math.cos(a1*r)*Math.sin(a2*r)-Math.sin(a1*r)*Math.cos(a2*r)*Math.cos((o2-o1)*r);
+  return Math.atan2(y,x);
+}
+const flagOf = iso => iso && iso.length===2 ? String.fromCodePoint(...[...iso.toUpperCase()].map(c=>127397+c.charCodeAt())) : '';
+const altFt = p => p.alt_baro === 'ground' ? 0 : (p.alt_baro ?? p.alt_geom ?? null);
+function setStatus(msg, err=false){ const s=$('status'); s.textContent=msg; s.classList.toggle('error', err); }
+// Alles loopt via de eigen proxy naast dit bestand (die cachet en vangt haperingen op).
+let lastError = '';
+async function getJSON(url){
+  const host = new URL(url).host;
+  try {
+    const r = await fetch(`proxy.php?url=${encodeURIComponent(url)}`, {cache:'no-store'});
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } catch(e){
+    lastError = `${host}: ${e.message}`;
+    throw e;
+  }
+}
+
+/* ---------- Data ---------- */
+function startPolling(){ tick(); timer = setInterval(tick, POLL_MS); }
+
+let busy = false, failCount = 0;
+async function tick(){
+  if (busy) return;            // vorige ronde nog bezig: niet opstapelen
+  busy = true;
+  try { await doTick(); } finally { busy = false; }
+}
+
+async function doTick(){
+  let data=null;
+  for (let i=0;i<FEEDS.length && !data;i++){
+    const idx=(feedIdx+i)%FEEDS.length;
+    try { data = await getJSON(FEEDS[idx](here.lat.toFixed(4), here.lon.toFixed(4), FETCH_NM)); feedIdx=idx; }
+    catch(e){ /* volgende bron proberen */ }
+  }
+  if (!data) {
+    failCount++;
+    render();
+    // Eén of twee missers zijn normaal; pas na drie op rij rood tonen.
+    if (failCount < 3) return setStatus(`Even geen update, opnieuw proberen… (${lastError})`);
+    return setStatus(`Vluchtdata al ${failCount} keer niet bereikbaar. Laatste fout: ${lastError}`, true);
+  }
+  failCount = 0;
+
+  // leeftijd van de data (incl. cache van de proxy), begrensd tegen klokverschillen
+  const feedAge = data.now ? Math.min(Math.max((Date.now()-data.now)/1000, 0), 10) : 0;
+  lastPlanes = (data.ac||[]).filter(p=>p.lat!=null && p.lon!=null).map(p=>({
+    ...p,
+    callsign:(p.flight||'').trim(),
+    d:distKm(here.lat,here.lon,p.lat,p.lon),
+    b:bearing(here.lat,here.lon,p.lat,p.lon),
+    alt:altFt(p),
+    t0:performance.now() - (feedAge + (p.seen_pos||0))*1000
+  }));
+  setStatus(`${lastPlanes.length} vliegtuigen binnen ${Math.round(FETCH_NM*1.852)} km · bijgewerkt ${new Date().toLocaleTimeString('nl-NL')}`);
+  prefetchRoutes();
+  evaluateOverhead();
+  render();
+}
+
+/* ---------- Welk toestel is "boven je"? ----------
+   Elke 250 ms, op basis van de doorgerekende positie (niet de laatste meting).
+   We kijken vooruit: waar komt elk toestel het dichtst bij je (CPA), en wanneer?
+   Komt dat binnen je straal en binnen LOOKAHEAD_S seconden, dan staat het al op het bord. */
+function liveState(p, now){
+  const pos = predicted(p, now);
+  const v = (p.gs||0)*1.852/3600;                    // km/s
+  const vx = Math.sin(pos.hdg)*v, vy = Math.cos(pos.hdg)*v;
+  const d = Math.hypot(pos.x, pos.y);
+  const vv = vx*vx + vy*vy;
+  const tcpa = vv > 0 ? -(pos.x*vx + pos.y*vy)/vv : 0;   // s tot dichtstbijzijnde punt
+  const dcpa = vv > 0 ? Math.hypot(pos.x + vx*tcpa, pos.y + vy*tcpa) : d;
+  return {d, tcpa, dcpa};
+}
+
+let shownHex = null;
+function evaluateOverhead(){
+  const now = performance.now();
+  const cands = [];
+  for (const p of lastPlanes){
+    if (!(p.alt>0 && p.alt<MAX_ALT_FT)) continue;
+    const st = liveState(p, now);
+    const inside = st.d <= radiusKm;
+    // seconden tot het toestel de straal binnenkomt (0 = er al in)
+    const v = (p.gs||1)*1.852/3600;
+    const enter = inside ? 0 : Math.max(st.tcpa - Math.sqrt(Math.max(radiusKm**2 - st.dcpa**2, 0))/v, 0);
+    const coming = st.dcpa <= radiusKm && st.tcpa > 0 && enter < LOOKAHEAD_S;
+    if (!inside && !coming) continue;
+    cands.push({p, st, inside, enter, score: enter + st.d*0.01});
+  }
+  cands.sort((a,b)=>a.score-b.score);
+
+  // huidige toestel vasthouden zolang het nog binnen de straal is (geen geflipper)
+  let pick = cands.find(c=>c.p.hex===current && c.inside) || cands[0] || null;
+
+  if (!pick){ if (current){ current=null; shownHex=null; showIdle(); } return; }
+  const p = pick.p;
+  current = p.hex;
+  showPlane(p, pick);
+  if (shownHex !== p.hex){
+    shownHex = p.hex;
+    const hit = routeCache.get(p.callsign);
+    if (hit !== undefined){ onNewPlane(p, hit); }
+    else { $('route').textContent = 'Route opzoeken…'; $('flag').textContent='';
+           getRoute(p.callsign).then(r => { if (current===p.hex) onNewPlane(p, r); }); }
+  }
+}
+
+/* ---------- Land: regeringsleider (Wikidata) + democratie-index (EIU via Our World in Data) ---------- */
+// Democratie-index uit Wikidata: het item "Democracy Index" (Q326174) wijst via
+// "Wikidata property" (P1687) naar de eigenschap met de EIU-score per land.
+// Zo hoeven we het eigenschapsnummer niet hard te coderen.
+const countryCache = new Map();
+const demoCache = new Map();
+let demoError = '';
+
+async function democracyScore(iso){
+  if (!/^[A-Z]{2}$/.test(iso)) return null;
+  if (demoCache.has(iso)) return demoCache.get(iso);
+  const q = `SELECT ?score ?time WHERE {
+    ?country wdt:P297 "${iso}" .
+    FILTER NOT EXISTS { ?country wdt:P576 ?end }
+    wd:Q326174 wdt:P1687 ?prop .
+    ?prop wikibase:claim ?pc ; wikibase:statementProperty ?ps .
+    ?country ?pc ?st . ?st ?ps ?score .
+    OPTIONAL { ?st pq:P585 ?time }
+  } ORDER BY DESC(?time) LIMIT 1`;
+  try {
+    const rows = (await getJSON('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q))).results.bindings;
+    demoError = '';
+    const r = rows[0];
+    const v = r ? parseFloat(r.score.value) : NaN;
+    const res = isNaN(v) ? null : {score: v <= 10 ? v*10 : v, year: r.time ? r.time.value.slice(0,4) : ''};
+    demoCache.set(iso, res);
+    return res;
+  } catch(e){ demoError = `Fout: ${e.message}`; return undefined; }   // undefined = laden mislukt
+}
+
+async function countryInfo(iso){
+  iso = (iso||'').toUpperCase();
+  if (!/^[A-Z]{2}$/.test(iso)) return null;
+  if (countryCache.has(iso)) return countryCache.get(iso);
+  const q = `SELECT ?iso3 ?countryLabel ?hog ?hogLabel ?hogImg ?hos ?hosLabel ?hosImg WHERE {
+    ?country wdt:P297 "${iso}" .
+    FILTER NOT EXISTS { ?country wdt:P576 ?end }
+    OPTIONAL { ?country wdt:P298 ?iso3 }
+    OPTIONAL { ?country wdt:P6 ?hog . OPTIONAL { ?hog wdt:P18 ?hogImg } }
+    OPTIONAL { ?country wdt:P35 ?hos . OPTIONAL { ?hos wdt:P18 ?hosImg } }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en". }
+  } LIMIT 10`;
+  let rows;
+  try { rows = (await getJSON('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q))).results.bindings; }
+  catch(e){ return null; }                       // niet cachen: later opnieuw
+  if (!rows.length){ countryCache.set(iso, null); return null; }
+  const v = (r,k) => r?.[k]?.value;
+  // voorkeur: regeringsleider (premier); geen foto? dan staatshoofd
+  let leader = null;
+  const hog = rows.find(r=>r.hogImg) || rows.find(r=>r.hog);
+  if (hog) leader = {name:v(hog,'hogLabel'), img:v(hog,'hogImg'), role:'Regeringsleider'};
+  if (!leader?.img){ const hos = rows.find(r=>r.hosImg); if (hos) leader = {name:v(hos,'hosLabel'), img:v(hos,'hosImg'), role:'Staatshoofd'}; }
+  const info = {iso3:v(rows[0],'iso3'), name:v(rows[0],'countryLabel'), leader};
+  countryCache.set(iso, info);
+  return info;
+}
+
+const DEMO_CATS = [[80,'volledige democratie'],[60,'gebrekkige democratie'],[40,'hybride regime'],[0,'autoritair regime']];
+
+/* ---------- Landenfeiten (Wikidata) + Big Mac-index (The Economist) ---------- */
+const factsCache = new Map();
+let bigMacPromise = null;
+const BIGMAC_URL = 'https://raw.githubusercontent.com/TheEconomist/big-mac-data/master/output-data/big-mac-full-index.csv';
+const USD = 'http://www.wikidata.org/entity/Q4917', KM2 = 'http://www.wikidata.org/entity/Q712226';
+
+async function getText(url){
+  const r = await fetch(`proxy.php?url=${encodeURIComponent(url)}`, {cache:'no-store'});
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.text();
+}
+function parseCSVLine(l){
+  const out=[]; let cur='', q=false;
+  for (let i=0;i<l.length;i++){
+    const ch=l[i];
+    if (q){ if (ch==='"'){ if (l[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=ch; }
+    else if (ch==='"') q=true; else if (ch===','){ out.push(cur); cur=''; } else cur+=ch;
+  }
+  out.push(cur); return out;
+}
+function loadBigMac(){
+  if (!bigMacPromise) bigMacPromise = getText(BIGMAC_URL).then(txt => {
+    const lines = txt.trim().split(/\r?\n/), h = parseCSVLine(lines[0]);
+    const ix = n => h.indexOf(n);
+    const iD=ix('date'), iIso=ix('iso_a3'), iP=ix('dollar_price'), iR=ix('USD_raw');
+    const map = new Map();
+    for (const l of lines.slice(1)){
+      const c = parseCSVLine(l), iso = c[iIso], price = parseFloat(c[iP]);
+      if (!iso || isNaN(price)) continue;
+      const prev = map.get(iso);
+      if (!prev || c[iD] > prev.date) map.set(iso, {date:c[iD], price, raw:parseFloat(c[iR])});
+    }
+    return map;
+  }).catch(() => { bigMacPromise = null; return null; });
+  return bigMacPromise;
+}
+
+async function countryFacts(iso){
+  if (!/^[A-Z]{2}$/.test(iso)) return null;
+  if (factsCache.has(iso)) return factsCache.get(iso);
+  const q = `SELECT ?k ?v ?vLabel ?t ?rank ?unit ?code WHERE {
+    ?country wdt:P297 "${iso}" .
+    FILTER NOT EXISTS { ?country wdt:P576 ?e }
+    VALUES (?k ?p ?ps ?psv) {
+      ("pop" p:P1082 ps:P1082 psv:P1082) ("gdp" p:P2131 ps:P2131 psv:P2131)
+      ("gdppc" p:P2132 ps:P2132 psv:P2132) ("area" p:P2046 ps:P2046 psv:P2046)
+      ("inc" p:P571 ps:P571 psv:P571) ("cap" p:P36 ps:P36 psv:P36) ("cur" p:P38 ps:P38 psv:P38)
+    }
+    ?country ?p ?st . ?st ?ps ?v ; wikibase:rank ?rank .
+    FILTER(?rank != wikibase:DeprecatedRank)
+    FILTER NOT EXISTS { ?st pq:P582 ?end }
+    OPTIONAL { ?st pq:P585 ?t }
+    OPTIONAL { ?st ?psv ?node . ?node wikibase:quantityUnit ?unit }
+    OPTIONAL { ?v wdt:P498 ?code }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en". }
+  }`;
+  let rows;
+  try { rows = (await getJSON('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q))).results.bindings; }
+  catch(e){ return null; }
+  const val = (r,k) => r?.[k]?.value;
+  const of = k => rows.filter(r => val(r,'k') === k);
+  const pref = arr => { const p = arr.filter(r => val(r,'rank').endsWith('PreferredRank')); return p.length ? p : arr; };
+  const latest = arr => arr.slice().sort((a,b) => (val(b,'t')||'').localeCompare(val(a,'t')||''))[0];
+  const num = r => r ? {n:parseFloat(val(r,'v')), year:(val(r,'t')||'').slice(0,4)} : null;
+
+  const incR = pref(of('inc')).slice().sort((a,b) => parseInt(val(a,'v')) - parseInt(val(b,'v')))[0];
+  const f = {
+    pop:   num(latest(pref(of('pop')))),
+    gdp:   num(latest(of('gdp').filter(r => val(r,'unit') === USD))),
+    gdppc: num(latest(of('gdppc').filter(r => val(r,'unit') === USD))),
+    area:  num(of('area').find(r => val(r,'unit') === KM2)),
+    inc:   incR ? parseInt(val(incR,'v')) : null,
+    cap:   val(pref(of('cap'))[0], 'vLabel'),
+    cur:   [...new Set(pref(of('cur')).map(r => val(r,'code')).filter(Boolean))],
+  };
+  factsCache.set(iso, f);
+  return f;
+}
+
+const fmtBig = n => new Intl.NumberFormat('nl-NL', {notation:'compact', maximumFractionDigits:1}).format(n);
+const fmtInt = n => new Intl.NumberFormat('nl-NL', {maximumFractionDigits:0}).format(n);
+function renderFacts(f, bm){
+  const dl = $('cFacts'); dl.innerHTML = '';
+  const add = (label, value, note) => {
+    if (value == null || value === '') return;
+    const dt = document.createElement('dt'); dt.textContent = label;
+    const dd = document.createElement('dd'); dd.textContent = value;
+    if (note){ const sm = document.createElement('small'); sm.textContent = ` ${note}`; dd.append(sm); }
+    const wrap = document.createElement('div'); wrap.append(dt, dd); dl.append(wrap);
+  };
+  if (f){
+    add('Hoofdstad', f.cap);
+    add('Inwoners', f.pop && fmtBig(f.pop.n), f.pop?.year);
+    add('Opgericht', f.inc != null ? (f.inc < 0 ? `${-f.inc} v.Chr.` : String(f.inc)) : null);
+    add('Oppervlakte', f.area && `${fmtInt(f.area.n)} km²`);
+    add('Bbp', f.gdp && `$ ${fmtBig(f.gdp.n)}`, f.gdp?.year);
+    add('Bbp per inwoner', f.gdppc && `$ ${fmtInt(f.gdppc.n)}`, f.gdppc?.year);
+    add('Munt', f.cur.join(', '));
+  }
+  if (bm){
+    const d = bm.date ? new Date(bm.date).toLocaleDateString('nl-NL', {month:'short', year:'numeric'}) : '';
+    add('Big Mac', `$ ${bm.price.toFixed(2).replace('.',',')}`, d);
+    if (!isNaN(bm.raw)) add('Big Mac-index', Math.abs(bm.raw) < 0.005 ? 'referentie ($)'
+      : `${Math.round(Math.abs(bm.raw)*100)}% ${bm.raw < 0 ? 'ondergewaardeerd' : 'overgewaardeerd'}`, 't.o.v. dollar');
+    if (f?.gdppc) add('Big Macs per inwoner', fmtInt(f.gdppc.n / bm.price), 'per jaar, bbp ÷ prijs');
+  }
+  dl.hidden = !dl.children.length;
+}
+
+async function showCountry(t, hex){
+  const box = $('country');
+  if (!t?.iso){ box.hidden = true; return; }
+  const ISO = (t.iso||'').toUpperCase();
+  const [info, d, f, bmMap] = await Promise.all([countryInfo(t.iso), democracyScore(ISO), countryFacts(ISO), loadBigMac()]);
+  if (current !== hex) return;                   // inmiddels ander toestel
+  if (!info){ box.hidden = true; return; }
+
+  const L = info.leader;
+  if (L?.img){
+    const src = L.img.replace(/^http:/,'https:');
+    $('cImg').src = src + (src.includes('?') ? '&' : '?') + 'width=240';
+    $('cImg').alt = `Portret van ${L.name}`;
+    $('cLink').href = src.replace('Special:FilePath/','File:');
+    $('cLink').hidden = false;
+  } else $('cLink').hidden = true;
+  $('cRole').textContent = L ? `${L.role} van ${info.name}` : info.name;
+  $('cName').textContent = L ? L.name : '';
+
+  $('cDemo').hidden = false;
+  if (d){
+    const sc = Math.round(d.score);
+    $('cScore').textContent = `${sc}/100`;
+    $('cBar').style.width = `${sc}%`;
+    $('cCat').textContent = DEMO_CATS.find(([min])=>sc>=min)[1];
+    $('cSrc').textContent = `EIU Democracy Index${d.year ? ' '+d.year : ''}, via Wikidata`;
+  } else {
+    $('cScore').textContent = '';
+    $('cBar').style.width = '0';
+    $('cCat').textContent = d === null ? 'Geen score voor dit land in de index.' : 'Democratie-index kon niet worden geladen.';
+    $('cSrc').textContent = d === null ? '' : demoError;
+  }
+  // Big Mac: eigen land, of de eurozone als het land de euro heeft
+  const bm = bmMap ? (bmMap.get(info.iso3) || (f?.cur.includes('EUR') ? bmMap.get('EUZ') : null)) : null;
+  renderFacts(f, bm);
+  box.hidden = false;
+}
+
+function onNewPlane(p, route){
+  showRoute(p, route);
+  showCountry(anthemTarget(route), p.hex);
+  addHistory(p, route);
+  maybePlayAnthem();
+}
+setInterval(() => { evaluateOverhead(); updateMix(); }, 250);
+
+/* Routes (en volksliederen) alvast ophalen voor alles wat laag in de buurt vliegt */
+function prefetchRoutes(){
+  const todo = lastPlanes
+    .filter(p=>p.callsign && p.alt>0 && p.alt<MAX_ALT_FT && p.d<12 && !routeCache.has(p.callsign))
+    .sort((a,b)=>a.d-b.d).slice(0,4);
+  todo.forEach(p => getRoute(p.callsign).then(r => {
+    const t = anthemTarget(r); if (t){ countryInfo(t.iso); democracyScore((t.iso||'').toUpperCase()); countryFacts((t.iso||'').toUpperCase()); if (soundOn) findAnthem(t.country); }
+  }));
+}
+
+async function getRoute(cs){
+  if (!cs) return null;
+  if (routeCache.has(cs)) return routeCache.get(cs);
+  let route=null;
+  try {
+    const j = await getJSON(`https://api.adsbdb.com/v0/callsign/${encodeURIComponent(cs)}`);
+    route = j?.response?.flightroute || null;
+  } catch(e){ return null; }        // bij een fout niet cachen, later opnieuw proberen
+  routeCache.set(cs, route);
+  return route;
+}
+
+/* "Bestemming" voor het volkslied: vertrekkers → bestemming, landers op Schiphol → herkomst */
+function anthemTarget(route){
+  if (!route) return null;
+  const o=route.origin, d=route.destination;
+  const landsHere = d && (d.icao_code === HOME_ICAO && here.id !== 'custom' ||
+    (d.latitude != null && distKm(here.lat, here.lon, d.latitude, d.longitude) < 60));
+  if (landsHere && o) return {country:o.country_name, iso:o.country_iso_name, why:'komt uit'};
+  if (d) return {country:d.country_name, iso:d.country_iso_name, why:'gaat naar'};
+  return null;
+}
+
+function showIdle(){
+  const c=$('callsign'); c.textContent='Even niets boven je'; c.classList.add('idle');
+  $('flag').textContent=''; $('route').textContent='Wachten op het volgende vliegtuig';
+  $('facts').hidden=true;
+  $('country').hidden=true;
+}
+
+function showPlane(p, pick){
+  const c=$('callsign'); c.textContent=p.callsign||p.r||p.hex.toUpperCase(); c.classList.remove('idle');
+  $('facts').hidden=false;
+  const st = pick.st;
+  $('fEta').textContent = pick.inside
+    ? (st.tcpa > 2 ? `nu · dichtst over ${Math.round(st.tcpa)} s` : 'nu')
+    : `over ${Math.max(1, Math.round(pick.enter))} s`;
+  $('fAlt').textContent = `${Math.round(p.alt*0.3048).toLocaleString('nl-NL')} m`;
+  $('fDist').textContent = `${st.d.toFixed(1).replace('.',',')} km`;
+  $('fSpd').textContent = p.gs ? `${Math.round(p.gs*1.852)} km/u` : '–';
+  $('fType').textContent = [p.t, p.r].filter(Boolean).join(' · ') || '–';
+}
+function showRoute(p, route){
+  const el=$('route');
+  if (!route){ el.textContent = p.callsign ? 'Route onbekend' : 'Geen vluchtnummer uitgezonden'; $('flag').textContent=''; return; }
+  const o=route.origin, d=route.destination, t=anthemTarget(route);
+  const airline = route.airline?.name ? ` · ${route.airline.name}` : '';
+  el.innerHTML = '';
+  const s = document.createElement('span');
+  s.textContent = `${o?.municipality||o?.iata_code||'?'} `;
+  const a = document.createElement('span'); a.className='arrow'; a.textContent='→';
+  const e = document.createElement('span');
+  e.textContent = ` ${d?.municipality||d?.iata_code||'?'}${airline}`;
+  el.append(s,a,e);
+  $('flag').textContent = flagOf(t?.iso);
+}
+function addHistory(p, route){
+  const t=anthemTarget(route);
+  history.unshift({cs:p.callsign||p.hex, flag:flagOf(t?.iso), where: route ? `${route.origin?.municipality||'?'} → ${route.destination?.municipality||'?'}` : 'Route onbekend', time:new Date()});
+  history.length = Math.min(history.length, 8);
+  const ol=$('history'); ol.innerHTML='';
+  history.forEach(h=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span class="cs"></span><span class="w"></span><span class="t"></span>`;
+    li.querySelector('.cs').textContent=h.cs;
+    li.querySelector('.w').textContent=`${h.flag} ${h.where}`;
+    li.querySelector('.t').textContent=h.time.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+    ol.append(li);
+  });
+}
+
+/* ---------- Radar met vloeiende beweging ----------
+   Tussen twee updates rekenen we elke frame door waar het toestel nu is
+   (positie + snelheid × verstreken tijd, in de vliegrichting). Komt er nieuwe
+   data, dan glijdt het icoon in ~0,6 s naar de nieuwe plek in plaats van te springen. */
+const display = new Map();      // hex -> {x, y, hdg, trail:[]}  (km t.o.v. jou, x=oost, y=noord)
+let lastFrame = performance.now();
+
+function predicted(p, now){
+  const hdg = (p.track ?? p.true_heading ?? 0) * Math.PI/180;
+  const x0 = Math.sin(p.b)*p.d, y0 = Math.cos(p.b)*p.d;
+  if (!p.gs || p.alt === 0 && p.gs < 3) return {x:x0, y:y0, hdg};
+  const dt = Math.min((now - p.t0)/1000, 20);           // niet eindeloos doorrekenen
+  const v = p.gs*1.852/3600;                              // knopen -> km/s
+  return {x:x0 + Math.sin(hdg)*v*dt, y:y0 + Math.cos(hdg)*v*dt, hdg};
+}
+
+function render(){
+  const now = performance.now();
+  const dt = Math.min((now - lastFrame)/1000, 0.25); lastFrame = now;
+  const k = 1 - Math.exp(-dt/0.25);                       // afvlakking
+
+  const cv=$('radar'), ctx=cv.getContext('2d'), W=cv.width, C=W/2, maxKm=FETCH_NM*1.852;
+  const scale=(C-20)/maxKm;
+  ctx.clearRect(0,0,W,W);
+  ctx.strokeStyle='#45484b'; ctx.fillStyle='#7d807c'; ctx.lineWidth=1.5; ctx.font='20px Barlow, sans-serif';
+  [1,5,10].filter(r=>r<=maxKm).forEach(r=>{ ctx.beginPath(); ctx.arc(C,C,r*scale,0,Math.PI*2); ctx.stroke(); ctx.fillText(`${r} km`, C+6, C-r*scale-6); });
+  ctx.fillStyle='rgba(255,194,14,.10)'; ctx.beginPath(); ctx.arc(C,C,radiusKm*scale,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#f2f2ec'; ctx.beginPath(); ctx.arc(C,C,6,0,Math.PI*2); ctx.fill();
+
+  const seen = new Set();
+  lastPlanes.forEach(p=>{
+    seen.add(p.hex);
+    const target = predicted(p, now);
+    let d = display.get(p.hex);
+    if (!d){ d = {...target, trail:[]}; display.set(p.hex, d); }
+    else {
+      // te grote sprong (bijv. andere plek gekozen)? dan direct zetten
+      if (Math.hypot(target.x-d.x, target.y-d.y) > 3){ d.x=target.x; d.y=target.y; d.trail=[]; }
+      d.x += (target.x-d.x)*k; d.y += (target.y-d.y)*k;
+      let dh = target.hdg - d.hdg; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
+      d.hdg += dh*k;
+    }
+    const x=C+d.x*scale, y=C-d.y*scale;
+    const isTop=p.hex===current, low=p.alt>0&&p.alt<MAX_ALT_FT, flying=p.alt>0;
+
+    // spoor achter vliegende toestellen
+    if (flying){
+      const last = d.trail[d.trail.length-1];
+      if (!last || Math.hypot(last[0]-x, last[1]-y) > 4) { d.trail.push([x,y]); if (d.trail.length>40) d.trail.shift(); }
+      if (d.trail.length>1){
+        ctx.strokeStyle = isTop ? 'rgba(255,194,14,.45)' : 'rgba(242,242,236,.18)';
+        ctx.lineWidth = isTop ? 3 : 2;
+        ctx.beginPath(); ctx.moveTo(d.trail[0][0], d.trail[0][1]);
+        d.trail.forEach(([tx,ty])=>ctx.lineTo(tx,ty)); ctx.lineTo(x,y); ctx.stroke();
+      }
+    }
+
+    ctx.save(); ctx.translate(x,y); ctx.rotate(d.hdg);
+    ctx.fillStyle = isTop ? '#ffc20e' : low ? '#f2f2ec' : '#6f726e';
+    const s = isTop ? 13 : 8;
+    ctx.beginPath(); ctx.moveTo(0,-s); ctx.lineTo(s*.65,s); ctx.lineTo(0,s*.55); ctx.lineTo(-s*.65,s); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    if (isTop || (low && p.d<maxKm*.6)){
+      ctx.fillStyle = isTop ? '#ffc20e' : '#b9bbb6';
+      ctx.font = `${isTop?600:500} ${isTop?24:18}px "Barlow Condensed", sans-serif`;
+      ctx.fillText(p.callsign||p.hex, x+14, y+6);
+    }
+  });
+  for (const h of display.keys()) if (!seen.has(h)) display.delete(h);
+}
+
+function loop(){ render(); requestAnimationFrame(loop); }
+
+/* ---------- Volkslied via Wikimedia Commons ---------- */
+async function findAnthem(country){
+  if (anthemCache.has(country)) return anthemCache.get(country);
+  const canOgg = !!audio.canPlayType('audio/ogg; codecs="vorbis"');
+  const queries = [`"national anthem" "${country}" filetype:audio`, `anthem ${country} filetype:audio`];
+  let hit=null;
+  for (const q of queries){
+    const url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*'
+      + '&generator=search&gsrnamespace=6&gsrlimit=6&gsrsearch=' + encodeURIComponent(q)
+      + '&prop=videoinfo&viprop=url|derivatives';
+    try {
+      const j = await getJSON(url);
+      const pages = Object.values(j?.query?.pages||{}).sort((a,b)=>a.index-b.index);
+      for (const p of pages){
+        const vi=p.videoinfo?.[0]; if(!vi) continue;
+        const ders = vi.derivatives||[];
+        const mp3 = ders.find(d=>/mpeg|mp3/.test(d.type||''));
+        const src = (!canOgg && mp3) ? mp3.src : (canOgg ? vi.url : null);
+        if (src){ hit={src, title:p.title.replace(/^File:/,'').replace(/\.\w+$/,'')}; break; }
+      }
+    } catch(e){}
+    if (hit) break;
+  }
+  anthemCache.set(country, hit);
+  return hit;
+}
+
+/* ---------- Mixer: volksliederen op afstand mengen ----------
+   Elk laag vliegend toestel binnen 1,6× je straal krijgt een gewicht:
+   aan de rand van de straal 35 %, recht boven je 100 %, daarbuiten loopt het af naar 0.
+   Per land telt het zwaarste toestel; de 3 zwaarste landen spelen tegelijk (in een lus),
+   elk op zijn eigen volume. Komt er een toestel aan terwijl een ander wegvliegt, dan
+   schuiven de volumes vanzelf in elkaar over. Volume via Web Audio (iOS laat
+   audio.volume niet toe). */
+const POOL = 3;
+const decks = [audio, new Audio(), new Audio()].map(el => {
+  el.crossOrigin = 'anonymous'; el.preload = 'auto'; el.loop = true;
+  return {el, gain:null, country:null, iso:null, target:0, level:0, zeroSince:0};
+});
+const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+let ac = null, useWA = false;
+
+function unlockAudio(){                       // moet binnen een tik/klik gebeuren
+  if (!ac){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC){
+      try {
+        ac = new AC();
+        decks.forEach(d => { d.gain = ac.createGain(); d.gain.gain.value = 0;
+          ac.createMediaElementSource(d.el).connect(d.gain).connect(ac.destination); });
+        useWA = true;
+      } catch(e){ useWA = false; }
+    }
+  }
+  if (ac) ac.resume();
+  decks.forEach(d => { if (d.el.paused && !d.country){ d.el.src = SILENT; d.el.play().then(()=>d.el.pause()).catch(()=>{}); } });
+}
+
+function setLevel(d, v){
+  d.level = v;
+  if (useWA) d.gain.gain.setTargetAtTime(v, ac.currentTime, 0.35);   // vloeiend naar het doel
+  else d.el.volume += (v - d.el.volume) * 0.5;                        // reserve: stapjes
+}
+
+function planeWeight(st){
+  const R = radiusKm, outer = R*1.6;
+  if (st.d <= R) return 0.35 + 0.65*(1 - st.d/R);
+  if (st.d >= outer) return 0;
+  return 0.35*(1 - (st.d - R)/(outer - R));
+}
+
+function updateMix(){
+  const now = performance.now();
+  // gewichten per land
+  const byCountry = new Map();
+  if (soundOn){
+    for (const p of lastPlanes){
+      if (!(p.alt>0 && p.alt<MAX_ALT_FT)) continue;
+      const t = anthemTarget(routeCache.get(p.callsign));
+      if (!t) continue;
+      const w = planeWeight(liveState(p, now));
+      if (w <= 0) continue;
+      const cur = byCountry.get(t.country);
+      if (!cur || w > cur.w) byCountry.set(t.country, {country:t.country, iso:t.iso, w, cs:p.callsign});
+    }
+  }
+  const top = [...byCountry.values()].sort((a,b)=>b.w-a.w).slice(0, POOL);
+  const sum = top.reduce((a,c)=>a+c.w, 0);
+  const norm = sum > 1 ? 1/sum : 1;                                   // samen niet te hard
+
+  // landen die al een deck hebben houden dat
+  const want = new Map(top.map(c=>[c.country, c]));
+  decks.forEach(d => { d.target = want.has(d.country) ? want.get(d.country).w*norm : 0; });
+
+  // nieuwe landen op een vrij deck zetten
+  for (const c of top){
+    if (decks.some(d=>d.country===c.country)) continue;
+    const free = decks.find(d=>!d.country) || decks.filter(d=>!want.has(d.country)).sort((a,b)=>a.level-b.level)[0];
+    if (!free) continue;
+    free.country = c.country; free.iso = c.iso; free.target = c.w*norm; free.level = 0;
+    if (free.gain){ free.gain.gain.cancelScheduledValues(ac.currentTime); free.gain.gain.value = 0; } else free.el.volume = 0;
+    findAnthem(c.country).then(a => {
+      if (free.country !== c.country) return;
+      if (!a){ free.missing = true; return; }
+      free.missing = false;
+      free.el.src = a.src;
+      free.el.play().catch(() => { $('play').hidden = false; $('play').textContent = 'Tik om geluid te starten'; });
+    });
+  }
+
+  // volumes zetten; stil geworden decks na 2 s vrijgeven
+  decks.forEach(d => {
+    if (!d.country) return;
+    setLevel(d, d.target);
+    if (d.target > 0.01) d.zeroSince = 0;
+    else if (!d.zeroSince) d.zeroSince = now;
+    else if (now - d.zeroSince > 2000){ d.el.pause(); d.country = null; d.iso = null; d.zeroSince = 0; }
+  });
+  renderMixer();
+}
+
+function renderMixer(){
+  const box = $('mixer');
+  const rows = decks.filter(d=>d.country).sort((a,b)=>b.target-a.target);
+  if (!soundOn || !rows.length){ box.innerHTML=''; return; }
+  box.innerHTML = '';
+  rows.forEach(d => {
+    const r = document.createElement('div'); r.className = 'mix-row';
+    r.innerHTML = '<span class="n"></span><span class="b"><span></span></span><span class="v"></span>';
+    r.querySelector('.n').textContent = `${flagOf(d.iso)} ${d.country}${d.missing ? ' (geen opname)' : ''}`;
+    r.querySelector('.b span').style.width = `${Math.round(d.target*100)}%`;
+    r.querySelector('.v').textContent = Math.round(d.target*100);
+    box.append(r);
+  });
+}
+
+// compatibiliteit met bestaande aanroepen
+function maybePlayAnthem(){ updateMix(); }
+function stopAnthem(){ soundOn = false; updateMix(); }
+
+/* ---------- Go ---------- */
+requestAnimationFrame(loop);
+loadBigMac();
+useGps();   // standaard: mijn locatie (valt terug op Polderbaan)
+</script>
+</body>
+</html>
