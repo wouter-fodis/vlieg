@@ -37,6 +37,10 @@
   .flag{font-size:clamp(2.6rem,11vw,4.5rem);line-height:1}
   .sign-dir{background:var(--sign-yellow);color:#000;border-radius:0 0 6px 6px;padding:10px 18px;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:clamp(1.3rem,5.5vw,1.9rem);line-height:1.2;display:flex;gap:14px;align-items:center;flex-wrap:wrap;min-height:58px}
   .sign-dir .arrow{font-size:1.2em}
+  .greet-big{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:clamp(2.6rem,12vw,4.8rem);line-height:1;color:var(--runway-white);margin:0 0 10px;unicode-bidi:plaintext}
+  .greet-rest{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:-10px 0 22px}
+  .greet-rest #greetText{flex:1 1 220px;font-family:"Barlow Condensed",sans-serif;font-weight:500;font-size:clamp(1.25rem,5vw,1.7rem);line-height:1.25;unicode-bidi:plaintext}
+  .greet-rest .btn{white-space:nowrap}
   .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:2px;margin-top:2px}
   .fact{background:var(--asphalt-2);padding:8px 12px}
   .fact dt{color:var(--muted);font-size:.85rem}
@@ -115,6 +119,7 @@
 
   <p class="here" id="hereLine"></p>
 
+  <div class="greet-big" id="greetBig" dir="auto" hidden></div>
   <section class="signs" aria-live="polite">
     <div class="sign-loc">
       <div class="callsign idle" id="callsign">Wachten op een vliegtuig</div>
@@ -122,6 +127,10 @@
     </div>
     <div class="sign-dir" id="route">Kies een plek bij een baan</div>
   </section>
+  <div class="greet-rest" id="greetRest" hidden>
+    <span id="greetText" dir="auto"></span>
+    <button class="btn" id="greetPlay" type="button">&#128266; Luister</button>
+  </div>
 
   <section class="country" id="country" hidden aria-live="polite">
     <a id="cLink" target="_blank" rel="noopener"><img id="cImg" alt=""></a>
@@ -726,6 +735,7 @@ function anthemTarget(route){
 }
 
 function showIdle(){
+  showGreeting(null);
   const c=$('callsign'); c.textContent='Even niets boven je'; c.classList.add('idle');
   $('flag').textContent=''; $('route').textContent='Wachten op het volgende vliegtuig';
   $('facts').hidden=true;
@@ -744,7 +754,100 @@ function showPlane(p, pick){
   $('fSpd').textContent = p.gs ? `${Math.round(p.gs*1.852)} km/u` : '\u2013';
   $('fType').textContent = [p.t, p.r].filter(Boolean).join(' \u00b7 ') || '\u2013';
 }
+/* ---------- Groet in de taal van het land ----------
+   Vertrek: "Doei allemaal, goede vlucht!" in de taal van de bestemming.
+   Aankomst op Schiphol: welkomstzin in de taal van het vertrekland.
+   Per taal: [groot woord, rest]. Begint de rest met '|', dan is het een hele zin
+   (andere woordvolgorde) en wordt alleen die voorgelezen. */
+const GREET = {
+  nl:{v:'nl-NL', dep:['Doei','allemaal, goede vlucht!'], arr:['Welkom','in Amsterdam! Welkom in Nederland, het land van bitterballen, kaas en oranje!']},
+  en:{v:'en-GB', dep:['Bye','everyone, have a good flight!'], arr:['Welcome','to Amsterdam! Welcome to the Netherlands, the land of bitterballen, cheese and orange!']},
+  de:{v:'de-DE', dep:['Tsch\u00fcss','zusammen, guten Flug!'], arr:['Willkommen','in Amsterdam! Willkommen in den Niederlanden, dem Land von Bitterballen, K\u00e4se und Orange!']},
+  fr:{v:'fr-FR', dep:['Salut','tout le monde, bon vol !'], arr:['Bienvenue','\u00e0 Amsterdam ! Bienvenue aux Pays-Bas, le pays des bitterballen, du fromage et de l\u2019orange !']},
+  es:{v:'es-ES', dep:['\u00a1Adi\u00f3s!','\u00a1Buen vuelo a todos!'], arr:['\u00a1Bienvenidos!','|\u00a1Bienvenidos a \u00c1msterdam! \u00a1Bienvenidos a los Pa\u00edses Bajos, el pa\u00eds de los bitterballen, el queso y el naranja!']},
+  it:{v:'it-IT', dep:['Ciao','a tutti, buon volo!'], arr:['Benvenuti','ad Amsterdam! Benvenuti nei Paesi Bassi, il paese dei bitterballen, del formaggio e dell\u2019arancione!']},
+  pt:{v:'pt-PT', dep:['Tchau','a todos, boa viagem!'], arr:['Bem-vindos','a Amsterdam! Bem-vindos aos Pa\u00edses Baixos, o pa\u00eds dos bitterballen, do queijo e do laranja!']},
+  pl:{v:'pl-PL', dep:['Cze\u015b\u0107','wszystkim, mi\u0142ego lotu!'], arr:['Witamy','w Amsterdamie! Witamy w Holandii, kraju bitterballen, sera i pomara\u0144czowego!']},
+  cs:{v:'cs-CZ', dep:['Ahoj','v\u0161ichni, \u0161\u0165astn\u00fd let!'], arr:['V\u00edtejte','v Amsterdamu! V\u00edtejte v Nizozemsku, zemi bitterballen, s\u00fdra a oran\u017eov\u00e9!']},
+  sk:{v:'sk-SK', dep:['Ahoj','v\u0161etci, \u0161\u0165astn\u00fd let!'], arr:['Vitajte','v Amsterdame! Vitajte v Holandsku, krajine bitterballen, syra a oran\u017eovej!']},
+  hu:{v:'hu-HU', dep:['Sziasztok','mindenki, j\u00f3 utat!'], arr:['\u00dcdv\u00f6z\u00f6lj\u00fck','Amszterdamban! \u00dcdv\u00f6z\u00f6lj\u00fck Hollandi\u00e1ban, a bitterballen, a sajt \u00e9s a narancss\u00e1rga orsz\u00e1g\u00e1ban!']},
+  ro:{v:'ro-RO', dep:['Pa','tuturor, zbor pl\u0103cut!'], arr:['Bine a\u021bi venit','la Amsterdam! Bine a\u021bi venit \u00een \u021a\u0103rile de Jos, \u021bara bitterballen-ilor, a br\u00e2nzei \u0219i a portocaliului!']},
+  bg:{v:'bg-BG', dep:['\u0427\u0430\u043e','\u043d\u0430 \u0432\u0441\u0438\u0447\u043a\u0438, \u043f\u0440\u0438\u044f\u0442\u0435\u043d \u043f\u043e\u043b\u0435\u0442!'], arr:['\u0414\u043e\u0431\u0440\u0435 \u0434\u043e\u0448\u043b\u0438','\u0432 \u0410\u043c\u0441\u0442\u0435\u0440\u0434\u0430\u043c! \u0414\u043e\u0431\u0440\u0435 \u0434\u043e\u0448\u043b\u0438 \u0432 \u041d\u0438\u0434\u0435\u0440\u043b\u0430\u043d\u0434\u0438\u044f, \u0441\u0442\u0440\u0430\u043d\u0430\u0442\u0430 \u043d\u0430 \u0431\u0438\u0442\u0435\u0440\u0431\u0430\u043b\u0435\u043d, \u0441\u0438\u0440\u0435\u043d\u0435\u0442\u043e \u0438 \u043e\u0440\u0430\u043d\u0436\u0435\u0432\u043e\u0442\u043e!']},
+  el:{v:'el-GR', dep:['\u0393\u03b5\u03b9\u03b1','\u03c3\u03b5 \u03cc\u03bb\u03bf\u03c5\u03c2, \u03ba\u03b1\u03bb\u03ae \u03c0\u03c4\u03ae\u03c3\u03b7!'], arr:['\u039a\u03b1\u03bb\u03ce\u03c2 \u03ae\u03c1\u03b8\u03b1\u03c4\u03b5','\u03c3\u03c4\u03bf \u0386\u03bc\u03c3\u03c4\u03b5\u03c1\u03bd\u03c4\u03b1\u03bc! \u039a\u03b1\u03bb\u03ce\u03c2 \u03ae\u03c1\u03b8\u03b1\u03c4\u03b5 \u03c3\u03c4\u03b7\u03bd \u039f\u03bb\u03bb\u03b1\u03bd\u03b4\u03af\u03b1, \u03c4\u03b7 \u03c7\u03ce\u03c1\u03b1 \u03c4\u03c9\u03bd \u03bc\u03c0\u03b9\u03c4\u03b5\u03c1\u03bc\u03c0\u03ac\u03bb\u03b5\u03bd, \u03c4\u03bf\u03c5 \u03c4\u03c5\u03c1\u03b9\u03bf\u03cd \u03ba\u03b1\u03b9 \u03c4\u03bf\u03c5 \u03c0\u03bf\u03c1\u03c4\u03bf\u03ba\u03b1\u03bb\u03af!']},
+  tr:{v:'tr-TR', dep:['Ho\u015f\u00e7a kal\u0131n','herkes, iyi u\u00e7u\u015flar!'], arr:['Ho\u015f geldiniz','|Amsterdam\u2019a ho\u015f geldiniz! Hollanda\u2019ya ho\u015f geldiniz: bitterballen, peynir ve turuncunun \u00fclkesi!']},
+  ru:{v:'ru-RU', dep:['\u041f\u043e\u043a\u0430','\u0432\u0441\u0435\u043c, \u0445\u043e\u0440\u043e\u0448\u0435\u0433\u043e \u043f\u043e\u043b\u0451\u0442\u0430!'], arr:['\u0414\u043e\u0431\u0440\u043e \u043f\u043e\u0436\u0430\u043b\u043e\u0432\u0430\u0442\u044c','\u0432 \u0410\u043c\u0441\u0442\u0435\u0440\u0434\u0430\u043c! \u0414\u043e\u0431\u0440\u043e \u043f\u043e\u0436\u0430\u043b\u043e\u0432\u0430\u0442\u044c \u0432 \u041d\u0438\u0434\u0435\u0440\u043b\u0430\u043d\u0434\u044b, \u0441\u0442\u0440\u0430\u043d\u0443 \u0431\u0438\u0442\u0442\u0435\u0440\u0431\u0430\u043b\u043b\u0435\u043d, \u0441\u044b\u0440\u0430 \u0438 \u043e\u0440\u0430\u043d\u0436\u0435\u0432\u043e\u0433\u043e \u0446\u0432\u0435\u0442\u0430!']},
+  uk:{v:'uk-UA', dep:['\u0411\u0443\u0432\u0430\u0439\u0442\u0435','\u0432\u0441\u0456, \u0433\u0430\u0440\u043d\u043e\u0433\u043e \u043f\u043e\u043b\u044c\u043e\u0442\u0443!'], arr:['\u041b\u0430\u0441\u043a\u0430\u0432\u043e \u043f\u0440\u043e\u0441\u0438\u043c\u043e','\u0434\u043e \u0410\u043c\u0441\u0442\u0435\u0440\u0434\u0430\u043c\u0430! \u041b\u0430\u0441\u043a\u0430\u0432\u043e \u043f\u0440\u043e\u0441\u0438\u043c\u043e \u0434\u043e \u041d\u0456\u0434\u0435\u0440\u043b\u0430\u043d\u0434\u0456\u0432, \u043a\u0440\u0430\u0457\u043d\u0438 \u0431\u0456\u0442\u0442\u0435\u0440\u0431\u0430\u043b\u043b\u0435\u043d, \u0441\u0438\u0440\u0443 \u0442\u0430 \u043f\u043e\u043c\u0430\u0440\u0430\u043d\u0447\u0435\u0432\u043e\u0433\u043e!']},
+  sv:{v:'sv-SE', dep:['Hej d\u00e5','allihop, trevlig flygresa!'], arr:['V\u00e4lkommen','till Amsterdam! V\u00e4lkommen till Nederl\u00e4nderna, landet med bitterballen, ost och orange!']},
+  nb:{v:'nb-NO', dep:['Ha det','alle sammen, god tur!'], arr:['Velkommen','til Amsterdam! Velkommen til Nederland, landet med bitterballen, ost og oransje!']},
+  da:{v:'da-DK', dep:['Farvel','alle sammen, god flyvetur!'], arr:['Velkommen','til Amsterdam! Velkommen til Holland, landet med bitterballen, ost og orange!']},
+  fi:{v:'fi-FI', dep:['Heippa','kaikille, hyv\u00e4\u00e4 lentoa!'], arr:['Tervetuloa','Amsterdamiin! Tervetuloa Alankomaihin, bitterballenin, juuston ja oranssin maahan!']},
+  is:{v:'is-IS', dep:['Bless','\u00f6ll s\u00f6mul, g\u00f3\u00f0a fer\u00f0!'], arr:['Velkomin','til Amsterdam! Velkomin til Hollands, lands bitterballen, osta og appels\u00ednuguls!']},
+  et:{v:'et-EE', dep:['N\u00e4gemist','k\u00f5igile, head lendu!'], arr:['Tere tulemast','Amsterdami! Tere tulemast Hollandisse, bitterballenite, juustu ja oran\u017ei maale!']},
+  lv:{v:'lv-LV', dep:['At\u0101','visiem, labu lidojumu!'], arr:['Laipni l\u016bdzam','Amsterdam\u0101! Laipni l\u016bdzam N\u012bderland\u0113, bitterballen, siera un oran\u017e\u0101s kr\u0101sas zem\u0113!']},
+  lt:{v:'lt-LT', dep:['Iki','visiems, gero skryd\u017eio!'], arr:['Sveiki atvyk\u0119','\u012f Amsterdam\u0105! Sveiki atvyk\u0119 \u012f Nyderlandus \u2013 bitterballen, s\u016brio ir oran\u017ein\u0117s spalvos \u0161al\u012f!']},
+  hr:{v:'hr-HR', dep:['Bok','svima, sretan let!'], arr:['Dobro do\u0161li','u Amsterdam! Dobro do\u0161li u Nizozemsku, zemlju bitterballena, sira i naran\u010daste boje!']},
+  sr:{v:'sr-RS', dep:['\u040b\u0430\u043e','\u0441\u0432\u0438\u043c\u0430, \u0441\u0440\u0435\u045b\u0430\u043d \u043b\u0435\u0442!'], arr:['\u0414\u043e\u0431\u0440\u043e \u0434\u043e\u0448\u043b\u0438','\u0443 \u0410\u043c\u0441\u0442\u0435\u0440\u0434\u0430\u043c! \u0414\u043e\u0431\u0440\u043e \u0434\u043e\u0448\u043b\u0438 \u0443 \u0425\u043e\u043b\u0430\u043d\u0434\u0438\u0458\u0443, \u0437\u0435\u043c\u0459\u0443 \u0431\u0438\u0442\u0435\u0440\u0431\u0430\u043b\u0435\u043d\u0430, \u0441\u0438\u0440\u0430 \u0438 \u043d\u0430\u0440\u0430\u043d\u045f\u0430\u0441\u0442\u0435 \u0431\u043e\u0458\u0435!']},
+  sl:{v:'sl-SI', dep:['Adijo','vsem, sre\u010den let!'], arr:['Dobrodo\u0161li','v Amsterdamu! Dobrodo\u0161li na Nizozemskem, v de\u017eeli bitterballnov, sira in oran\u017ene barve!']},
+  sq:{v:'sq-AL', dep:['Mirupafshim','t\u00eb gjith\u00ebve, fluturim t\u00eb mbar\u00eb!'], arr:['Mir\u00eb se vini','n\u00eb Amsterdam! Mir\u00eb se vini n\u00eb Holand\u00eb, vendin e bitterballen-\u00ebve, djathit dhe portokallis\u00eb!']},
+  ar:{v:'ar-SA', dep:['\u0648\u062f\u0627\u0639\u064b\u0627','\u0644\u0644\u062c\u0645\u064a\u0639\u060c \u0631\u062d\u0644\u0629 \u0633\u0639\u064a\u062f\u0629!'], arr:['\u0623\u0647\u0644\u0627\u064b \u0648\u0633\u0647\u0644\u0627\u064b','\u0641\u064a \u0623\u0645\u0633\u062a\u0631\u062f\u0627\u0645! \u0623\u0647\u0644\u0627\u064b \u0628\u0643\u0645 \u0641\u064a \u0647\u0648\u0644\u0646\u062f\u0627\u060c \u0628\u0644\u062f \u0627\u0644\u0628\u064a\u062a\u0631\u0628\u0627\u0644\u0646 \u0648\u0627\u0644\u062c\u0628\u0646 \u0648\u0627\u0644\u0644\u0648\u0646 \u0627\u0644\u0628\u0631\u062a\u0642\u0627\u0644\u064a!']},
+  he:{v:'he-IL', dep:['\u05d1\u05d9\u05d9','\u05dc\u05db\u05d5\u05dc\u05dd, \u05d8\u05d9\u05e1\u05d4 \u05e0\u05e2\u05d9\u05de\u05d4!'], arr:['\u05d1\u05e8\u05d5\u05db\u05d9\u05dd \u05d4\u05d1\u05d0\u05d9\u05dd','\u05dc\u05d0\u05de\u05e1\u05d8\u05e8\u05d3\u05dd! \u05d1\u05e8\u05d5\u05db\u05d9\u05dd \u05d4\u05d1\u05d0\u05d9\u05dd \u05dc\u05d4\u05d5\u05dc\u05e0\u05d3, \u05d0\u05e8\u05e5 \u05d4\u05d1\u05d9\u05d8\u05e8\u05d1\u05d0\u05dc\u05df, \u05d4\u05d2\u05d1\u05d9\u05e0\u05d4 \u05d5\u05d4\u05db\u05ea\u05d5\u05dd!']},
+  fa:{v:'fa-IR', dep:['\u062e\u062f\u0627\u062d\u0627\u0641\u0638','\u0647\u0645\u06af\u06cc\u060c \u067e\u0631\u0648\u0627\u0632 \u062e\u0648\u0628\u06cc \u062f\u0627\u0634\u062a\u0647 \u0628\u0627\u0634\u06cc\u062f!'], arr:['\u062e\u0648\u0634 \u0622\u0645\u062f\u06cc\u062f','|\u0628\u0647 \u0622\u0645\u0633\u062a\u0631\u062f\u0627\u0645 \u062e\u0648\u0634 \u0622\u0645\u062f\u06cc\u062f! \u0628\u0647 \u0647\u0644\u0646\u062f \u062e\u0648\u0634 \u0622\u0645\u062f\u06cc\u062f\u060c \u0633\u0631\u0632\u0645\u06cc\u0646 \u0628\u06cc\u062a\u0631\u0628\u0627\u0644\u0646\u060c \u067e\u0646\u06cc\u0631 \u0648 \u0646\u0627\u0631\u0646\u062c\u06cc!']},
+  hi:{v:'hi-IN', dep:['\u0905\u0932\u0935\u093f\u0926\u093e','\u0938\u092c\u0915\u094b, \u0906\u092a\u0915\u0940 \u0909\u0921\u093c\u093e\u0928 \u0936\u0941\u092d \u0939\u094b!'], arr:['\u0938\u094d\u0935\u093e\u0917\u0924 \u0939\u0948','|\u090f\u092e\u094d\u0938\u094d\u091f\u0930\u094d\u0921\u092e \u092e\u0947\u0902 \u0906\u092a\u0915\u093e \u0938\u094d\u0935\u093e\u0917\u0924 \u0939\u0948! \u0928\u0940\u0926\u0930\u0932\u0948\u0902\u0921 \u092e\u0947\u0902 \u0906\u092a\u0915\u093e \u0938\u094d\u0935\u093e\u0917\u0924 \u0939\u0948, \u092c\u093f\u091f\u0930\u092c\u093e\u0932\u0947\u0928, \u091a\u0940\u091c\u093c \u0914\u0930 \u0928\u093e\u0930\u0902\u0917\u0940 \u0930\u0902\u0917 \u0915\u093e \u0926\u0947\u0936!']},
+  zh:{v:'zh-CN', dep:['\u518d\u89c1','\u5927\u5bb6\uff0c\u4e00\u8def\u987a\u98ce\uff01'], arr:['\u6b22\u8fce','|\u6b22\u8fce\u6765\u5230\u963f\u59c6\u65af\u7279\u4e39\uff01\u6b22\u8fce\u6765\u5230\u8377\u5170\u2014\u2014\u70b8\u8089\u4e38\u3001\u5976\u916a\u548c\u6a59\u8272\u7684\u56fd\u5ea6\uff01']},
+  ja:{v:'ja-JP', dep:['\u30d0\u30a4\u30d0\u30a4','\u307f\u3093\u306a\u3001\u826f\u3044\u30d5\u30e9\u30a4\u30c8\u3092\uff01'], arr:['\u3088\u3046\u3053\u305d','|\u30a2\u30e0\u30b9\u30c6\u30eb\u30c0\u30e0\u3078\u3088\u3046\u3053\u305d\uff01\u30d3\u30bf\u30fc\u30d0\u30ec\u30f3\u3068\u30c1\u30fc\u30ba\u3068\u30aa\u30ec\u30f3\u30b8\u306e\u56fd\u3001\u30aa\u30e9\u30f3\u30c0\u3078\u3088\u3046\u3053\u305d\uff01']},
+  ko:{v:'ko-KR', dep:['\uc548\ub155\ud788 \uac00\uc138\uc694','\uc5ec\ub7ec\ubd84, \uc990\uac70\uc6b4 \ube44\ud589 \ub418\uc138\uc694!'], arr:['\ud658\uc601\ud569\ub2c8\ub2e4','|\uc554\uc2a4\ud14c\ub974\ub2f4\uc5d0 \uc624\uc2e0 \uac83\uc744 \ud658\uc601\ud569\ub2c8\ub2e4! \ube44\ud130\ubc1c\ub80c, \uce58\uc988, \uc624\ub80c\uc9c0\uc758 \ub098\ub77c \ub124\ub35c\ub780\ub4dc\uc5d0 \uc624\uc2e0 \uac83\uc744 \ud658\uc601\ud569\ub2c8\ub2e4!']},
+  th:{v:'th-TH', dep:['\u0e25\u0e32\u0e01\u0e48\u0e2d\u0e19','\u0e17\u0e38\u0e01\u0e04\u0e19 \u0e40\u0e14\u0e34\u0e19\u0e17\u0e32\u0e07\u0e1b\u0e25\u0e2d\u0e14\u0e20\u0e31\u0e22\u0e19\u0e30!'], arr:['\u0e22\u0e34\u0e19\u0e14\u0e35\u0e15\u0e49\u0e2d\u0e19\u0e23\u0e31\u0e1a','\u0e2a\u0e39\u0e48\u0e2d\u0e31\u0e21\u0e2a\u0e40\u0e15\u0e2d\u0e23\u0e4c\u0e14\u0e31\u0e21! \u0e22\u0e34\u0e19\u0e14\u0e35\u0e15\u0e49\u0e2d\u0e19\u0e23\u0e31\u0e1a\u0e2a\u0e39\u0e48\u0e40\u0e19\u0e40\u0e18\u0e2d\u0e23\u0e4c\u0e41\u0e25\u0e19\u0e14\u0e4c \u0e14\u0e34\u0e19\u0e41\u0e14\u0e19\u0e41\u0e2b\u0e48\u0e07\u0e1a\u0e34\u0e17\u0e40\u0e17\u0e2d\u0e23\u0e4c\u0e1a\u0e32\u0e25\u0e40\u0e25\u0e19 \u0e0a\u0e35\u0e2a \u0e41\u0e25\u0e30\u0e2a\u0e35\u0e2a\u0e49\u0e21!']},
+  id:{v:'id-ID', dep:['Sampai jumpa','semuanya, selamat terbang!'], arr:['Selamat datang','di Amsterdam! Selamat datang di Belanda, negeri bitterballen, keju, dan oranye!']},
+  ms:{v:'ms-MY', dep:['Selamat tinggal','semua, selamat terbang!'], arr:['Selamat datang','ke Amsterdam! Selamat datang ke Belanda, negara bitterballen, keju dan oren!']},
+  vi:{v:'vi-VN', dep:['T\u1ea1m bi\u1ec7t','m\u1ecdi ng\u01b0\u1eddi, ch\u00fac chuy\u1ebfn bay vui v\u1ebb!'], arr:['Ch\u00e0o m\u1eebng','\u0111\u1ebfn Amsterdam! Ch\u00e0o m\u1eebng \u0111\u1ebfn H\u00e0 Lan, x\u1ee9 s\u1edf c\u1ee7a bitterballen, ph\u00f4 mai v\u00e0 m\u00e0u cam!']},
+  sw:{v:'sw-KE', dep:['Kwaherini','nyote, safari njema!'], arr:['Karibuni','Amsterdam! Karibuni Uholanzi, nchi ya bitterballen, jibini na rangi ya chungwa!']},
+};
+// Land (ISO2) -> taal. Niet genoemd = Engels.
+const COUNTRY_LANG = Object.fromEntries((
+  'NL nl,BE nl,SR nl,CW nl,AW nl,BQ nl,SX nl,' +
+  'DE de,AT de,CH de,LI de,FR fr,MC fr,LU fr,SN fr,CI fr,CM fr,ES es,AD es,MX es,AR es,CL es,CO es,PE es,EC es,DO es,CU es,CR es,PA es,UY es,' +
+  'IT it,SM it,VA it,PT pt,BR pt,CV pt,AO pt,PL pl,CZ cs,SK sk,HU hu,RO ro,MD ro,BG bg,GR el,CY el,TR tr,' +
+  'RU ru,BY ru,KZ ru,UA uk,SE sv,NO nb,DK da,FI fi,IS is,EE et,LV lv,LT lt,HR hr,BA hr,RS sr,ME sr,SI sl,AL sq,XK sq,' +
+  'MA ar,DZ ar,TN ar,EG ar,JO ar,LB ar,SA ar,AE ar,QA ar,KW ar,BH ar,OM ar,IL he,IR fa,IN hi,CN zh,HK zh,TW zh,SG en,' +
+  'JP ja,KR ko,TH th,ID id,MY ms,VN vi,KE sw,TZ sw'
+).split(',').map(x => x.split(' ')));
+
+function greetingFor(route){
+  const t = anthemTarget(route);
+  if (!t) return null;
+  const arriving = t.why === 'komt uit';
+  // de welkomstzin noemt Amsterdam, dus alleen bij landingen op Schiphol
+  if (arriving && route.destination?.icao_code !== HOME_ICAO) return null;
+  const lang = COUNTRY_LANG[(t.iso||'').toUpperCase()] || 'en';
+  const g = GREET[lang], [big, rest] = arriving ? g.arr : g.dep;
+  const full = rest.startsWith('|'), restText = full ? rest.slice(1) : rest;
+  return {lang, voice:g.v, big, rest:restText, say: full ? restText : `${big} ${restText}`};
+}
+
+let greetNow = null;
+function showGreeting(route){
+  const g = route ? greetingFor(route) : null;
+  greetNow = g;
+  const big = $('greetBig'), rest = $('greetRest');
+  if (!g){ big.hidden = true; rest.hidden = true; return; }
+  big.textContent = g.big; big.lang = g.lang;
+  $('greetText').textContent = g.rest; $('greetText').lang = g.lang;
+  big.hidden = false; rest.hidden = false;
+}
+function speakGreeting(){
+  if (!greetNow || !window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(greetNow.say);
+  u.lang = greetNow.voice;
+  const pre = greetNow.voice.split('-')[0];
+  const voices = speechSynthesis.getVoices();
+  u.voice = voices.find(v => v.lang.replace('_','-') === greetNow.voice) || voices.find(v => v.lang.startsWith(pre)) || null;
+  u.rate = 0.95;
+  speechSynthesis.speak(u);
+}
+
 function showRoute(p, route){
+  showGreeting(route);
   const el=$('route');
   if (!route){ el.textContent = p.callsign ? 'Route onbekend' : 'Geen vluchtnummer uitgezonden'; $('flag').textContent=''; return; }
   const o=route.origin, d=route.destination, t=anthemTarget(route);
@@ -987,6 +1090,9 @@ function renderMixer(){
 // compatibiliteit met bestaande aanroepen
 function maybePlayAnthem(){ updateMix(); }
 function stopAnthem(){ soundOn = false; updateMix(); }
+
+$('greetPlay').onclick = speakGreeting;
+if (window.speechSynthesis) speechSynthesis.getVoices();   // stemmen alvast laden
 
 /* ---------- Go ---------- */
 requestAnimationFrame(loop);
