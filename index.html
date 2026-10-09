@@ -18,7 +18,25 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--asphalt);color:var(--runway-white);font-family:Barlow,system-ui,sans-serif;font-size:16px;line-height:1.5}
-  main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+  main{max-width:1240px;margin:0 auto;padding:20px 16px 48px}
+  .layout{display:flex;flex-direction:column;gap:22px}
+  .col{display:contents}
+  /* telefoon: vlucht, geluid, land, radar, geschiedenis */
+  .flight{order:1} .sound{order:2} .country{order:3} .radar-box{order:4} .past{order:5}
+  @media (min-width:960px){
+    .top{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);column-gap:32px;align-items:end}
+    .top h1{grid-column:1/-1}
+    .top .controls{grid-column:1/-1}
+    .layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:32px;align-items:start}
+    .col{display:flex;flex-direction:column;gap:22px;min-width:0}
+    .flight .callsign{font-size:clamp(3.4rem,7vw,6.5rem)}
+    .flight .flag{font-size:clamp(2.6rem,5vw,4.5rem)}
+    .sound h2:first-of-type{margin-top:4px}
+  }
+  .layout h2{margin:16px 0 8px}
+  .flight .signs{margin-bottom:12px}
+  .flight .greet-rest{margin:0 0 12px}
+  .country{margin:0!important}
   h1{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:1.25rem;margin:0 0 14px;color:var(--muted);letter-spacing:.02em}
   button,select,input{font:inherit}
   :focus-visible{outline:3px solid var(--sign-yellow);outline-offset:2px}
@@ -32,7 +50,7 @@
   /* Airfield signage: black location sign + yellow direction sign */
   .signs{display:flex;flex-direction:column;gap:0;margin-bottom:22px}
   .sign-loc{background:var(--sign-black);border:4px solid var(--sign-yellow);border-radius:6px 6px 0 0;padding:14px 18px 10px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-height:128px}
-  .callsign{font-family:"Barlow Condensed",sans-serif;font-weight:700;color:var(--sign-yellow);font-size:clamp(3.4rem,15vw,6.5rem);line-height:1;letter-spacing:.01em;word-break:break-all}
+  .callsign{font-family:"Barlow Condensed",sans-serif;font-weight:700;color:var(--sign-yellow);font-size:clamp(2.6rem,12vw,6.5rem);line-height:1;letter-spacing:.01em;overflow-wrap:anywhere;min-width:0}
   .callsign.idle{font-size:clamp(1.8rem,7vw,2.6rem);font-weight:600;line-height:1.15}
   .flag{font-size:clamp(2.6rem,11vw,4.5rem);line-height:1}
   .sign-dir{background:var(--sign-yellow);color:#000;border-radius:0 0 6px 6px;padding:10px 18px;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:clamp(1.3rem,5.5vw,1.9rem);line-height:1.2;display:flex;gap:14px;align-items:center;flex-wrap:wrap;min-height:58px}
@@ -41,8 +59,9 @@
   .greet-rest{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:-10px 0 22px}
   .greet-rest #greetText{flex:1 1 220px;font-family:"Barlow Condensed",sans-serif;font-weight:500;font-size:clamp(1.25rem,5vw,1.7rem);line-height:1.25;unicode-bidi:plaintext}
   .greet-rest .btn{white-space:nowrap}
-  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:2px;margin-top:2px}
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:2px;margin-top:2px}
   .fact{background:var(--asphalt-2);padding:8px 12px}
+  .fact:last-child{grid-column:1/-1}
   .fact dt{color:var(--muted);font-size:.85rem}
   .fact dd{margin:0;font-family:"Barlow Condensed",sans-serif;font-size:1.35rem;font-weight:500}
 
@@ -62,6 +81,19 @@
   ol.history li{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid #3d4043}
   ol.history .cs{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:1.2rem;min-width:90px;color:var(--sign-yellow)}
   ol.history .t{margin-left:auto;color:var(--muted);font-size:.85rem}
+  ol.history li{flex-wrap:wrap}
+  ol.history .pl{flex:1 1 100%;margin:2px 0 0 100px;color:var(--muted);font-size:.85rem}
+  ol.history .pl span{display:block}
+  ol.history .empty,ol.playlist .empty{color:var(--muted)}
+  ol.playlist{list-style:none;margin:0;padding:0;border-top:1px solid #3d4043}
+  ol.playlist li{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid #3d4043}
+  ol.playlist .w{display:flex;gap:10px;align-items:baseline;min-width:0;flex:1}
+  ol.playlist .fl{flex:0 0 1.4em}
+  ol.playlist .tx{min-width:0}
+  ol.playlist b{font-weight:600}
+  ol.playlist small{display:block;color:var(--muted);font-size:.8rem}
+  ol.playlist .t{color:var(--muted);font-size:.85rem;flex:0 0 auto}
+  ol.playlist li:first-child:not(.empty) b{color:var(--sign-yellow)}
   .range{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.9rem;flex:1 1 100%}
   .range input{flex:1;accent-color:var(--sign-yellow)}
   [hidden]{display:none!important}
@@ -71,7 +103,7 @@
   .tabs button[aria-selected="true"]{background:var(--sign-yellow);color:#000}
   .panel{padding-top:12px}
   .ph{font:600 1.25rem/1.2 "Barlow Condensed",sans-serif;margin:14px 0 8px}
-  .panel > .ph:first-child,.art .ph{margin-top:0}
+  .panel > .ph:first-child{margin-top:0}
   .pnote{color:var(--muted);margin:4px 0}
   .psrc{color:var(--muted);font-size:.75rem;margin:8px 0 0}
   .np1{display:flex;gap:12px;align-items:center;color:inherit;text-decoration:none}
@@ -84,22 +116,13 @@
   .pitem{display:flex;flex-direction:column;gap:2px;font-size:.95rem;line-height:1.25}
   .pitem small{color:var(--muted);font-size:.78rem}
   .pthumb{aspect-ratio:1;background:#232527;border-radius:3px;overflow:hidden;margin-bottom:4px;display:grid;place-items:center;font:700 2.2rem 'Barlow Condensed',sans-serif;color:#45484b}
-  .pthumb.wide{aspect-ratio:4/3}
   .pthumb img{width:100%;height:100%;object-fit:cover}
-  .logos .pthumb{background:#f2f2ec;padding:10px;color:#9a9c98}
-  .logos .pthumb img{object-fit:contain}
-  .art{display:grid;grid-template-columns:minmax(0,9rem) 1fr;gap:14px;margin:0 0 16px}
-  .art img{width:100%;border-radius:3px;background:#232527}
-  .pmeta{color:var(--muted);font-size:.85rem;margin:0 0 6px}
-  .pstory{margin:0;font-size:.95rem;line-height:1.5}
-  .pstory a{color:var(--sign-yellow)}
-  @media (max-width:420px){.art{grid-template-columns:1fr}}
-  .modes{display:flex;gap:8px;margin:16px 0 10px}
+  .modes{display:flex;gap:8px;margin:0 0 10px}
   .modes .btn[aria-pressed="true"]{background:var(--sign-yellow);color:#000;border-color:var(--sign-yellow)}
   .custom{display:flex;flex-wrap:wrap;gap:8px;margin:-8px 0 18px}
   .custom input{flex:1 1 240px;background:var(--asphalt-2);color:var(--runway-white);border:1px solid #4a4d50;border-radius:4px;padding:9px 12px;min-height:44px}
   .custom input::placeholder{color:var(--muted)}
-  .here{margin:-8px 0 18px;color:var(--muted);font-size:.9rem}
+  .here{margin:-8px 0 18px;grid-column:1/-1;color:var(--muted);font-size:.9rem}
   .here strong{color:var(--runway-white);font-weight:500}
   .here a{color:var(--sign-yellow)}
   .cfacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:8px 14px;margin:12px 0 0}
@@ -141,6 +164,7 @@
 </head>
 <body>
 <main>
+  <header class="top">
   <h1>Wat vliegt er nu over?</h1>
 
   <div class="controls">
@@ -160,81 +184,92 @@
   </form>
 
   <p class="here" id="hereLine"></p>
+  </header>
 
-  <div class="greet-big" id="greetBig" dir="auto" hidden></div>
-  <section class="signs" aria-live="polite">
-    <div class="sign-loc">
-      <div class="callsign idle" id="callsign">Wachten op een vliegtuig</div>
-      <div class="flag" id="flag" aria-hidden="true"></div>
+  <div class="layout">
+    <div class="col col-left">
+      <section class="flight">
+        <div class="greet-big" id="greetBig" dir="auto" hidden></div>
+        <section class="signs" aria-live="polite">
+          <div class="sign-loc">
+            <div class="callsign idle" id="callsign">Wachten op een vliegtuig</div>
+            <div class="flag" id="flag" aria-hidden="true"></div>
+          </div>
+          <div class="sign-dir" id="route">Kies een plek bij een baan</div>
+        </section>
+        <div class="greet-rest" id="greetRest" hidden>
+          <span id="greetText" dir="auto"></span>
+          <button class="btn" id="greetPlay" type="button">&#128266; Luister</button>
+        </div>
+        <dl class="facts" id="facts" hidden>
+          <div class="fact"><dt>Hoogte</dt><dd id="fAlt">&#8211;</dd></div>
+          <div class="fact"><dt>Boven je</dt><dd id="fEta">&#8211;</dd></div>
+          <div class="fact"><dt>Afstand</dt><dd id="fDist">&#8211;</dd></div>
+          <div class="fact"><dt>Snelheid</dt><dd id="fSpd">&#8211;</dd></div>
+          <div class="fact"><dt>Toestel</dt><dd id="fType">&#8211;</dd></div>
+        </dl>
+      </section>
+
+      <section class="country" id="country" hidden aria-live="polite">
+        <div class="chead">
+          <a id="cLink" target="_blank" rel="noopener"><img id="cImg" alt=""></a>
+          <div class="cinfo">
+            <div class="crole" id="cRole"></div>
+            <div class="cname" id="cName"></div>
+          </div>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Informatie over het land">
+          <button type="button" role="tab" data-tab="land" aria-controls="p-land">Land</button>
+          <button type="button" role="tab" data-tab="muziek" aria-controls="p-muziek">Muziek</button>
+        </div>
+        <div class="panel" id="p-land" role="tabpanel">
+          <div class="demo" id="cDemo">
+            <div class="demo-head"><span>Democratie-index</span><strong id="cScore">&#8211;</strong></div>
+            <div class="ladder"><div class="ladder-fill" id="cBar" style="width:0"></div><i style="left:40%"></i><i style="left:60%"></i><i style="left:80%"></i></div>
+            <div class="demo-cat" id="cCat"></div>
+            <div class="demo-src" id="cSrc"></div>
+          </div>
+          <dl class="cfacts" id="cFacts"></dl>
+        </div>
+        <div class="panel" id="p-muziek" role="tabpanel" hidden></div>
+      </section>
+
+      <section class="radar-box">
+        <div class="radar-wrap">
+          <canvas id="radar" width="700" height="700" aria-label="Kaart met vliegtuigen in de buurt"></canvas>
+          <div class="radar-note">Ringen op 1, 5 en 10 km. Noord is boven.</div>
+        </div>
+        <p class="status" id="status">Nog niet gestart.</p>
+      </section>
     </div>
-    <div class="sign-dir" id="route">Kies een plek bij een baan</div>
-  </section>
-  <div class="greet-rest" id="greetRest" hidden>
-    <span id="greetText" dir="auto"></span>
-    <button class="btn" id="greetPlay" type="button">&#128266; Luister</button>
-  </div>
 
-  <section class="country" id="country" hidden aria-live="polite">
-    <div class="chead">
-      <a id="cLink" target="_blank" rel="noopener"><img id="cImg" alt=""></a>
-      <div class="cinfo">
-        <div class="crole" id="cRole"></div>
-        <div class="cname" id="cName"></div>
-      </div>
+    <div class="col col-right">
+      <section class="sound">
+        <div class="modes" role="group" aria-label="Geluid">
+          <button type="button" class="btn" data-mode="anthem" aria-pressed="true">Volksliederen</button>
+          <button type="button" class="btn" data-mode="radio" aria-pressed="false">Radio</button>
+        </div>
+        <div class="anthem">
+          <div class="title" id="anthemTitle">Zet geluid aan: de volksliederen van alle vliegtuigen in de buurt worden gemixt, het dichtstbijzijnde het hardst.</div>
+          <button class="btn" id="play" type="button" hidden>Speel volkslied</button>
+          <button class="btn" id="stop" type="button" hidden>Stop</button>
+        </div>
+        <a class="onair" id="onair" target="_blank" rel="noopener" hidden>
+          <span class="onair-icon" id="onairIcon" aria-hidden="true"></span>
+          <span class="onair-text"><small>Nu op de radio</small><strong id="onairName"></strong><span class="onair-song" id="onairSong" hidden></span><span id="onairCountry"></span></span>
+        </a>
+        <div class="mixer" id="mixer" aria-label="Mixer"></div>
+        <audio id="audio" preload="none"></audio>
+        <h2>Speellijst</h2>
+        <ol class="playlist" id="playlist"><li class="empty">Nog niets afgespeeld. Zet het geluid aan.</li></ol>
+      </section>
+
+      <section class="past">
+        <h2>Eerder overgekomen</h2>
+        <ol class="history" id="history"><li class="empty">Nog niets.</li></ol>
+      </section>
     </div>
-    <div class="tabs" role="tablist" aria-label="Informatie over het land">
-      <button type="button" role="tab" data-tab="land" aria-controls="p-land">Land</button>
-      <button type="button" role="tab" data-tab="muziek" aria-controls="p-muziek">Muziek</button>
-      <button type="button" role="tab" data-tab="kunst" aria-controls="p-kunst">Kunst</button>
-      <button type="button" role="tab" data-tab="autos" aria-controls="p-autos">Auto&#39;s</button>
-    </div>
-    <div class="panel" id="p-land" role="tabpanel">
-      <div class="demo" id="cDemo">
-        <div class="demo-head"><span>Democratie-index</span><strong id="cScore">&#8211;</strong></div>
-        <div class="ladder"><div class="ladder-fill" id="cBar" style="width:0"></div><i style="left:40%"></i><i style="left:60%"></i><i style="left:80%"></i></div>
-        <div class="demo-cat" id="cCat"></div>
-        <div class="demo-src" id="cSrc"></div>
-      </div>
-      <dl class="cfacts" id="cFacts"></dl>
-    </div>
-    <div class="panel" id="p-muziek" role="tabpanel" hidden></div>
-    <div class="panel" id="p-kunst" role="tabpanel" hidden></div>
-    <div class="panel" id="p-autos" role="tabpanel" hidden></div>
-  </section>
-
-  <dl class="facts" id="facts" hidden>
-    <div class="fact"><dt>Hoogte</dt><dd id="fAlt">&#8211;</dd></div>
-    <div class="fact"><dt>Boven je</dt><dd id="fEta">&#8211;</dd></div>
-    <div class="fact"><dt>Afstand</dt><dd id="fDist">&#8211;</dd></div>
-    <div class="fact"><dt>Snelheid</dt><dd id="fSpd">&#8211;</dd></div>
-    <div class="fact"><dt>Toestel</dt><dd id="fType">&#8211;</dd></div>
-  </dl>
-
-  <div class="modes" role="group" aria-label="Geluid">
-    <button type="button" class="btn" data-mode="anthem" aria-pressed="true">Volksliederen</button>
-    <button type="button" class="btn" data-mode="radio" aria-pressed="false">Radio</button>
   </div>
-  <div class="anthem">
-    <div class="title" id="anthemTitle">Zet geluid aan: de volksliederen van alle vliegtuigen in de buurt worden gemixt, het dichtstbijzijnde het hardst.</div>
-    <button class="btn" id="play" type="button" hidden>Speel volkslied</button>
-    <button class="btn" id="stop" type="button" hidden>Stop</button>
-  </div>
-  <a class="onair" id="onair" target="_blank" rel="noopener" hidden>
-    <span class="onair-icon" id="onairIcon" aria-hidden="true"></span>
-    <span class="onair-text"><small>Nu op de radio</small><strong id="onairName"></strong><span class="onair-song" id="onairSong" hidden></span><span id="onairCountry"></span></span>
-  </a>
-  <div class="mixer" id="mixer" aria-label="Mixer"></div>
-  <audio id="audio" preload="none"></audio>
-
-  <div class="radar-wrap">
-    <canvas id="radar" width="700" height="700" aria-label="Kaart met vliegtuigen in de buurt"></canvas>
-    <div class="radar-note">Ringen op 1, 5 en 10 km. Noord is boven.</div>
-  </div>
-
-  <p class="status" id="status">Nog niet gestart.</p>
-
-  <h2>Eerder overgekomen</h2>
-  <ol class="history" id="history"><li style="color:var(--muted)">Nog niets.</li></ol>
 </main>
 
 <script>
@@ -730,7 +765,7 @@ function renderFacts(f, bm, wb, fx){
 
 
 /* ---------- Tabbladen op de landkaart: Land / Muziek / Kunst / Auto's ---------- */
-const TABS = ['land', 'muziek', 'kunst', 'autos'];
+const TABS = ['land', 'muziek'];
 let activeTab = 'land', tabISO = null, tabInfo = null;
 try { const t = localStorage.getItem('flyTab'); if (TABS.includes(t)) activeTab = t; } catch(e){}
 const tabCache = new Map();          // `${tab}:${ISO}` -> Promise<data>
@@ -759,12 +794,12 @@ function initTabs(){
 function setTabCountry(ISO, info){
   if (tabISO === ISO) return;
   tabISO = ISO; tabInfo = info;
-  ['muziek','kunst','autos'].forEach(t => { $('p-' + t).innerHTML = ''; $('p-' + t).dataset.iso = ''; });
+  ['muziek'].forEach(t => { $('p-' + t).innerHTML = ''; $('p-' + t).dataset.iso = ''; });
   if (activeTab !== 'land') loadTab(activeTab, ISO, info);
 }
 
-const LOADERS = {muziek: loadMusic, kunst: loadArt, autos: loadCars};
-const RENDER  = {muziek: renderMusic, kunst: renderArt, autos: renderCars};
+const LOADERS = {muziek: loadMusic};
+const RENDER  = {muziek: renderMusic};
 async function loadTab(tab, ISO, info){
   const panel = $('p-' + tab);
   if (panel.dataset.iso === ISO) return;                 // staat er al
@@ -844,113 +879,6 @@ function renderMusic(panel, d, info){
     panel.append(g);
     srcLine(panel, 'Bron: Wikidata, gesorteerd op bekendheid (aantal Wikipedia-talen)');
   }
-}
-
-/* --- Kunst: beroemde werken met kort verhaal (Wikidata + Wikipedia) --- */
-async function wikiSummary(nlUrl, enUrl){
-  for (const u of [nlUrl, enUrl]){
-    if (!u) continue;
-    const m = u.match(/^https:\/\/(nl|en)\.wikipedia\.org\/wiki\/(.+)$/);
-    if (!m) continue;
-    try {
-      const j = await getJSON(`https://${m[1]}.wikipedia.org/api/rest_v1/page/summary/${m[2]}`);
-      if (j?.extract) return {text: j.extract, url: u};
-    } catch(e){}
-  }
-  return null;
-}
-function shortStory(t, max = 320){
-  if (t.length <= max) return t;
-  const cut = t.slice(0, max), dot = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '));
-  return dot > 120 ? cut.slice(0, dot + 1) : cut.replace(/\s+\S*$/, '') + '\u2026';
-}
-async function loadArt(ISO){
-  const rows = await sparql(`SELECT ?w ?wLabel ?img ?creatorLabel ?incep ?locLabel ?nl ?en ?sl WHERE {
-    ${COUNTRY(ISO)}
-    VALUES ?type { wd:Q3305213 wd:Q860861 }
-    ?w wdt:P31 ?type ; (wdt:P17|wdt:P495) ?c ; wikibase:sitelinks ?sl .
-    FILTER(?sl > 8)
-    OPTIONAL { ?w wdt:P18 ?img } OPTIONAL { ?w wdt:P170 ?creator } OPTIONAL { ?w wdt:P571 ?incep }
-    OPTIONAL { ?w wdt:P276 ?loc }
-    OPTIONAL { ?nl schema:about ?w ; schema:isPartOf <https://nl.wikipedia.org/> }
-    OPTIONAL { ?en schema:about ?w ; schema:isPartOf <https://en.wikipedia.org/> }
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en". }
-  } ORDER BY DESC(?sl) LIMIT 30`);
-  const works = uniqBy(rows, 'w').slice(0, 3);
-  if (!works.length) return [];
-  return Promise.all(works.map(async r => ({
-    title: val(r, 'wLabel'), creator: val(r, 'creatorLabel'), year: yearOf(val(r, 'incep')),
-    place: val(r, 'locLabel'), img: commonsThumb(val(r, 'img'), 640),
-    story: await wikiSummary(val(r, 'nl'), val(r, 'en')),
-  })));
-}
-function renderArt(panel, works, info){
-  const land = info?.name || 'dit land';
-  if (!works){ emptyLine(panel, 'Kunstinfo kon niet worden geladen.'); return; }
-  if (!works.length){ emptyLine(panel, `Geen bekende kunstwerken gevonden voor ${land}.`); return; }
-  works.forEach(w => {
-    const card = el('article', 'art');
-    if (w.img){ const i = el('img'); i.src = w.img; i.alt = w.title; i.loading = 'lazy'; card.append(i); }
-    const body = el('div');
-    body.append(el('h3', 'ph', w.title));
-    const meta = [w.creator, w.year, w.place].filter(Boolean).join(' \u00b7 ');
-    if (meta) body.append(el('p', 'pmeta', meta));
-    if (w.story){
-      const p = el('p', 'pstory', shortStory(w.story.text) + ' ');
-      const a = el('a', null, 'Lees verder'); a.href = w.story.url; a.target = '_blank'; a.rel = 'noopener';
-      p.append(a); body.append(p);
-    }
-    card.append(body); panel.append(card);
-  });
-  srcLine(panel, 'Bron: Wikidata en Wikipedia');
-}
-
-/* --- Auto's: merken en bekendste modellen (Wikidata) --- */
-async function loadCars(ISO){
-  const brands = sparql(`SELECT ?m ?mLabel ?logo ?incep ?sl WHERE {
-    ${COUNTRY(ISO)}
-    { ?m wdt:P31 wd:Q786820 } UNION { ?m wdt:P31 ?t . ?t wdt:P279 wd:Q786820 }
-    ?m wdt:P17 ?c ; wikibase:sitelinks ?sl .
-    FILTER NOT EXISTS { ?m wdt:P576 ?dissolved }
-    OPTIONAL { ?m wdt:P154 ?logo } OPTIONAL { ?m wdt:P571 ?incep }
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en". }
-  } ORDER BY DESC(?sl) LIMIT 20`).then(r => uniqBy(r, 'm').slice(0, 8)).catch(() => null);
-  const models = sparql(`SELECT ?x ?xLabel ?mLabel ?img ?sl WHERE {
-    ${COUNTRY(ISO)}
-    ?m wdt:P31 wd:Q786820 ; wdt:P17 ?c .
-    ?x wdt:P31 wd:Q3231690 ; wdt:P176 ?m ; wikibase:sitelinks ?sl .
-    OPTIONAL { ?x wdt:P18 ?img }
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en". }
-  } ORDER BY DESC(?sl) LIMIT 15`).then(r => uniqBy(r, 'x').slice(0, 5)).catch(() => null);
-  const [b, m] = await Promise.all([brands, models]);
-  return (b || m) ? {brands: b || [], models: m || []} : null;
-}
-function renderCars(panel, d, info){
-  const land = info?.name || 'dit land';
-  if (!d){ emptyLine(panel, 'Auto-info kon niet worden geladen.'); return; }
-  if (!d.brands.length && !d.models.length){ emptyLine(panel, `Geen automerken gevonden uit ${land}.`); return; }
-  if (d.brands.length){
-    panel.append(el('h3', 'ph', `Automerken uit ${land}`));
-    const g = el('div', 'pgrid logos');
-    d.brands.forEach(r => {
-      const item = el('div', 'pitem');
-      item.append(thumbBox(commonsThumb(val(r, 'logo'), 200), val(r, 'mLabel')), el('strong', null, val(r, 'mLabel')));
-      if (val(r, 'incep')) item.append(el('small', null, `sinds ${yearOf(val(r, 'incep'))}`));
-      g.append(item);
-    });
-    panel.append(g);
-  }
-  if (d.models.length){
-    panel.append(el('h3', 'ph', 'Bekendste modellen'));
-    const g = el('div', 'pgrid');
-    d.models.forEach(r => {
-      const item = el('div', 'pitem');
-      item.append(thumbBox(commonsThumb(val(r, 'img'), 320), val(r, 'xLabel'), 'pthumb wide'), el('strong', null, val(r, 'xLabel')), el('small', null, val(r, 'mLabel')));
-      g.append(item);
-    });
-    panel.append(g);
-  }
-  srcLine(panel, 'Bron: Wikidata, gesorteerd op bekendheid (aantal Wikipedia-talen)');
 }
 
 async function showCountry(t, hex){
@@ -1165,16 +1093,77 @@ function showRoute(p, route){
 function addHistory(p, route){
   const t=anthemTarget(route);
   const prev = history.findIndex(h => h.hex === p.hex);
+  const played = prev >= 0 ? history[prev].played : [];
   if (prev >= 0) history.splice(prev, 1);
-  history.unshift({hex:p.hex, cs:p.callsign||p.hex, flag:flagOf(t?.iso), where: route ? `${route.origin?.municipality||'?'} \u2192 ${route.destination?.municipality||'?'}` : 'Route onbekend', time:new Date()});
+  history.unshift({hex:p.hex, cs:p.callsign||p.hex, flag:flagOf(t?.iso), where: route ? `${route.origin?.municipality||'?'} \u2192 ${route.destination?.municipality||'?'}` : 'Route onbekend', time:new Date(), played});
   history.length = Math.min(history.length, 8);
+  renderHistory();
+}
+function renderHistory(){
   const ol=$('history'); ol.innerHTML='';
+  if (!history.length){ ol.append(el('li', 'empty', 'Nog niets.')); return; }
   history.forEach(h=>{
     const li=document.createElement('li');
     li.innerHTML=`<span class="cs"></span><span class="w"></span><span class="t"></span>`;
     li.querySelector('.cs').textContent=h.cs;
     li.querySelector('.w').textContent=`${h.flag} ${h.where}`;
-    li.querySelector('.t').textContent=h.time.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+    li.querySelector('.t').textContent=hhmm(h.time);
+    if (h.played?.length){
+      const pl = el('div', 'pl');
+      h.played.forEach(x => pl.append(el('span', null, `\u266a ${x}`)));
+      li.append(pl);
+    }
+    ol.append(li);
+  });
+}
+
+/* ---------- Speellijst: wat er is afgespeeld ----------
+   Elk nieuw nummer, elke zenderwissel en elk volkslied komt in de speellijst
+   (rechterkolom) en wordt gekoppeld aan het vliegtuig dat op dat moment de dj
+   was, zodat je het bij "Eerder overgekomen" terugziet. */
+const playLog = [];
+const lastPlayKey = {};
+function logPlay(e){
+  if (lastPlayKey[e.kind] === e.key) return;
+  lastPlayKey[e.kind] = e.key;
+  e.time = new Date();
+  playLog.unshift(e);
+  playLog.length = Math.min(playLog.length, 40);
+  renderPlaylist();
+  // koppelen aan het vliegtuig op het bord, anders aan het laatst overgekomen toestel
+  const h = history.find(x => x.hex === current) || history[0];
+  if (h){
+    h.played = h.played || [];
+    const txt = playText(e);
+    if (!h.played.includes(txt)){ h.played.unshift(txt); h.played.length = Math.min(h.played.length, 3); renderHistory(); }
+  }
+}
+function playText(e){
+  if (e.kind === 'song') return e.artist && e.song ? `${e.song} \u00b7 ${e.artist}` : e.title;
+  if (e.kind === 'station') return `${e.station} (radio)`;
+  return `Volkslied van ${e.country}`;
+}
+const hhmm = d => d.toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'});
+function renderPlaylist(){
+  const ol = $('playlist'); ol.innerHTML = '';
+  if (!playLog.length){ const li = el('li', 'empty', 'Nog niets afgespeeld. Zet het geluid aan.'); ol.append(li); return; }
+  playLog.slice(0, 10).forEach(e => {
+    const li = el('li', 'pl-' + e.kind);
+    const what = el('span', 'w');
+    what.append(el('span', 'fl', flagOf(e.iso) || '\u266a'));
+    const tx = el('span', 'tx');
+    if (e.kind === 'song'){
+      tx.append(el('b', null, e.song || e.title));
+      if (e.artist) tx.append(document.createTextNode(` \u00b7 ${e.artist}`));
+      tx.append(el('small', null, e.station));
+    } else if (e.kind === 'station'){
+      tx.append(document.createTextNode('Overgeschakeld naar '), el('b', null, e.station));
+      tx.append(el('small', null, e.country));
+    } else {
+      tx.append(document.createTextNode('Volkslied van '), el('b', null, e.country));
+    }
+    what.append(tx);
+    li.append(what, el('span', 't', hhmm(e.time)));
     ol.append(li);
   });
 }
@@ -1554,6 +1543,10 @@ function renderMixer(){
   const rows = set.filter(d=>d.country).sort((a,b)=>b.target-a.target);
   box.innerHTML = '';
   renderOnAir(radio && soundOn ? rows.find(d => d.label && !d.missing) : null);
+  if (!radio && soundOn){
+    const lead = rows.find(d => !d.missing && d.el.src && !d.el.paused && d.target > 0.3);
+    if (lead) logPlay({kind:'anthem', key:lead.country, country:lead.country, iso:lead.iso});
+  }
   if (!soundOn || !rows.length) return;
   rows.forEach(d => {
     const r = document.createElement('div'); r.className = 'mix-row';
@@ -1584,6 +1577,7 @@ function renderOnAir(d){
   else ic.textContent = d.label.charAt(0);
   if (d.home) box.href = d.home; else box.removeAttribute('href');
   onAirUuid = d.uuid || '';
+  logPlay({kind:'station', key:key, station:d.label, country:d.country, iso:d.iso});
   showSong(null);
   fetchSong();                                   // nieuwe zender: meteen vragen wat er speelt
 }
@@ -1607,7 +1601,11 @@ async function fetchSong(){
   try {
     const r = await fetch(`proxy.php?icy=${encodeURIComponent(uuid)}`, {cache:'no-store'});
     const j = r.ok ? await r.json() : null;
-    if (my === songReq && uuid === onAirUuid) showSong(j);
+    if (my === songReq && uuid === onAirUuid){
+      showSong(j);
+      const st = radioDecks.find(d => d.uuid === uuid);
+      if (j?.title) logPlay({kind:'song', key:uuid + '|' + j.title, title:j.title, artist:j.artist, song:j.song, station:st?.label || '', country:st?.country, iso:st?.iso});
+    }
   } catch(e){}
   if (my === songReq) songTimer = setTimeout(fetchSong, 20000);
 }
