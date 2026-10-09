@@ -65,6 +65,7 @@ Let op: fodis.nl is een WordPress-site van het bedrijf. `public_html` in de thui
   - **Speellijst:** met een afspeelknop kies je zelf een zender en staat de dj uit; "Terug naar live" zet hem weer aan.
 - **Menu** bovenin: RADIO en DISCOVER (/dj-vliegtuig-discovery/), met slogan per taal (`tagRadio`, `tagDiscover`).
 - **Delen** (`shareLink`, `applyShared`): knop "Deel" maakt een link met `spot=<baankop-id>` of `at=lat,lon` (~100 m) plus `name`, `r`, `mode` (radio/anthem) en `genre`. Een gedeelde link gaat voor op opgeslagen instellingen.
+- **Banen op de radar:** elke baankop is een stip met de kopnaam en is klikbaar (`radarHits`, klik → `selectSpot`). **In gebruik** (`trackRunways`, elke seconde): kwam er de laatste 10 minuten een toestel onder 2500 ft binnen 1,5 km over de kop, in de lijn van de baan, dan is de stip geel en staat er "in gebruik" achter de baan in de keuzelijst. Vertrekkers die over de andere kop klimmen tellen ook mee voor die kop.
 - **Layout:** linkerkolom vlucht, radar, landinfo (radar boven de landinfo).
 - **Groet:** bij vertrek "Doei allemaal, goede vlucht!" in de taal van de bestemming (`GREET`, 41 talen). Bij landing "Welkom in <plaats>!" in de taal van het vliegtuig, plus een zin over het land van de luchthaven (`HOSTS`, 44 landen) in de taal van de app. Voorlezen via de spraak van de browser.
 

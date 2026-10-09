@@ -261,7 +261,7 @@
       <section class="radar-box">
         <div class="radar-wrap">
           <canvas id="radar" width="700" height="700" data-i18n-attr="aria-label:radarAria"></canvas>
-          <div class="radar-note" data-i18n="radarNote">Ringen op 1, 5 en 10 km. Noord is boven.</div>
+          <div class="radar-note" data-i18n="radarNote">Ringen op 1, 5 en 10 km. Noord is boven. Tik op een baankop om erheen te gaan; geel = in gebruik.</div>
         </div>
         <p class="status" id="status" data-i18n="notStarted">Nog niet gestart.</p>
       </section>
@@ -344,7 +344,7 @@ const I18N = {
     waiting:'Wachten op een vliegtuig', pickRunway:'Kies een plek bij een baan', listen:'Luister',
     alt:'Hoogte', overYou:'Boven je', dist:'Afstand', speed:'Snelheid', aircraft:'Toestel',
     countryInfo:'Informatie over het land', tabLand:'Land', tabMusic:'Muziek', demoIndex:'Democratie-index',
-    radarAria:'Kaart met vliegtuigen in de buurt', radarNote:'Ringen op 1, 5 en 10 km. Noord is boven.', notStarted:'Nog niet gestart.',
+    radarAria:'Kaart met vliegtuigen in de buurt', radarNote:'Ringen op 1, 5 en 10 km. Noord is boven. Tik op een baankop om erheen te gaan; geel = in gebruik.', inUse:'in gebruik', notStarted:'Nog niet gestart.',
     sound:'Geluid', iLove:'Ik houd van:', genreAria:'Genre van de radiozender',
     g_popular:'Populairste zender', g_pop:'Pop', g_rock:'Rock', g_folk:'Folk', g_jazz:'Jazz', g_classical:'Klassiek', g_dance:'Dance', g_hiphop:'Hiphop', g_oldies:'Oldies', g_news:'Nieuws',
     playAnthem:'Speel volkslied', stop:'Stop', backLive:'Terug naar live', backLiveSub:'DJ Vliegtuig neemt het weer over',
@@ -394,7 +394,7 @@ const I18N = {
     waiting:'Waiting for a plane', pickRunway:'Choose a spot near a runway', listen:'Listen',
     alt:'Altitude', overYou:'Overhead', dist:'Distance', speed:'Speed', aircraft:'Aircraft',
     countryInfo:'About the country', tabLand:'Country', tabMusic:'Music', demoIndex:'Democracy index',
-    radarAria:'Map of nearby aircraft', radarNote:'Rings at 1, 5 and 10 km. North is up.', notStarted:'Not started yet.',
+    radarAria:'Map of nearby aircraft', radarNote:'Rings at 1, 5 and 10 km. North is up. Tap a runway end to go there; yellow = in use.', inUse:'in use', notStarted:'Not started yet.',
     sound:'Sound', iLove:'I love:', genreAria:'Radio station genre',
     g_popular:'Most popular station', g_pop:'Pop', g_rock:'Rock', g_folk:'Folk', g_jazz:'Jazz', g_classical:'Classical', g_dance:'Dance', g_hiphop:'Hip-hop', g_oldies:'Oldies', g_news:'News',
     playAnthem:'Play anthem', stop:'Stop', backLive:'Back to live', backLiveSub:'DJ Vliegtuig takes over again',
@@ -444,7 +444,7 @@ const I18N = {
     waiting:'Warten auf ein Flugzeug', pickRunway:'W\u00e4hle einen Ort an einer Bahn', listen:'Anh\u00f6ren',
     alt:'H\u00f6he', overYou:'\u00dcber dir', dist:'Entfernung', speed:'Geschwindigkeit', aircraft:'Flugzeug',
     countryInfo:'Infos zum Land', tabLand:'Land', tabMusic:'Musik', demoIndex:'Demokratieindex',
-    radarAria:'Karte mit Flugzeugen in der N\u00e4he', radarNote:'Ringe bei 1, 5 und 10 km. Norden ist oben.', notStarted:'Noch nicht gestartet.',
+    radarAria:'Karte mit Flugzeugen in der N\u00e4he', radarNote:'Ringe bei 1, 5 und 10 km. Norden ist oben. Tippe auf ein Bahnende, um dorthin zu wechseln; gelb = in Betrieb.', inUse:'in Betrieb', notStarted:'Noch nicht gestartet.',
     sound:'Ton', iLove:'Ich liebe:', genreAria:'Genre des Radiosenders',
     g_popular:'Beliebtester Sender', g_pop:'Pop', g_rock:'Rock', g_folk:'Folk', g_jazz:'Jazz', g_classical:'Klassik', g_dance:'Dance', g_hiphop:'Hip-Hop', g_oldies:'Oldies', g_news:'Nachrichten',
     playAnthem:'Hymne abspielen', stop:'Stopp', backLive:'Zur\u00fcck zu live', backLiveSub:'DJ Vliegtuig \u00fcbernimmt wieder',
@@ -1644,6 +1644,26 @@ function drawReference(ctx, C, scale, maxKm){
   }
   ctx.restore();
 
+  // baankoppen: klikbaar; geel = in gebruik (de laatste 10 minuten kwam er een toestel laag overheen)
+  radarHits = [];
+  const nowMs = Date.now();
+  ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const sp of SPOTS){
+    if (Math.abs(sp.lat - here.lat) > 0.3 || Math.abs(sp.lon - here.lon) > 0.5) continue;
+    const [x, y, d] = toXY(sp.lat, sp.lon);
+    if (d > maxKm || !inside(x, y)) continue;
+    const act = nowMs - (rwyActive.get(sp.id) || 0) < ACTIVE_MS, sel = here.id === sp.id;
+    const b = Math.atan2(sp.ux, sp.uy), lx = x + Math.sin(b) * 22, ly = y - Math.cos(b) * 22;   // label iets naar buiten
+    ctx.fillStyle = act ? '#ffc20e' : '#2d3033';
+    ctx.strokeStyle = sel ? '#f2f2ec' : act ? '#ffc20e' : '#6f726e'; ctx.lineWidth = sel ? 3 : 1.5;
+    ctx.beginPath(); ctx.arc(x, y, act ? 7 : 5.5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.font = `${act || sel ? 700 : 600} 17px "Barlow Condensed", sans-serif`;
+    ctx.fillStyle = act ? '#ffc20e' : sel ? '#f2f2ec' : 'rgba(242,242,236,.55)';
+    ctx.fillText(sp.end, lx, ly);
+    radarHits.push({x, y, lx, ly, id: sp.id});
+  }
+  ctx.restore();
+
   // plaatsnamen: grote plaatsen eerst, geen overlappende labels
   placesAround(here.lat, here.lon);
   const list = (places || PLACES_FALLBACK)
@@ -1731,6 +1751,54 @@ function render(){
 }
 
 function loop(){ render(); requestAnimationFrame(loop); }
+
+/* ---------- Welke baan is in gebruik? ----------
+   Een baankop telt als "in gebruik" als er de laatste 10 minuten een toestel laag
+   (onder 2500 ft) binnen 1,5 km overheen vloog, in de richting van de baan. */
+const ACTIVE_MS = 10 * 60 * 1000;
+const rwyActive = new Map();          // spot-id -> laatste keer dat er een toestel overheen kwam
+let radarHits = [];
+SPOTS.forEach(sp => {                 // richting van de baan als eenheidsvector (oost, noord)
+  const ap = SPOTS.find(o => o !== sp && o.ap === sp.ap && o.rw === sp.rw);
+  const b = ap ? bearing(ap.lat, ap.lon, sp.lat, sp.lon) : 0;
+  sp.ux = Math.sin(b); sp.uy = Math.cos(b);
+});
+function trackRunways(){
+  const now = Date.now();
+  for (const p of lastPlanes){
+    if (!(p.alt > 0 && p.alt < 2500) || !(p.gs > 60) || p.track == null) continue;
+    const tr = p.track * Math.PI / 180, tx = Math.sin(tr), ty = Math.cos(tr);
+    for (const sp of SPOTS){
+      if (Math.abs(sp.lat - p.lat) > 0.03 || Math.abs(sp.lon - p.lon) > 0.05) continue;
+      if (distKm(p.lat, p.lon, sp.lat, sp.lon) > 1.5) continue;
+      if (Math.abs(tx * sp.ux + ty * sp.uy) < 0.9) continue;      // niet in de lijn van de baan
+      rwyActive.set(sp.id, now);
+    }
+  }
+  // in de keuzelijst: "in gebruik" achter de banen die nu gebruikt worden
+  for (const o of runSel.options){
+    const sp = SPOTS.find(x => x.id === o.value); if (!sp) continue;
+    const txt = now - (rwyActive.get(sp.id) || 0) < ACTIVE_MS ? `${sp.name} \u00b7 ${t('inUse')}` : sp.name;
+    if (o.textContent !== txt) o.textContent = txt;
+  }
+}
+setInterval(trackRunways, 1000);
+{ // tik of klik op een baankop op de radar: daarheen
+  const cv = $('radar');
+  const hitAt = e => {
+    const r = cv.getBoundingClientRect(), k = cv.width / r.width;
+    const x = (e.clientX - r.left) * k, y = (e.clientY - r.top) * k;
+    let best = null, bd = 30;
+    for (const h of radarHits){
+      const d = Math.min(Math.hypot(h.x - x, h.y - y), Math.hypot(h.lx - x, h.ly - y));
+      if (d < bd){ bd = d; best = h; }
+    }
+    return best;
+  };
+  cv.addEventListener('click', e => { const h = hitAt(e); if (h && h.id !== here.id) selectSpot(h.id); });
+  cv.addEventListener('mousemove', e => { cv.style.cursor = hitAt(e) ? 'pointer' : ''; });
+}
+
 
 /* ---------- Volkslied via Wikimedia Commons ---------- */
 async function findAnthem(country){
