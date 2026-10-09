@@ -237,13 +237,22 @@
 
 <script>
 /* ---------- Config ---------- */
-// Co\u00f6rdinaten zijn benaderingen van plekken bij de baankoppen.
+// 100 m voorbij elke baankop, op het verlengde van de middenlijn: daar komen
+// landende toestellen laag binnen en vertrekkende toestellen laag over.
+// Berekend uit de baankop-coordinaten van OurAirports.
 const SPOTS = [
-  {id:'polderbaan', name:'Polderbaan noord (18R/36L)', lat:52.3600, lon:4.7115},
-  {id:'zwanenburg', name:'Zwanenburgbaan noord (18C/36C)', lat:52.3340, lon:4.7400},
-  {id:'aalsmeer',   name:'Aalsmeerbaan zuid (18L/36R)',    lat:52.2860, lon:4.7770},
-  {id:'kaag',       name:'Kaagbaan zuidwest (06/24)',      lat:52.2850, lon:4.7280},
-  {id:'buitenv',    name:'Buitenveldertbaan oost (09/27)', lat:52.3185, lon:4.8030},
+  {id:'polderbaan-18r', name:'Polderbaan noord (kop 18R)', lat:52.36360, lon:4.71201},
+  {id:'polderbaan-36l', name:'Polderbaan zuid (kop 36L)', lat:52.32770, lon:4.70876},
+  {id:'zwanenburgbaan-18c', name:'Zwanenburgbaan noord (kop 18C)', lat:52.33230, lon:4.74011},
+  {id:'zwanenburgbaan-36c', name:'Zwanenburgbaan zuid (kop 36C)', lat:52.30090, lon:4.73742},
+  {id:'aalsmeerbaan-18l', name:'Aalsmeerbaan noord (kop 18L)', lat:52.32220, lon:4.78004},
+  {id:'aalsmeerbaan-36r', name:'Aalsmeerbaan zuid (kop 36R)', lat:52.28990, lon:4.77727},
+  {id:'kaagbaan-06', name:'Kaagbaan zuidwest (kop 06)', lat:52.28742, lon:4.73277},
+  {id:'kaagbaan-24', name:'Kaagbaan noordoost (kop 24)', lat:52.30508, lon:4.77877},
+  {id:'buitenveldertbaan-09', name:'Buitenveldertbaan west (kop 09)', lat:52.31655, lon:4.74488},
+  {id:'buitenveldertbaan-27', name:'Buitenveldertbaan oost (kop 27)', lat:52.31845, lon:4.79836},
+  {id:'oostbaan-04', name:'Oostbaan zuidwest (kop 04)', lat:52.29972, lon:4.78251},
+  {id:'oostbaan-22', name:'Oostbaan noordoost (kop 22)', lat:52.31467, lon:4.80399},
 ];
 const FEEDS = [
   (lat,lon,nm)=>`https://api.adsb.lol/v2/point/${lat}/${lon}/${nm}`,
@@ -362,7 +371,7 @@ function useGps(){
     showHere();
     spotSel.value = 'gps'; current = null;
     if (!timer) startPolling(); else tick();
-  }, () => fallback('Locatie niet beschikbaar (geen toestemming?). Polderbaan gekozen; kies zelf een plek in de lijst.'),
+  }, () => fallback('Locatie niet beschikbaar (geen toestemming?). Polderbaan noord gekozen; kies zelf een plek in de lijst.'),
   {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
 }
 
