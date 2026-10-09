@@ -1807,9 +1807,9 @@ function unlockAudio(){                       // moet binnen een tik/klik gebeur
 
 function setLevel(d, v){
   d.level = v;
-  if (d.wa && useWA){ d.gain.gain.setTargetAtTime(v, ac.currentTime, 0.35); return; }   // vloeiend naar het doel
+  if (d.wa && useWA){ d.gain.gain.setTargetAtTime(v, ac.currentTime, 0.8); return; }    // vloeiend naar het doel (~2,5 s)
   if (!CAN_VOLUME) return;                                                               // iOS: aan/uit
-  const next = d.el.volume + (v - d.el.volume) * 0.3;                                    // ~3 s fade bij 4 stappen/s
+  const next = d.el.volume + Math.max(-0.05, Math.min(0.05, (v - d.el.volume) * 0.3));  // rustig: hooguit 20% per seconde
   d.el.volume = Math.min(1, Math.max(0, Math.abs(next - v) < 0.01 ? v : next));
 }
 function releaseDeck(d){
@@ -1959,6 +1959,15 @@ function updateMix(){
   if (soundOn && lastLead){
     const cur = byCountry.get(lastLead.country);
     if (!cur || cur.w < HOLD_LEVEL) byCountry.set(lastLead.country, {...lastLead, w: HOLD_LEVEL, held: !cur || cur.w < 0.35});
+    // Overgang: is het dj-toestel weg en nadert een nieuw toestel je straal, dan zakt de dj
+    // geleidelijk van 80% naar 50% en komt het nieuwe land op van 0 naar 50%. Bij binnenkomst
+    // neemt het nieuwe land het over (en gaat het rustig door naar 80%).
+    const leadC = byCountry.get(lastLead.country);
+    if (leadC.held){
+      let p = 0;
+      byCountry.forEach(c => { if (c !== leadC){ c.w = 0.5 * Math.min(1, c.w / 0.35); p = Math.max(p, c.w / 0.5); } });
+      leadC.w = HOLD_LEVEL - (HOLD_LEVEL - 0.5) * p;
+    }
   }
 
   const pool = soundMode === 'radio' && !CAN_VOLUME ? 1 : POOL;
