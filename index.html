@@ -25,7 +25,6 @@
   .flight{order:1} .sound{order:2} .country{order:3} .radar-box{order:4} .past{order:5}
   @media (min-width:960px){
     .top{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);column-gap:32px;align-items:end}
-    .top h1{grid-column:1/-1}
     .top .controls{grid-column:1/-1}
     .layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:32px;align-items:start}
     .col{display:flex;flex-direction:column;gap:22px;min-width:0}
@@ -121,8 +120,14 @@
   .pthumb{aspect-ratio:1;background:#232527;border-radius:3px;overflow:hidden;margin-bottom:4px;display:grid;place-items:center;font:700 2.2rem 'Barlow Condensed',sans-serif;color:#45484b}
   .pthumb img{width:100%;height:100%;object-fit:cover}
   .modes{display:flex;gap:8px;margin:0 0 10px;flex-wrap:wrap}
-  .modes select{flex:1 1 9rem}
-  .modes:not(:has(select:not([hidden]))){display:none}
+  .genre{display:flex;flex-direction:column;gap:4px;margin:0 0 12px}
+  .genre label{color:var(--muted);font-size:.9rem}
+  .genre select{flex:0 0 auto}
+  .brand{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;grid-column:1/-1}
+  .brand h1{margin:0}
+  .langs{display:flex;border:1px solid #4a4d50;border-radius:4px;overflow:hidden}
+  .langs button{background:none;border:0;color:var(--muted);padding:6px 10px;min-height:36px;cursor:pointer;font:600 .9rem Barlow,sans-serif}
+  .langs button[aria-pressed="true"]{background:var(--sign-yellow);color:#000}
   .back-live{display:block;width:100%;text-align:left;margin:0 0 10px;font-size:1.1rem;font-weight:600}
   .back-live small{display:block;font-weight:400;font-size:.8rem}
   ol.playlist .pl-play{flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:1px solid #4a4d50;background:var(--asphalt-2);color:var(--sign-yellow);cursor:pointer;font-size:.9rem;line-height:1}
@@ -178,13 +183,18 @@
 <body>
 <main>
   <header class="top">
-  <h1>DJ VLIEGTUIG</h1>
+  <div class="brand">
+    <h1>DJ VLIEGTUIG</h1>
+    <div class="langs" role="group" data-i18n-attr="aria-label:language">
+      <button type="button" data-lang="nl">NL</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="de">DE</button>
+    </div>
+  </div>
 
   <div class="controls">
-    <select id="spot" aria-label="Kies een plek"></select>
-    <button class="btn" id="gps" type="button">Gebruik mijn locatie</button>
-    <button class="btn primary" id="start" type="button">Start met geluid</button>
-    <label class="range">Boven je = binnen
+    <select id="spot" data-i18n-attr="aria-label:pickSpot"></select>
+    <button class="btn" id="gps" type="button" data-i18n="useGps">Gebruik mijn locatie</button>
+    <button class="btn primary" id="start" type="button" data-i18n="soundOn">Start met geluid</button>
+    <label class="range"><span data-i18n="overhead">Boven je = binnen</span>
       <input id="radius" type="range" min="0.5" max="5" step="0.5" value="3">
       <span id="radiusVal">3 km</span>
     </label>
@@ -192,8 +202,8 @@
 
   <form class="custom" id="customForm" hidden>
     <input id="customInput" type="text" autocomplete="off" enterkeyhint="search"
-      placeholder="Adres, plaats of co&#246;rdinaten (bijv. Heathrow of 52.36, 4.71)" aria-label="Locatie invoeren">
-    <button class="btn primary" type="submit">Zoek</button>
+      data-i18n-attr="placeholder:searchPh;aria-label:searchAria">
+    <button class="btn primary" type="submit" data-i18n="search">Zoek</button>
   </form>
 
   <p class="here" id="hereLine"></p>
@@ -207,22 +217,22 @@
           <div class="sign-loc">
             <div class="sign-main">
               <div class="sign-tag" id="signTag" hidden></div>
-              <div class="callsign idle" id="callsign">Wachten op een vliegtuig</div>
+              <div class="callsign idle" id="callsign" data-i18n="waiting">Wachten op een vliegtuig</div>
             </div>
             <div class="flag" id="flag" aria-hidden="true"></div>
           </div>
-          <div class="sign-dir" id="route">Kies een plek bij een baan</div>
+          <div class="sign-dir" id="route" data-i18n="pickRunway">Kies een plek bij een baan</div>
         </section>
         <div class="greet-rest" id="greetRest" hidden>
           <span id="greetText" dir="auto"></span>
-          <button class="btn" id="greetPlay" type="button">&#128266; Luister</button>
+          <button class="btn" id="greetPlay" type="button">&#128266; <span data-i18n="listen">Luister</span></button>
         </div>
         <dl class="facts" id="facts" hidden>
-          <div class="fact"><dt>Hoogte</dt><dd id="fAlt">&#8211;</dd></div>
-          <div class="fact"><dt>Boven je</dt><dd id="fEta">&#8211;</dd></div>
-          <div class="fact"><dt>Afstand</dt><dd id="fDist">&#8211;</dd></div>
-          <div class="fact"><dt>Snelheid</dt><dd id="fSpd">&#8211;</dd></div>
-          <div class="fact"><dt>Toestel</dt><dd id="fType">&#8211;</dd></div>
+          <div class="fact"><dt data-i18n="alt">Hoogte</dt><dd id="fAlt">&#8211;</dd></div>
+          <div class="fact"><dt data-i18n="overYou">Boven je</dt><dd id="fEta">&#8211;</dd></div>
+          <div class="fact"><dt data-i18n="dist">Afstand</dt><dd id="fDist">&#8211;</dd></div>
+          <div class="fact"><dt data-i18n="speed">Snelheid</dt><dd id="fSpd">&#8211;</dd></div>
+          <div class="fact"><dt data-i18n="aircraft">Toestel</dt><dd id="fType">&#8211;</dd></div>
         </dl>
       </section>
 
@@ -234,13 +244,13 @@
             <div class="cname" id="cName"></div>
           </div>
         </div>
-        <div class="tabs" role="tablist" aria-label="Informatie over het land">
-          <button type="button" role="tab" data-tab="land" aria-controls="p-land">Land</button>
-          <button type="button" role="tab" data-tab="muziek" aria-controls="p-muziek">Muziek</button>
+        <div class="tabs" role="tablist" data-i18n-attr="aria-label:countryInfo">
+          <button type="button" role="tab" data-tab="land" aria-controls="p-land" data-i18n="tabLand">Land</button>
+          <button type="button" role="tab" data-tab="muziek" aria-controls="p-muziek" data-i18n="tabMusic">Muziek</button>
         </div>
         <div class="panel" id="p-land" role="tabpanel">
           <div class="demo" id="cDemo">
-            <div class="demo-head"><span>Democratie-index</span><strong id="cScore">&#8211;</strong></div>
+            <div class="demo-head"><span data-i18n="demoIndex">Democratie-index</span><strong id="cScore">&#8211;</strong></div>
             <div class="ladder"><div class="ladder-fill" id="cBar" style="width:0"></div><i style="left:40%"></i><i style="left:60%"></i><i style="left:80%"></i></div>
             <div class="demo-cat" id="cCat"></div>
             <div class="demo-src" id="cSrc"></div>
@@ -252,35 +262,36 @@
 
       <section class="radar-box">
         <div class="radar-wrap">
-          <canvas id="radar" width="700" height="700" aria-label="Kaart met vliegtuigen in de buurt"></canvas>
-          <div class="radar-note">Ringen op 1, 5 en 10 km. Noord is boven.</div>
+          <canvas id="radar" width="700" height="700" data-i18n-attr="aria-label:radarAria"></canvas>
+          <div class="radar-note" data-i18n="radarNote">Ringen op 1, 5 en 10 km. Noord is boven.</div>
         </div>
-        <p class="status" id="status">Nog niet gestart.</p>
+        <p class="status" id="status" data-i18n="notStarted">Nog niet gestart.</p>
       </section>
     </div>
 
     <div class="col col-right">
       <section class="sound">
-        <div class="modes" role="group" aria-label="Geluid">
-          <select id="genre" aria-label="Genre van de radiozender" hidden>
-            <option value="popular">Populairste zender</option>
-            <option value="pop">Pop</option>
-            <option value="rock">Rock</option>
-            <option value="folk">Folk</option>
-            <option value="jazz">Jazz</option>
-            <option value="classical">Klassiek</option>
-            <option value="dance">Dance</option>
-            <option value="hip hop">Hiphop</option>
-            <option value="oldies">Oldies</option>
-            <option value="news">Nieuws</option>
+        <div class="genre" id="genreBox" hidden>
+          <label for="genre" data-i18n="iLove">Ik houd van:</label>
+          <select id="genre" data-i18n-attr="aria-label:genreAria">
+            <option value="popular" data-i18n="g_popular">Populairste zender</option>
+            <option value="pop" data-i18n="g_pop">Pop</option>
+            <option value="rock" data-i18n="g_rock">Rock</option>
+            <option value="folk" data-i18n="g_folk">Folk</option>
+            <option value="jazz" data-i18n="g_jazz">Jazz</option>
+            <option value="classical" data-i18n="g_classical">Klassiek</option>
+            <option value="dance" data-i18n="g_dance">Dance</option>
+            <option value="hip hop" data-i18n="g_hiphop">Hiphop</option>
+            <option value="oldies" data-i18n="g_oldies">Oldies</option>
+            <option value="news" data-i18n="g_news">Nieuws</option>
           </select>
         </div>
         <div class="anthem">
           <div class="title" id="anthemTitle">Zet geluid aan: de volksliederen van alle vliegtuigen in de buurt worden gemixt, het dichtstbijzijnde het hardst.</div>
-          <button class="btn" id="play" type="button" hidden>Speel volkslied</button>
-          <button class="btn" id="stop" type="button" hidden>Stop</button>
+          <button class="btn" id="play" type="button" hidden data-i18n="playAnthem">Speel volkslied</button>
+          <button class="btn" id="stop" type="button" hidden data-i18n="stop">Stop</button>
         </div>
-        <button class="btn primary back-live" id="backLive" type="button" hidden>&#9664; Terug naar live <small>DJ Vliegtuig neemt het weer over</small></button>
+        <button class="btn primary back-live" id="backLive" type="button" hidden>&#9664; <span data-i18n="backLive">Terug naar live</span> <small data-i18n="backLiveSub">DJ Vliegtuig neemt het weer over</small></button>
         <a class="onair" id="onair" target="_blank" rel="noopener" hidden>
           <span class="onair-icon" id="onairIcon" aria-hidden="true"></span>
           <span class="onair-text"><small id="onairKicker">Nu op de radio</small><strong id="onairName"></strong><span class="onair-song" id="onairSong" hidden></span><span id="onairCountry"></span></span>
@@ -288,41 +299,209 @@
         <button class="btn mode-switch" id="modeSwitch" type="button"></button>
         <div class="mixer" id="mixer" aria-label="Mixer"></div>
         <audio id="audio" preload="none"></audio>
-        <h2>Speellijst</h2>
-        <ol class="playlist" id="playlist"><li class="empty">Nog niets afgespeeld. Zet het geluid aan.</li></ol>
+        <h2 data-i18n="playlist">Speellijst</h2>
+        <ol class="playlist" id="playlist"><li class="empty" data-i18n="playlistEmpty">Nog niets afgespeeld. Zet het geluid aan.</li></ol>
       </section>
 
       <section class="past">
-        <h2>Eerder overgekomen</h2>
-        <ol class="history" id="history"><li class="empty">Nog niets.</li></ol>
+        <h2 data-i18n="history">Eerder overgekomen</h2>
+        <ol class="history" id="history"><li class="empty" data-i18n="nothingYet">Nog niets.</li></ol>
       </section>
     </div>
   </div>
 </main>
 
 <script>
+
+/* ---------- Talen: Nederlands, Engels, Duits ----------
+   Keuze: eerder gekozen taal, anders de browsertaal (nl/de), anders Engels. */
+const I18N = {
+  nl: {
+    pickSpot:'Kies een plek', useGps:'Gebruik mijn locatie', soundOn:'Start met geluid', soundOff:'Geluid uit',
+    overhead:'Boven je = binnen', searchPh:'Adres, plaats of co\u00f6rdinaten (bijv. Heathrow of 52.36, 4.71)', searchAria:'Locatie invoeren', search:'Zoek',
+    waiting:'Wachten op een vliegtuig', pickRunway:'Kies een plek bij een baan', listen:'Luister',
+    alt:'Hoogte', overYou:'Boven je', dist:'Afstand', speed:'Snelheid', aircraft:'Toestel',
+    countryInfo:'Informatie over het land', tabLand:'Land', tabMusic:'Muziek', demoIndex:'Democratie-index',
+    radarAria:'Kaart met vliegtuigen in de buurt', radarNote:'Ringen op 1, 5 en 10 km. Noord is boven.', notStarted:'Nog niet gestart.',
+    sound:'Geluid', iLove:'Ik houd van:', genreAria:'Genre van de radiozender',
+    g_popular:'Populairste zender', g_pop:'Pop', g_rock:'Rock', g_folk:'Folk', g_jazz:'Jazz', g_classical:'Klassiek', g_dance:'Dance', g_hiphop:'Hiphop', g_oldies:'Oldies', g_news:'Nieuws',
+    playAnthem:'Speel volkslied', stop:'Stop', backLive:'Terug naar live', backLiveSub:'DJ Vliegtuig neemt het weer over',
+    onAir:'Nu op de radio', playlist:'Speellijst', playlistEmpty:'Nog niets afgespeeld. Zet het geluid aan.',
+    history:'Eerder overgekomen', nothingYet:'Nog niets.',
+    myLocation:'Mijn locatie', enterOwn:'Zelf invoeren\u2026', map:'kaart', kmFrom:'{d} km van {s}', ownCoords:'Eigen co\u00f6rdinaten',
+    searching:'Zoeken naar \u201c{q}\u201d\u2026', notFound:'Niets gevonden voor \u201c{q}\u201d. Probeer een andere naam of co\u00f6rdinaten.', searchFail:'Zoeken lukt nu niet. Probeer co\u00f6rdinaten, bijv. 52.36, 4.71.',
+    noGeo:'Je browser geeft geen locatie door. Kies een plek uit de lijst.', locating:'Locatie opvragen\u2026',
+    geoFail:'Locatie niet beschikbaar (geen toestemming?). Polderbaan noord gekozen; kies zelf een plek in de lijst.',
+    retrying:'Even geen update, opnieuw proberen\u2026 ({e})', feedDown:'Vluchtdata al {n} keer niet bereikbaar. Laatste fout: {e}',
+    statusLine:'{n} vliegtuigen binnen {km} km \u00b7 bijgewerkt {t}', statusLine1:'1 vliegtuig binnen {km} km \u00b7 bijgewerkt {t}',
+    lookingRoute:'Route opzoeken\u2026', routeUnknown:'Route onbekend', noCallsign:'Geen vluchtnummer uitgezonden',
+    nothingOver:'Even niets boven je', waitingNext:'Wachten op het volgende vliegtuig',
+    nowClosest:'nu \u00b7 dichtst over {s} s', now:'nu', inSec:'over {s} s', kmh:'km/u',
+    upNext:'Up next', nowPlaying:'Now playing',
+    headGov:'Regeringsleider', headState:'Staatshoofd', roleOf:'{r} van {c}', portraitOf:'Portret van {n}',
+    demo_full:'volledige democratie', demo_flawed:'gebrekkige democratie', demo_hybrid:'hybride regime', demo_auth:'autoritair regime',
+    demoNone:'Geen score voor dit land in de index.', demoFail:'Democratie-index kon niet worden geladen.', demoSrc:'EIU Democracy Index{y}, via Wikidata',
+    capital:'Hoofdstad', population:'Inwoners', founded:'Opgericht', bc:'{y} v.Chr.', area:'Oppervlakte', gdp:'Bbp', gdppc:'Bbp per inwoner',
+    life:'Levensverwachting', years:'{n} jaar', online:'Online', ofPop:'van de bevolking, {y}', currency:'Munt', fx:'Wisselkoers', today:'vandaag',
+    bigmac:'Big Mac', pricier:'duurder dan hier ({p}), {d}', cheaper:'goedkoper dan hier ({p}), {d}', bmIndex:'Big Mac-index', bmRef:'referentie ($)',
+    under:'{n}% ondergewaardeerd', over:'{n}% overgewaardeerd', vsDollar:'t.o.v. dollar', bmPer:'Big Macs per inwoner', bmPerNote:'per jaar, bbp \u00f7 prijs',
+    loading:'Laden\u2026', thisCountry:'dit land', musicFail:'Muziekinfo kon niet worden geladen.', nowNo1:'Nu op 1 in {c}', chartSrc:'Meest gespeeld op Apple Music, vandaag',
+    noChart:'Geen actuele hitlijst beschikbaar voor {c}.', bandsFrom:'Bekende bands uit {c}', since:'sinds {y}', bandsSrc:'Bron: Wikidata, gesorteerd op bekendheid (aantal Wikipedia-talen)',
+    anthemOf:'Volkslied van {c}', switchedTo:'Overgeschakeld naar ', anthemOfPre:'Volkslied van ', radioSuffix:'{s} (radio)',
+    playingNow:'{s} speelt nu', listenTo:'Luister naar {s}', pinnedTitle:'Speelt nu (zelf gekozen)', switchTo:'Schakel over naar {s}',
+    tapToStart:'Tik om geluid te starten', anthemMe:'Doe mij maar het volkslied', radioMe:'Doe mij maar de radio',
+    holding:'blijft spelen tot het volgende vliegtuig', noStation:'geen werkende zender gevonden in dit land', noRecording:'geen opname', findingStation:'zender zoeken\u2026',
+    pinnedKicker:'Zelf gekozen \u00b7 de dj staat uit', genreFallback:'geen werkende {g}zender gevonden, dit is de populairste zender',
+    titleFail:'Titel kon niet worden opgehaald', noTitle:'Deze zender stuurt geen titel mee',
+    txtAnthem:'Zet geluid aan: de volksliederen van alle vliegtuigen in de buurt worden gemixt, het dichtstbijzijnde het hardst.',
+    txtRadio:'Zet geluid aan: elk land krijgt zijn radiozender. De vliegtuigen zijn de dj en schuiven de mixer naar het land dat het dichtst bij is.',
+    txtRadioIOS:'Zet geluid aan: de radiozender van het land van het dichtstbijzijnde vliegtuig speelt. Op iPhone en iPad schakelt hij direct over, zonder fade.',
+    end:'kop', d_n:'noord', d_s:'zuid', d_e:'oost', d_w:'west', d_ne:'noordoost', d_sw:'zuidwest', language:'Taal',
+  },
+  en: {
+    pickSpot:'Choose a spot', useGps:'Use my location', soundOn:'Start sound', soundOff:'Sound off',
+    overhead:'Overhead = within', searchPh:'Address, place or coordinates (e.g. Heathrow or 52.36, 4.71)', searchAria:'Enter a location', search:'Search',
+    waiting:'Waiting for a plane', pickRunway:'Choose a spot near a runway', listen:'Listen',
+    alt:'Altitude', overYou:'Overhead', dist:'Distance', speed:'Speed', aircraft:'Aircraft',
+    countryInfo:'About the country', tabLand:'Country', tabMusic:'Music', demoIndex:'Democracy index',
+    radarAria:'Map of nearby aircraft', radarNote:'Rings at 1, 5 and 10 km. North is up.', notStarted:'Not started yet.',
+    sound:'Sound', iLove:'I love:', genreAria:'Radio station genre',
+    g_popular:'Most popular station', g_pop:'Pop', g_rock:'Rock', g_folk:'Folk', g_jazz:'Jazz', g_classical:'Classical', g_dance:'Dance', g_hiphop:'Hip-hop', g_oldies:'Oldies', g_news:'News',
+    playAnthem:'Play anthem', stop:'Stop', backLive:'Back to live', backLiveSub:'DJ Vliegtuig takes over again',
+    onAir:'On the radio now', playlist:'Playlist', playlistEmpty:'Nothing played yet. Turn the sound on.',
+    history:'Recently overhead', nothingYet:'Nothing yet.',
+    myLocation:'My location', enterOwn:'Enter a location\u2026', map:'map', kmFrom:'{d} km from {s}', ownCoords:'Custom coordinates',
+    searching:'Searching for \u201c{q}\u201d\u2026', notFound:'Nothing found for \u201c{q}\u201d. Try another name or coordinates.', searchFail:'Search is not working right now. Try coordinates, e.g. 52.36, 4.71.',
+    noGeo:'Your browser does not share a location. Choose a spot from the list.', locating:'Getting your location\u2026',
+    geoFail:'Location not available (no permission?). Polderbaan north selected; choose a spot from the list.',
+    retrying:'No update for a moment, retrying\u2026 ({e})', feedDown:'Flight data unreachable {n} times in a row. Last error: {e}',
+    statusLine:'{n} aircraft within {km} km \u00b7 updated {t}', statusLine1:'1 aircraft within {km} km \u00b7 updated {t}',
+    lookingRoute:'Looking up route\u2026', routeUnknown:'Route unknown', noCallsign:'No flight number broadcast',
+    nothingOver:'Nothing overhead right now', waitingNext:'Waiting for the next plane',
+    nowClosest:'now \u00b7 closest in {s} s', now:'now', inSec:'in {s} s', kmh:'km/h',
+    upNext:'Up next', nowPlaying:'Now playing',
+    headGov:'Head of government', headState:'Head of state', roleOf:'{r} of {c}', portraitOf:'Portrait of {n}',
+    demo_full:'full democracy', demo_flawed:'flawed democracy', demo_hybrid:'hybrid regime', demo_auth:'authoritarian regime',
+    demoNone:'No score for this country in the index.', demoFail:'Democracy index could not be loaded.', demoSrc:'EIU Democracy Index{y}, via Wikidata',
+    capital:'Capital', population:'Population', founded:'Founded', bc:'{y} BC', area:'Area', gdp:'GDP', gdppc:'GDP per capita',
+    life:'Life expectancy', years:'{n} years', online:'Online', ofPop:'of the population, {y}', currency:'Currency', fx:'Exchange rate', today:'today',
+    bigmac:'Big Mac', pricier:'more expensive than here ({p}), {d}', cheaper:'cheaper than here ({p}), {d}', bmIndex:'Big Mac index', bmRef:'reference ($)',
+    under:'{n}% undervalued', over:'{n}% overvalued', vsDollar:'against the dollar', bmPer:'Big Macs per person', bmPerNote:'per year, GDP \u00f7 price',
+    loading:'Loading\u2026', thisCountry:'this country', musicFail:'Music info could not be loaded.', nowNo1:'Number 1 in {c} right now', chartSrc:'Most played on Apple Music, today',
+    noChart:'No current chart available for {c}.', bandsFrom:'Famous bands from {c}', since:'since {y}', bandsSrc:'Source: Wikidata, sorted by fame (number of Wikipedia languages)',
+    anthemOf:'Anthem of {c}', switchedTo:'Switched to ', anthemOfPre:'Anthem of ', radioSuffix:'{s} (radio)',
+    playingNow:'{s} is playing', listenTo:'Listen to {s}', pinnedTitle:'Playing now (your choice)', switchTo:'Switch to {s}',
+    tapToStart:'Tap to start the sound', anthemMe:'Give me the anthem', radioMe:'Give me the radio',
+    holding:'keeps playing until the next plane', noStation:'no working station found in this country', noRecording:'no recording', findingStation:'finding a station\u2026',
+    pinnedKicker:'Your choice \u00b7 the DJ is off', genreFallback:'no working {g} station found, this is the most popular station',
+    titleFail:'Could not get the title', noTitle:'This station does not send song titles',
+    txtAnthem:'Turn the sound on: the anthems of all nearby planes are mixed, the closest one loudest.',
+    txtRadio:'Turn the sound on: every country gets its radio station. The planes are the DJ and slide the mixer to the country that is closest.',
+    txtRadioIOS:'Turn the sound on: the radio station of the closest plane\u2019s country plays. On iPhone and iPad it switches straight away, without a fade.',
+    end:'end', d_n:'north', d_s:'south', d_e:'east', d_w:'west', d_ne:'northeast', d_sw:'southwest', language:'Language',
+  },
+  de: {
+    pickSpot:'Ort w\u00e4hlen', useGps:'Meinen Standort verwenden', soundOn:'Ton starten', soundOff:'Ton aus',
+    overhead:'\u00dcber dir = innerhalb', searchPh:'Adresse, Ort oder Koordinaten (z. B. Heathrow oder 52.36, 4.71)', searchAria:'Ort eingeben', search:'Suchen',
+    waiting:'Warten auf ein Flugzeug', pickRunway:'W\u00e4hle einen Ort an einer Bahn', listen:'Anh\u00f6ren',
+    alt:'H\u00f6he', overYou:'\u00dcber dir', dist:'Entfernung', speed:'Geschwindigkeit', aircraft:'Flugzeug',
+    countryInfo:'Infos zum Land', tabLand:'Land', tabMusic:'Musik', demoIndex:'Demokratieindex',
+    radarAria:'Karte mit Flugzeugen in der N\u00e4he', radarNote:'Ringe bei 1, 5 und 10 km. Norden ist oben.', notStarted:'Noch nicht gestartet.',
+    sound:'Ton', iLove:'Ich liebe:', genreAria:'Genre des Radiosenders',
+    g_popular:'Beliebtester Sender', g_pop:'Pop', g_rock:'Rock', g_folk:'Folk', g_jazz:'Jazz', g_classical:'Klassik', g_dance:'Dance', g_hiphop:'Hip-Hop', g_oldies:'Oldies', g_news:'Nachrichten',
+    playAnthem:'Hymne abspielen', stop:'Stopp', backLive:'Zur\u00fcck zu live', backLiveSub:'DJ Vliegtuig \u00fcbernimmt wieder',
+    onAir:'Jetzt im Radio', playlist:'Playlist', playlistEmpty:'Noch nichts gespielt. Schalte den Ton ein.',
+    history:'Zuletzt \u00fcberflogen', nothingYet:'Noch nichts.',
+    myLocation:'Mein Standort', enterOwn:'Selbst eingeben\u2026', map:'Karte', kmFrom:'{d} km von {s}', ownCoords:'Eigene Koordinaten',
+    searching:'Suche nach \u201e{q}\u201c\u2026', notFound:'Nichts gefunden f\u00fcr \u201e{q}\u201c. Versuch einen anderen Namen oder Koordinaten.', searchFail:'Die Suche funktioniert gerade nicht. Versuch Koordinaten, z. B. 52.36, 4.71.',
+    noGeo:'Dein Browser gibt keinen Standort weiter. W\u00e4hle einen Ort aus der Liste.', locating:'Standort wird abgefragt\u2026',
+    geoFail:'Standort nicht verf\u00fcgbar (keine Erlaubnis?). Polderbaan Nord gew\u00e4hlt; w\u00e4hle selbst einen Ort aus der Liste.',
+    retrying:'Gerade kein Update, neuer Versuch\u2026 ({e})', feedDown:'Flugdaten {n}-mal nicht erreichbar. Letzter Fehler: {e}',
+    statusLine:'{n} Flugzeuge innerhalb von {km} km \u00b7 aktualisiert {t}', statusLine1:'1 Flugzeug innerhalb von {km} km \u00b7 aktualisiert {t}',
+    lookingRoute:'Route wird gesucht\u2026', routeUnknown:'Route unbekannt', noCallsign:'Keine Flugnummer gesendet',
+    nothingOver:'Gerade nichts \u00fcber dir', waitingNext:'Warten auf das n\u00e4chste Flugzeug',
+    nowClosest:'jetzt \u00b7 am n\u00e4chsten in {s} s', now:'jetzt', inSec:'in {s} s', kmh:'km/h',
+    upNext:'Up next', nowPlaying:'Now playing',
+    headGov:'Regierungschef', headState:'Staatsoberhaupt', roleOf:'{r} von {c}', portraitOf:'Portr\u00e4t von {n}',
+    demo_full:'vollst\u00e4ndige Demokratie', demo_flawed:'unvollst\u00e4ndige Demokratie', demo_hybrid:'Hybridregime', demo_auth:'autorit\u00e4res Regime',
+    demoNone:'Kein Wert f\u00fcr dieses Land im Index.', demoFail:'Demokratieindex konnte nicht geladen werden.', demoSrc:'EIU Democracy Index{y}, \u00fcber Wikidata',
+    capital:'Hauptstadt', population:'Einwohner', founded:'Gegr\u00fcndet', bc:'{y} v. Chr.', area:'Fl\u00e4che', gdp:'BIP', gdppc:'BIP pro Kopf',
+    life:'Lebenserwartung', years:'{n} Jahre', online:'Online', ofPop:'der Bev\u00f6lkerung, {y}', currency:'W\u00e4hrung', fx:'Wechselkurs', today:'heute',
+    bigmac:'Big Mac', pricier:'teurer als hier ({p}), {d}', cheaper:'g\u00fcnstiger als hier ({p}), {d}', bmIndex:'Big-Mac-Index', bmRef:'Referenz ($)',
+    under:'{n} % unterbewertet', over:'{n} % \u00fcberbewertet', vsDollar:'gegen\u00fcber dem Dollar', bmPer:'Big Macs pro Kopf', bmPerNote:'pro Jahr, BIP \u00f7 Preis',
+    loading:'Laden\u2026', thisCountry:'dieses Land', musicFail:'Musikinfos konnten nicht geladen werden.', nowNo1:'Jetzt auf Platz 1 in {c}', chartSrc:'Meistgespielt auf Apple Music, heute',
+    noChart:'Keine aktuellen Charts f\u00fcr {c} verf\u00fcgbar.', bandsFrom:'Bekannte Bands aus {c}', since:'seit {y}', bandsSrc:'Quelle: Wikidata, sortiert nach Bekanntheit (Anzahl Wikipedia-Sprachen)',
+    anthemOf:'Hymne von {c}', switchedTo:'Umgeschaltet auf ', anthemOfPre:'Hymne von ', radioSuffix:'{s} (Radio)',
+    playingNow:'{s} l\u00e4uft gerade', listenTo:'{s} anh\u00f6ren', pinnedTitle:'L\u00e4uft gerade (selbst gew\u00e4hlt)', switchTo:'Auf {s} umschalten',
+    tapToStart:'Tippen, um den Ton zu starten', anthemMe:'Gib mir lieber die Hymne', radioMe:'Gib mir lieber das Radio',
+    holding:'spielt weiter bis zum n\u00e4chsten Flugzeug', noStation:'kein funktionierender Sender in diesem Land gefunden', noRecording:'keine Aufnahme', findingStation:'Sender wird gesucht\u2026',
+    pinnedKicker:'Selbst gew\u00e4hlt \u00b7 der DJ ist aus', genreFallback:'kein funktionierender {g}-Sender gefunden, das ist der beliebteste Sender',
+    titleFail:'Titel konnte nicht abgerufen werden', noTitle:'Dieser Sender sendet keine Titel mit',
+    txtAnthem:'Schalte den Ton ein: Die Hymnen aller Flugzeuge in der N\u00e4he werden gemischt, das n\u00e4chste am lautesten.',
+    txtRadio:'Schalte den Ton ein: Jedes Land bekommt seinen Radiosender. Die Flugzeuge sind der DJ und schieben den Mixer zum Land, das am n\u00e4chsten ist.',
+    txtRadioIOS:'Schalte den Ton ein: Der Radiosender des Landes des n\u00e4chsten Flugzeugs l\u00e4uft. Auf iPhone und iPad schaltet er sofort um, ohne \u00dcberblendung.',
+    end:'Schwelle', d_n:'Nord', d_s:'S\u00fcd', d_e:'Ost', d_w:'West', d_ne:'Nordost', d_sw:'S\u00fcdwest', language:'Sprache',
+  },
+};
+const LANGS = ['nl', 'en', 'de'];
+const LANG = (() => {
+  try { const l = localStorage.getItem('flyLang'); if (LANGS.includes(l)) return l; } catch(e){}
+  for (const l of (navigator.languages || [navigator.language || ''])){
+    const p = String(l).slice(0, 2).toLowerCase();
+    if (LANGS.includes(p)) return p;
+  }
+  return 'en';
+})();
+const LOCALE = {nl:'nl-NL', en:'en-GB', de:'de-DE'}[LANG];
+function t(key, vars){
+  let s = I18N[LANG][key] ?? I18N.en[key] ?? key;
+  if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? '');
+  return s;
+}
+const dec = (n, digits) => Number(n).toLocaleString(LOCALE, {minimumFractionDigits: digits, maximumFractionDigits: digits});
+const regionNames = (() => { try { return new Intl.DisplayNames([LOCALE], {type: 'region'}); } catch(e){ return null; } })();
+const countryName = (iso, fallback) => { try { return (iso && regionNames?.of(String(iso).toUpperCase())) || fallback || ''; } catch(e){ return fallback || ''; } };
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-attr]').forEach(e => {
+    e.dataset.i18nAttr.split(';').forEach(pair => { const [attr, key] = pair.split(':'); e.setAttribute(attr, t(key)); });
+  });
+  document.querySelectorAll('.langs [data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === LANG));
+}
+function setLang(l){
+  try { localStorage.setItem('flyLang', l); } catch(e){}
+  location.reload();
+}
+
 /* ---------- Config ---------- */
 // 100 m voorbij elke baankop, op het verlengde van de middenlijn: daar komen
 // landende toestellen laag binnen en vertrekkende toestellen laag over.
 // Berekend uit de baankop-coordinaten van OurAirports.
-const SPOTS = [
-  {id:'polderbaan-18r', name:'Polderbaan noord (kop 18R)', lat:52.36360, lon:4.71201},
-  {id:'polderbaan-36l', name:'Polderbaan zuid (kop 36L)', lat:52.32770, lon:4.70876},
-  {id:'zwanenburgbaan-18c', name:'Zwanenburgbaan noord (kop 18C)', lat:52.33230, lon:4.74011},
-  {id:'zwanenburgbaan-36c', name:'Zwanenburgbaan zuid (kop 36C)', lat:52.30090, lon:4.73742},
-  {id:'aalsmeerbaan-18l', name:'Aalsmeerbaan noord (kop 18L)', lat:52.32220, lon:4.78004},
-  {id:'aalsmeerbaan-36r', name:'Aalsmeerbaan zuid (kop 36R)', lat:52.28990, lon:4.77727},
-  {id:'kaagbaan-06', name:'Kaagbaan zuidwest (kop 06)', lat:52.28742, lon:4.73277},
-  {id:'kaagbaan-24', name:'Kaagbaan noordoost (kop 24)', lat:52.30508, lon:4.77877},
-  {id:'buitenveldertbaan-09', name:'Buitenveldertbaan west (kop 09)', lat:52.31655, lon:4.74488},
-  {id:'buitenveldertbaan-27', name:'Buitenveldertbaan oost (kop 27)', lat:52.31845, lon:4.79836},
-  {id:'oostbaan-04', name:'Oostbaan zuidwest (kop 04)', lat:52.29972, lon:4.78251},
-  {id:'oostbaan-22', name:'Oostbaan noordoost (kop 22)', lat:52.31467, lon:4.80399},
+const SPOTS_RAW = [
+  {id:'polderbaan-18r', label:'Polderbaan noord (kop 18R)', lat:52.36360, lon:4.71201},
+  {id:'polderbaan-36l', label:'Polderbaan zuid (kop 36L)', lat:52.32770, lon:4.70876},
+  {id:'zwanenburgbaan-18c', label:'Zwanenburgbaan noord (kop 18C)', lat:52.33230, lon:4.74011},
+  {id:'zwanenburgbaan-36c', label:'Zwanenburgbaan zuid (kop 36C)', lat:52.30090, lon:4.73742},
+  {id:'aalsmeerbaan-18l', label:'Aalsmeerbaan noord (kop 18L)', lat:52.32220, lon:4.78004},
+  {id:'aalsmeerbaan-36r', label:'Aalsmeerbaan zuid (kop 36R)', lat:52.28990, lon:4.77727},
+  {id:'kaagbaan-06', label:'Kaagbaan zuidwest (kop 06)', lat:52.28742, lon:4.73277},
+  {id:'kaagbaan-24', label:'Kaagbaan noordoost (kop 24)', lat:52.30508, lon:4.77877},
+  {id:'buitenveldertbaan-09', label:'Buitenveldertbaan west (kop 09)', lat:52.31655, lon:4.74488},
+  {id:'buitenveldertbaan-27', label:'Buitenveldertbaan oost (kop 27)', lat:52.31845, lon:4.79836},
+  {id:'oostbaan-04', label:'Oostbaan zuidwest (kop 04)', lat:52.29972, lon:4.78251},
+  {id:'oostbaan-22', label:'Oostbaan noordoost (kop 22)', lat:52.31467, lon:4.80399},
 ];
 const FEEDS = [
   (lat,lon,nm)=>`https://api.adsb.lol/v2/point/${lat}/${lon}/${nm}`,
   (lat,lon,nm)=>`https://api.airplanes.live/v2/point/${lat}/${lon}/${nm}`,
 ];
+const SPOTS = SPOTS_RAW.map(sp => ({...sp, get name(){ return spotName(sp); }}));
+function spotName(sp){
+  const [, rw, dir, end] = /^(\S+) (\S+) \(kop (\w+)\)$/.exec(sp.label) || [];
+  const D = {noord:'d_n', zuid:'d_s', oost:'d_e', west:'d_w', noordoost:'d_ne', zuidwest:'d_sw'};
+  return rw ? `${rw} ${t(D[dir])} (${t('end')} ${end})` : sp.label;
+}
 const POLL_MS = 2000;
 const LOOKAHEAD_S = 40;      // toestel al tonen als het binnen zoveel seconden boven je is
 const FETCH_NM = 8;          // straal voor de radar
@@ -344,8 +523,8 @@ const history = [];
 /* ---------- DOM ---------- */
 const $ = id => document.getElementById(id);
 const spotSel = $('spot'), audio = $('audio');
-spotSel.add(new Option('Mijn locatie', 'gps'));
-spotSel.add(new Option('Zelf invoeren\u2026', 'custom'));
+spotSel.add(new Option(t('myLocation'), 'gps'));
+spotSel.add(new Option(t('enterOwn'), 'custom'));
 SPOTS.forEach(s => spotSel.add(new Option(s.name, s.id)));
 
 spotSel.onchange = () => {
@@ -359,22 +538,22 @@ spotSel.onchange = () => {
 $('gps').onclick = useGps;
 $('radius').oninput = e => setRadius(+e.target.value);
 function setRadius(km){
-  radiusKm = km; $('radius').value = km; $('radiusVal').textContent = `${String(km).replace('.', ',')} km`;
+  radiusKm = km; $('radius').value = km; $('radiusVal').textContent = `${Number(km).toLocaleString(LOCALE)} km`;
 }
 $('start').onclick = () => {
   soundOn = !soundOn;
-  $('start').textContent = soundOn ? 'Geluid uit' : 'Start met geluid';
+  $('start').textContent = soundOn ? t('soundOff') : t('soundOn');
   if (!soundOn && pinned) backToLive();
   if (soundOn) unlockAudio();
   if (!timer) startPolling();
   updateMix();
 };
-$('play').onclick = () => { unlockAudio(); soundOn = true; $('start').textContent = 'Geluid uit'; $('play').hidden = true; [...decks, ...radioDecks].forEach(d=>d.el.src && d.country && d.el.play().catch(()=>{})); };
-$('stop').onclick = () => { soundOn = false; $('start').textContent = 'Start met geluid'; updateMix(); };
+$('play').onclick = () => { unlockAudio(); soundOn = true; $('start').textContent = t('soundOff'); $('play').hidden = true; [...decks, ...radioDecks].forEach(d=>d.el.src && d.country && d.el.play().catch(()=>{})); };
+$('stop').onclick = () => { soundOn = false; $('start').textContent = t('soundOn'); updateMix(); };
 
 
 /* ---------- Waar sta je? ---------- */
-const nf1 = new Intl.NumberFormat('nl-NL', {maximumFractionDigits:4, minimumFractionDigits:4});
+const nf1 = new Intl.NumberFormat(LOCALE, {maximumFractionDigits:4, minimumFractionDigits:4});
 let herePlace = null;
 function placeLabel(){
   const p = herePlace?.plaats, c = herePlace?.stad;
@@ -389,16 +568,16 @@ async function showHere(){
   const render = place => {
     el.innerHTML = '';
     const b = document.createElement('strong'); b.textContent = `\ud83d\udccd ${place}`;
-    const a = document.createElement('a'); a.href = map; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'kaart';
+    const a = document.createElement('a'); a.href = map; a.target = '_blank'; a.rel = 'noopener'; a.textContent = t('map');
     const extra = h.id === 'gps'
-      ? ` \u00b7 ${coords}${h.acc ? ` (\u00b1${Math.round(h.acc)} m)` : ''} \u00b7 ${nearest.d.toFixed(1).replace('.',',')} km van ${nearest.sp.name.split(' (')[0]} \u00b7 `
+      ? ` \u00b7 ${coords}${h.acc ? ` (\u00b1${Math.round(h.acc)} m)` : ''} \u00b7 ${t('kmFrom', {d: dec(nearest.d, 1), s: nearest.sp.name.split(' (')[0]})} \u00b7 `
       : ` \u00b7 ${coords} \u00b7 `;
     el.append(b, extra, a);
   };
-  render(h.id === 'gps' ? 'Mijn locatie' : h.name);
+  render(h.id === 'gps' ? t('myLocation') : h.name);
   herePlace = null;
   try {
-    const j = await getJSON(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&accept-language=nl&lat=${h.lat.toFixed(4)}&lon=${h.lon.toFixed(4)}`);
+    const j = await getJSON(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&accept-language=${LANG}&lat=${h.lat.toFixed(4)}&lon=${h.lon.toFixed(4)}`);
     if (here !== h) return;                       // inmiddels andere plek gekozen
     const a = j.address || {};
     // plaats (dorp/wijk) en stad of gemeente, voor de welkomstzin
@@ -426,14 +605,14 @@ $('customForm').onsubmit = async e => {
   const m = q.match(/^\s*(-?\d{1,2}(?:[.,]\d+)?)\s*[,; ]\s*(-?\d{1,3}(?:[.,]\d+)?)\s*$/);
   if (m){
     const lat = parseFloat(m[1].replace(',','.')), lon = parseFloat(m[2].replace(',','.'));
-    if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return setCustom(lat, lon, 'Eigen co\u00f6rdinaten');
+    if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return setCustom(lat, lon, t('ownCoords'));
   }
-  setStatus(`Zoeken naar \u201c${q}\u201d\u2026`);
+  setStatus(t('searching', {q}));
   try {
-    const r = await getJSON(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=nl&q=${encodeURIComponent(q)}`);
-    if (!r.length) return setStatus(`Niets gevonden voor \u201c${q}\u201d. Probeer een andere naam of co\u00f6rdinaten.`, true);
+    const r = await getJSON(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=${LANG}&q=${encodeURIComponent(q)}`);
+    if (!r.length) return setStatus(t('notFound', {q}), true);
     setCustom(parseFloat(r[0].lat), parseFloat(r[0].lon), r[0].display_name.split(',').slice(0,2).join(',').trim());
-  } catch(err){ setStatus('Zoeken lukt nu niet. Probeer co\u00f6rdinaten, bijv. 52.36, 4.71.', true); }
+  } catch(err){ setStatus(t('searchFail'), true); }
 };
 
 function useGps(){
@@ -443,15 +622,15 @@ function useGps(){
     setStatus(msg, true);
     if (!timer) startPolling(); else tick();
   };
-  if (!navigator.geolocation) return fallback('Je browser geeft geen locatie door. Kies een plek uit de lijst.');
+  if (!navigator.geolocation) return fallback(t('noGeo'));
   spotSel.value = 'gps';
-  setStatus('Locatie opvragen\u2026');
+  setStatus(t('locating'));
   navigator.geolocation.getCurrentPosition(p => {
-    here = {id:'gps', name:'Mijn locatie', lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy}; setRadius(3);
+    here = {id:'gps', name:t('myLocation'), lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy}; setRadius(3);
     showHere();
     spotSel.value = 'gps'; current = null;
     if (!timer) startPolling(); else tick();
-  }, () => fallback('Locatie niet beschikbaar (geen toestemming?). Polderbaan noord gekozen; kies zelf een plek in de lijst.'),
+  }, () => fallback(t('geoFail')),
   {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
 }
 
@@ -504,8 +683,8 @@ async function doTick(){
     failCount++;
     render();
     // E\u00e9n of twee missers zijn normaal; pas na drie op rij rood tonen.
-    if (failCount < 3) return setStatus(`Even geen update, opnieuw proberen\u2026 (${lastError})`);
-    return setStatus(`Vluchtdata al ${failCount} keer niet bereikbaar. Laatste fout: ${lastError}`, true);
+    if (failCount < 3) return setStatus(t('retrying', {e: lastError}));
+    return setStatus(t('feedDown', {n: failCount, e: lastError}), true);
   }
   failCount = 0;
 
@@ -519,7 +698,7 @@ async function doTick(){
     alt:altFt(p),
     t0:performance.now() - (feedAge + (p.seen_pos||0))*1000
   }));
-  setStatus(`${lastPlanes.length} vliegtuigen binnen ${Math.round(FETCH_NM*1.852)} km \u00b7 bijgewerkt ${new Date().toLocaleTimeString('nl-NL')}`);
+  setStatus(t(lastPlanes.length === 1 ? 'statusLine1' : 'statusLine', {n: lastPlanes.length, km: Math.round(FETCH_NM*1.852), t: new Date().toLocaleTimeString(LOCALE)}));
   prefetchRoutes();
   evaluateOverhead();
   render();
@@ -571,7 +750,7 @@ function evaluateOverhead(){
     shownHex = p.hex;
     const hit = routeCache.get(p.callsign);
     if (hit !== undefined){ onNewPlane(p, hit); }
-    else { $('route').textContent = 'Route opzoeken\u2026'; $('flag').textContent='';
+    else { $('route').textContent = t('lookingRoute'); $('flag').textContent='';
            getRoute(p.callsign).then(r => { if (current===p.hex) onNewPlane(p, r); }); }
   }
 }
@@ -616,7 +795,7 @@ async function countryInfo(iso){
     OPTIONAL { ?country wdt:P298 ?iso3 }
     OPTIONAL { ?country wdt:P6 ?hog . OPTIONAL { ?hog wdt:P18 ?hogImg } }
     OPTIONAL { ?country wdt:P35 ?hos . OPTIONAL { ?hos wdt:P18 ?hosImg } }
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en". }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "${LANG},en". }
   } LIMIT 10`;
   let rows;
   try { rows = (await getJSON('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q))).results.bindings; }
@@ -626,14 +805,14 @@ async function countryInfo(iso){
   // voorkeur: regeringsleider (premier); geen foto? dan staatshoofd
   let leader = null;
   const hog = rows.find(r=>r.hogImg) || rows.find(r=>r.hog);
-  if (hog) leader = {name:v(hog,'hogLabel'), img:v(hog,'hogImg'), role:'Regeringsleider'};
-  if (!leader?.img){ const hos = rows.find(r=>r.hosImg); if (hos) leader = {name:v(hos,'hosLabel'), img:v(hos,'hosImg'), role:'Staatshoofd'}; }
+  if (hog) leader = {name:v(hog,'hogLabel'), img:v(hog,'hogImg'), role:t('headGov')};
+  if (!leader?.img){ const hos = rows.find(r=>r.hosImg); if (hos) leader = {name:v(hos,'hosLabel'), img:v(hos,'hosImg'), role:t('headState')}; }
   const info = {iso3:v(rows[0],'iso3'), name:v(rows[0],'countryLabel'), leader};
   countryCache.set(iso, info);
   return info;
 }
 
-const DEMO_CATS = [[80,'volledige democratie'],[60,'gebrekkige democratie'],[40,'hybride regime'],[0,'autoritair regime']];
+const DEMO_CATS = [[80,t('demo_full')],[60,t('demo_flawed')],[40,t('demo_hybrid')],[0,t('demo_auth')]];
 
 /* ---------- Landenfeiten (Wikidata) + Big Mac-index (The Economist) ---------- */
 const factsCache = new Map();
@@ -689,7 +868,7 @@ async function countryFacts(iso){
     OPTIONAL { ?st pq:P585 ?t }
     OPTIONAL { ?st ?psv ?node . ?node wikibase:quantityUnit ?unit }
     OPTIONAL { ?v wdt:P498 ?code }
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en". }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "${LANG},en". }
   }`;
   let rows;
   try { rows = (await getJSON('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q))).results.bindings; }
@@ -714,8 +893,8 @@ async function countryFacts(iso){
   return f;
 }
 
-const fmtBig = n => new Intl.NumberFormat('nl-NL', {notation:'compact', maximumFractionDigits:1}).format(n);
-const fmtInt = n => new Intl.NumberFormat('nl-NL', {maximumFractionDigits:0}).format(n);
+const fmtBig = n => new Intl.NumberFormat(LOCALE, {notation:'compact', maximumFractionDigits:1}).format(n);
+const fmtInt = n => new Intl.NumberFormat(LOCALE, {maximumFractionDigits:0}).format(n);
 /* ---------- Wisselkoersen (Frankfurter) ---------- */
 let fxPromise = null;
 function parseRates(j){
@@ -775,29 +954,29 @@ function renderFacts(f, bm, wb, fx){
   const money = usd => { const e = eur(usd); return e != null ? `${EUR} ${fmtBig(e)}` : `$ ${fmtBig(usd)}`; };
   const moneyInt = usd => { const e = eur(usd); return e != null ? `${EUR} ${fmtInt(e)}` : `$ ${fmtInt(usd)}`; };
   if (f || wb){
-    add('Hoofdstad', f?.cap);
-    add('Inwoners', pop && fmtBig(pop.n), pop?.year);
-    add('Opgericht', f.inc != null ? (f.inc < 0 ? `${-f.inc} v.Chr.` : String(f.inc)) : null);
-    add('Oppervlakte', f?.area && `${fmtInt(f.area.n)} km\u00b2`);
-    add('Bbp', gdp && money(gdp.n), gdp?.year);
-    add('Bbp per inwoner', gdppc && moneyInt(gdppc.n), gdppc?.year);
-    add('Levensverwachting', wb?.life && `${Math.round(wb.life.n)} jaar`, wb?.life?.year);
-    add('Online', wb?.net && `${Math.round(wb.net.n)}%`, wb?.net ? `van de bevolking, ${wb.net.year}` : '');
+    add(t('capital'), f?.cap);
+    add(t('population'), pop && fmtBig(pop.n), pop?.year);
+    add(t('founded'), f?.inc != null ? (f.inc < 0 ? t('bc', {y: -f.inc}) : String(f.inc)) : null);
+    add(t('area'), f?.area && `${fmtInt(f.area.n)} km\u00b2`);
+    add(t('gdp'), gdp && money(gdp.n), gdp?.year);
+    add(t('gdppc'), gdppc && moneyInt(gdppc.n), gdppc?.year);
+    add(t('life'), wb?.life && t('years', {n: Math.round(wb.life.n)}), wb?.life?.year);
+    add(t('online'), wb?.net && `${Math.round(wb.net.n)}%`, wb?.net ? t('ofPop', {y: wb.net.year}) : '');
     const cur = (f?.cur || []).filter(c => c !== 'EUR');
-    add('Munt', (f?.cur || []).join(', '));
+    add(t('currency'), (f?.cur || []).join(', '));
     if (fx && cur.length && fx[cur[0]]){
       const r = fx[cur[0]];
-      add('Wisselkoers', `${EUR} 1 = ${r >= 100 ? fmtInt(r) : r.toFixed(r >= 10 ? 1 : 2).replace('.',',')} ${cur[0]}`, 'vandaag');
+      add(t('fx'), `${EUR} 1 = ${r >= 100 ? fmtInt(r) : dec(r, r >= 10 ? 1 : 2)} ${cur[0]}`, t('today'));
     }
   }
   if (bm){
-    const d = bm.date ? new Date(bm.date).toLocaleDateString('nl-NL', {month:'short', year:'numeric'}) : '';
+    const d = bm.date ? new Date(bm.date).toLocaleDateString(LOCALE, {month:'short', year:'numeric'}) : '';
     const be = eur(bm.price), nl = fx?.USD && window._bmNL ? window._bmNL / fx.USD : null;
-    add('Big Mac', be != null ? `${EUR} ${be.toFixed(2).replace('.',',')}` : `$ ${bm.price.toFixed(2).replace('.',',')}`,
-        nl != null ? `${be > nl ? 'duurder' : 'goedkoper'} dan hier (${EUR} ${nl.toFixed(2).replace('.',',')}), ${d}` : d);
-    if (!isNaN(bm.raw)) add('Big Mac-index', Math.abs(bm.raw) < 0.005 ? 'referentie ($)'
-      : `${Math.round(Math.abs(bm.raw)*100)}% ${bm.raw < 0 ? 'ondergewaardeerd' : 'overgewaardeerd'}`, 't.o.v. dollar');
-    if (gdppc) add('Big Macs per inwoner', fmtInt(gdppc.n / bm.price), 'per jaar, bbp \u00f7 prijs');
+    add(t('bigmac'), be != null ? `${EUR} ${dec(be, 2)}` : `$ ${dec(bm.price, 2)}`,
+        nl != null ? t(be > nl ? 'pricier' : 'cheaper', {p: `${EUR} ${dec(nl, 2)}`, d}) : d);
+    if (!isNaN(bm.raw)) add(t('bmIndex'), Math.abs(bm.raw) < 0.005 ? t('bmRef')
+      : t(bm.raw < 0 ? 'under' : 'over', {n: Math.round(Math.abs(bm.raw)*100)}), t('vsDollar'));
+    if (gdppc) add(t('bmPer'), fmtInt(gdppc.n / bm.price), t('bmPerNote'));
   }
   dl.hidden = !dl.children.length;
 }
@@ -843,7 +1022,7 @@ async function loadTab(tab, ISO, info){
   const panel = $('p-' + tab);
   if (panel.dataset.iso === ISO) return;                 // staat er al
   panel.dataset.iso = ISO;
-  panel.innerHTML = '<p class="pnote">Laden\u2026</p>';
+  panel.innerHTML = ''; panel.append(el('p', 'pnote', t('loading')));
   const key = `${tab}:${ISO}`;
   if (!tabCache.has(key)) tabCache.set(key, LOADERS[tab](ISO, info).catch(() => null));
   const data = await tabCache.get(key);
@@ -883,17 +1062,17 @@ async function loadMusic(ISO){
     { ?b wdt:P31 wd:Q215380 } UNION { ?b wdt:P31 ?t . ?t wdt:P279 wd:Q215380 }
     ?b wdt:P495 ?c ; wikibase:sitelinks ?sl .
     OPTIONAL { ?b wdt:P18 ?img } OPTIONAL { ?b wdt:P571 ?start }
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en". }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "${LANG},en". }
   } ORDER BY DESC(?sl) LIMIT 20`).then(r => uniqBy(r, 'b').slice(0, 6)).catch(() => null);
   const [c, b] = await Promise.all([chart, bands]);
   return (c || b) ? {chart: c, bands: b} : null;
 }
 function renderMusic(panel, d, info){
-  const land = info?.name || 'dit land';
-  if (!d){ emptyLine(panel, 'Muziekinfo kon niet worden geladen.'); return; }
+  const land = info?.name || t('thisCountry');
+  if (!d){ emptyLine(panel, t('musicFail')); return; }
   if (d.chart?.length){
     const [one, ...rest] = d.chart;
-    panel.append(el('h3', 'ph', `Nu op 1 in ${land}`));
+    panel.append(el('h3', 'ph', t('nowNo1', {c: land})));
     const top = el('a', 'np1'); top.href = one.url; top.target = '_blank'; top.rel = 'noopener';
     if (one.artworkUrl100){ const im = el('img'); im.src = one.artworkUrl100.replace('100x100', '200x200'); im.alt = ''; im.loading = 'lazy'; im.onerror = () => im.remove(); top.append(im); }
     const tx = el('span'); tx.append(el('strong', null, one.name), el('span', null, one.artistName)); top.append(tx);
@@ -903,28 +1082,28 @@ function renderMusic(panel, d, info){
       rest.forEach(s => { const li = el('li'); li.append(el('strong', null, s.name), document.createTextNode(` \u00b7 ${s.artistName}`)); ol.append(li); });
       panel.append(ol);
     }
-    srcLine(panel, 'Meest gespeeld op Apple Music, vandaag');
-  } else emptyLine(panel, `Geen actuele hitlijst beschikbaar voor ${land}.`);
+    srcLine(panel, t('chartSrc'));
+  } else emptyLine(panel, t('noChart', {c: land}));
 
   if (d.bands?.length){
-    panel.append(el('h3', 'ph', `Bekende bands uit ${land}`));
+    panel.append(el('h3', 'ph', t('bandsFrom', {c: land})));
     const g = el('div', 'pgrid');
     d.bands.forEach(r => {
       const item = el('div', 'pitem');
       item.append(thumbBox(commonsThumb(val(r, 'img'), 200), val(r, 'bLabel')), el('strong', null, val(r, 'bLabel')));
-      if (val(r, 'start')) item.append(el('small', null, `sinds ${yearOf(val(r, 'start'))}`));
+      if (val(r, 'start')) item.append(el('small', null, t('since', {y: yearOf(val(r, 'start'))})));
       g.append(item);
     });
     panel.append(g);
-    srcLine(panel, 'Bron: Wikidata, gesorteerd op bekendheid (aantal Wikipedia-talen)');
+    srcLine(panel, t('bandsSrc'));
   }
 }
 
-async function showCountry(t, hex){
+async function showCountry(tgt, hex){
   const box = $('country');
-  if (!t?.iso){ box.hidden = true; return; }
-  const ISO = (t.iso||'').toUpperCase();
-  const [info, d, f, bmMap, fx] = await Promise.all([countryInfo(t.iso), democracyScore(ISO), countryFacts(ISO), loadBigMac(), loadRates()]);
+  if (!tgt?.iso){ box.hidden = true; return; }
+  const ISO = (tgt.iso||'').toUpperCase();
+  const [info, d, f, bmMap, fx] = await Promise.all([countryInfo(tgt.iso), democracyScore(ISO), countryFacts(ISO), loadBigMac(), loadRates()]);
   const wb = await worldBank(info?.iso3);
   if (current !== hex) return;                   // inmiddels ander toestel
   if (!info){ box.hidden = true; return; }
@@ -934,11 +1113,11 @@ async function showCountry(t, hex){
   if (L?.img){
     const src = L.img.replace(/^http:/,'https:');
     $('cImg').src = src + (src.includes('?') ? '&' : '?') + 'width=240';
-    $('cImg').alt = `Portret van ${L.name}`;
+    $('cImg').alt = t('portraitOf', {n: L.name});
     $('cLink').href = src.replace('Special:FilePath/','File:');
     $('cLink').hidden = false;
   } else $('cLink').hidden = true;
-  $('cRole').textContent = L ? `${L.role} van ${info.name}` : info.name;
+  $('cRole').textContent = L ? t('roleOf', {r: L.role, c: info.name}) : info.name;
   $('cName').textContent = L ? L.name : '';
 
   $('cDemo').hidden = false;
@@ -947,11 +1126,11 @@ async function showCountry(t, hex){
     $('cScore').textContent = `${sc}/100`;
     $('cBar').style.width = `${sc}%`;
     $('cCat').textContent = DEMO_CATS.find(([min])=>sc>=min)[1];
-    $('cSrc').textContent = `EIU Democracy Index${d.year ? ' '+d.year : ''}, via Wikidata`;
+    $('cSrc').textContent = t('demoSrc', {y: d.year ? ' ' + d.year : ''});
   } else {
     $('cScore').textContent = '';
     $('cBar').style.width = '0';
-    $('cCat').textContent = d === null ? 'Geen score voor dit land in de index.' : 'Democratie-index kon niet worden geladen.';
+    $('cCat').textContent = d === null ? t('demoNone') : t('demoFail');
     $('cSrc').textContent = d === null ? '' : demoError;
   }
   // Big Mac: eigen land, of de eurozone als het land de euro heeft
@@ -1036,8 +1215,8 @@ function anthemTarget(route){
 
 function showIdle(){
   showGreeting(null);
-  const c=$('callsign'); c.textContent='Even niets boven je'; c.classList.add('idle');
-  $('flag').textContent=''; $('route').textContent='Wachten op het volgende vliegtuig';
+  const c=$('callsign'); c.textContent=t('nothingOver'); c.classList.add('idle');
+  $('flag').textContent=''; $('route').textContent=t('waitingNext');
   $('facts').hidden=true;
   $('country').hidden=true;
 }
@@ -1047,11 +1226,11 @@ function showPlane(p, pick){
   $('facts').hidden=false;
   const st = pick.st;
   $('fEta').textContent = pick.inside
-    ? (st.tcpa > 2 ? `nu \u00b7 dichtst over ${Math.round(st.tcpa)} s` : 'nu')
-    : `over ${Math.max(1, Math.round(pick.enter))} s`;
-  $('fAlt').textContent = `${Math.round(p.alt*0.3048).toLocaleString('nl-NL')} m`;
-  $('fDist').textContent = `${st.d.toFixed(1).replace('.',',')} km`;
-  $('fSpd').textContent = p.gs ? `${Math.round(p.gs*1.852)} km/u` : '\u2013';
+    ? (st.tcpa > 2 ? t('nowClosest', {s: Math.round(st.tcpa)}) : t('now'))
+    : t('inSec', {s: Math.max(1, Math.round(pick.enter))});
+  $('fAlt').textContent = `${Math.round(p.alt*0.3048).toLocaleString(LOCALE)} m`;
+  $('fDist').textContent = `${dec(st.d, 1)} km`;
+  $('fSpd').textContent = p.gs ? `${Math.round(p.gs*1.852)} ${t('kmh')}` : '\u2013';
   $('fType').textContent = [p.t, p.r].filter(Boolean).join(' \u00b7 ') || '\u2013';
 }
 /* ---------- Groet in de taal van het land ----------
@@ -1113,12 +1292,12 @@ const COUNTRY_LANG = Object.fromEntries((
 ).split(',').map(x => x.split(' ')));
 
 function greetingFor(route){
-  const t = anthemTarget(route);
-  if (!t) return null;
-  const arriving = t.why === 'komt uit';
+  const tgt = anthemTarget(route);
+  if (!tgt) return null;
+  const arriving = tgt.why === 'komt uit';
   // de welkomstzin gaat over Nederland, dus alleen bij landingen op Schiphol
   if (arriving && route.destination?.icao_code !== HOME_ICAO) return null;
-  const lang = COUNTRY_LANG[(t.iso||'').toUpperCase()] || 'en';
+  const lang = COUNTRY_LANG[(tgt.iso||'').toUpperCase()] || 'en';
   const g = GREET[lang], [big, rest] = arriving ? g.arr : g.dep;
   const full = rest.startsWith('|');
   const restText = (full ? rest.slice(1) : rest).replace('{p}', placeLabel());
@@ -1150,8 +1329,8 @@ function speakGreeting(){
 function showRoute(p, route){
   showGreeting(route);
   const el=$('route');
-  if (!route){ el.textContent = p.callsign ? 'Route onbekend' : 'Geen vluchtnummer uitgezonden'; $('flag').textContent=''; return; }
-  const o=route.origin, d=route.destination, t=anthemTarget(route);
+  if (!route){ el.textContent = p.callsign ? t('routeUnknown') : t('noCallsign'); $('flag').textContent=''; return; }
+  const o=route.origin, d=route.destination, tgt=anthemTarget(route);
   const airline = route.airline?.name ? ` \u00b7 ${route.airline.name}` : '';
   el.innerHTML = '';
   const s = document.createElement('span');
@@ -1160,20 +1339,20 @@ function showRoute(p, route){
   const e = document.createElement('span');
   e.textContent = ` ${d?.municipality||d?.iata_code||'?'}${airline}`;
   el.append(s,a,e);
-  $('flag').textContent = flagOf(t?.iso);
+  $('flag').textContent = flagOf(tgt?.iso);
 }
 function addHistory(p, route){
-  const t=anthemTarget(route);
+  const tgt=anthemTarget(route);
   const prev = history.findIndex(h => h.hex === p.hex);
   const played = prev >= 0 ? history[prev].played : [];
   if (prev >= 0) history.splice(prev, 1);
-  history.unshift({hex:p.hex, cs:p.callsign||p.hex, flag:flagOf(t?.iso), where: route ? `${route.origin?.municipality||'?'} \u2192 ${route.destination?.municipality||'?'}` : 'Route onbekend', time:new Date(), played});
+  history.unshift({hex:p.hex, cs:p.callsign||p.hex, flag:flagOf(tgt?.iso), where: route ? `${route.origin?.municipality||'?'} \u2192 ${route.destination?.municipality||'?'}` : t('routeUnknown'), time:new Date(), played});
   history.length = Math.min(history.length, 8);
   renderHistory();
 }
 function renderHistory(){
   const ol=$('history'); ol.innerHTML='';
-  if (!history.length){ ol.append(el('li', 'empty', 'Nog niets.')); return; }
+  if (!history.length){ ol.append(el('li', 'empty', t('nothingYet'))); return; }
   history.forEach(h=>{
     const li=document.createElement('li');
     li.innerHTML=`<span class="cs"></span><span class="w"></span><span class="t"></span>`;
@@ -1213,13 +1392,13 @@ function logPlay(e){
 }
 function playText(e){
   if (e.kind === 'song') return e.artist && e.song ? `${e.song} \u00b7 ${e.artist}` : e.title;
-  if (e.kind === 'station') return `${e.station} (radio)`;
-  return `Volkslied van ${e.country}`;
+  if (e.kind === 'station') return t('radioSuffix', {s: e.station});
+  return t('anthemOf', {c: countryName(e.iso, e.country)});
 }
-const hhmm = d => d.toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'});
+const hhmm = d => d.toLocaleTimeString(LOCALE, {hour:'2-digit', minute:'2-digit'});
 function renderPlaylist(){
   const ol = $('playlist'); ol.innerHTML = '';
-  if (!playLog.length){ const li = el('li', 'empty', 'Nog niets afgespeeld. Zet het geluid aan.'); ol.append(li); return; }
+  if (!playLog.length){ const li = el('li', 'empty', t('playlistEmpty')); ol.append(li); return; }
   playLog.slice(0, 10).forEach(e => {
     const li = el('li', 'pl-' + e.kind);
     const what = el('span', 'w');
@@ -1230,10 +1409,10 @@ function renderPlaylist(){
       if (e.artist) tx.append(document.createTextNode(` \u00b7 ${e.artist}`));
       tx.append(el('small', null, e.station));
     } else if (e.kind === 'station'){
-      tx.append(document.createTextNode('Overgeschakeld naar '), el('b', null, e.station));
-      tx.append(el('small', null, e.country));
+      tx.append(document.createTextNode(t('switchedTo')), el('b', null, e.station));
+      tx.append(el('small', null, countryName(e.iso, e.country)));
     } else {
-      tx.append(document.createTextNode('Volkslied van '), el('b', null, e.country));
+      tx.append(document.createTextNode(t('anthemOfPre')), el('b', null, countryName(e.iso, e.country)));
     }
     what.append(tx);
     li.append(what, el('span', 't', hhmm(e.time)));
@@ -1241,8 +1420,8 @@ function renderPlaylist(){
       const isPinned = pinned && pinned.src === e.st.src;
       const b = el('button', 'pl-play', isPinned ? '\u25a0' : '\u25b6');
       b.type = 'button'; b.dataset.id = e.id;
-      b.setAttribute('aria-label', isPinned ? `${e.st.name} speelt nu` : `Luister naar ${e.st.name}`);
-      b.title = isPinned ? 'Speelt nu (zelf gekozen)' : `Schakel over naar ${e.st.name}`;
+      b.setAttribute('aria-label', isPinned ? t('playingNow', {s: e.st.name}) : t('listenTo', {s: e.st.name}));
+      b.title = isPinned ? t('pinnedTitle') : t('switchTo', {s: e.st.name});
       if (isPinned) li.classList.add('pinned');
       li.append(b);
     }
@@ -1587,7 +1766,7 @@ function mixDecks(set, mode, top, now){
         free.el.onerror = tryNext;                         // zender werkt niet: volgende proberen
         free.el.src = s.src;
         free.el.play().catch(err => {
-          if (err && err.name === 'NotAllowedError'){ $('play').hidden = false; $('play').textContent = 'Tik om geluid te starten'; }
+          if (err && err.name === 'NotAllowedError'){ $('play').hidden = false; $('play').textContent = t('tapToStart'); }
           else if (err && err.name === 'AbortError') return;   // onderbroken door een nieuwe bron: geen fout
           else tryNext();
         });
@@ -1612,12 +1791,12 @@ function updateMix(){
   if (soundOn){
     for (const p of lastPlanes){
       if (!(p.alt>0 && p.alt<MAX_ALT_FT)) continue;
-      const t = anthemTarget(routeCache.get(p.callsign));
-      if (!t) continue;
+      const tgt = anthemTarget(routeCache.get(p.callsign));
+      if (!tgt) continue;
       const w = planeWeight(liveState(p, now));
       if (w <= 0) continue;
-      const cur = byCountry.get(t.country);
-      if (!cur || w > cur.w) byCountry.set(t.country, {country:t.country, iso:t.iso, w, cs:p.callsign});
+      const cur = byCountry.get(tgt.country);
+      if (!cur || w > cur.w) byCountry.set(tgt.country, {country:tgt.country, iso:tgt.iso, w, cs:p.callsign});
     }
   }
   // Vasthouden: het land van het vliegtuig dat als laatste echt boven je was
@@ -1652,10 +1831,10 @@ function updateMix(){
 function updateSignTag(){
   const tag = $('signTag');
   const p = current && lastPlanes.find(x => x.hex === current);
-  const t = p && anthemTarget(routeCache.get(p.callsign));
-  if (!soundOn || !t || pinned){ tag.hidden = true; return; }
-  const now = t.country === lastLead?.country;
-  tag.textContent = now ? 'Now playing' : 'Up next';
+  const tgt = p && anthemTarget(routeCache.get(p.callsign));
+  if (!soundOn || !tgt || pinned){ tag.hidden = true; return; }
+  const now = tgt.country === lastLead?.country;
+  tag.textContent = now ? t('nowPlaying') : t('upNext');
   tag.classList.toggle('now', now);
   tag.hidden = false;
 }
@@ -1670,7 +1849,7 @@ function stationOf(d){                       // gegevens om later terug te kunne
 function pinStation(st){
   if (!st?.src) return;
   unlockAudio();
-  if (!soundOn){ soundOn = true; $('start').textContent = 'Geluid uit'; if (!timer) startPolling(); }
+  if (!soundOn){ soundOn = true; $('start').textContent = t('soundOff'); if (!timer) startPolling(); }
   if (soundMode !== 'radio') setSoundMode('radio');
   pinned = st;
   pinnedEl.src = st.src;
@@ -1698,9 +1877,9 @@ function updateModeSwitch(){
   modeSwitchKey = key;
   b.textContent = '';
   if (soundMode === 'radio'){
-    b.append('Doe mij maar het volkslied');
+    b.append(t('anthemMe'));
     if (iso){ const f = document.createElement('span'); f.className = 'fl'; f.textContent = flagOf(iso); b.append(f); }
-  } else b.append('Doe mij maar de radio \ud83d\udcfb');
+  } else b.append(t('radioMe') + ' \ud83d\udcfb');
 }
 function renderMixer(){
   updateModeSwitch();
@@ -1721,9 +1900,9 @@ function renderMixer(){
     const r = document.createElement('div'); r.className = 'mix-row';
     r.innerHTML = '<span class="n"></span><span class="b"><span></span></span><span class="v"></span>';
     const n = r.querySelector('.n');
-    n.textContent = `${flagOf(d.iso)} ${d.country}`;
-    const hold = d.held ? 'blijft spelen tot het volgende vliegtuig' : '';
-    const sub = d.missing ? (radio ? 'geen werkende zender gevonden in dit land' : 'geen opname') : [radio ? (d.label || 'zender zoeken\u2026') : '', hold].filter(Boolean).join(' \u00b7 ');
+    n.textContent = `${flagOf(d.iso)} ${countryName(d.iso, d.country)}`;
+    const hold = d.held ? t('holding') : '';
+    const sub = d.missing ? (radio ? t('noStation') : t('noRecording')) : [radio ? (d.label || t('findingStation')) : '', hold].filter(Boolean).join(' \u00b7 ');
     if (sub){ const sm = document.createElement('small'); sm.textContent = sub; n.append(sm); }
     n.title = d.label ? `${d.country} \u00b7 ${d.label}` : d.country;
     r.querySelector('.b span').style.width = `${Math.round(d.target*100)}%`;
@@ -1736,12 +1915,12 @@ function renderOnAir(d){
   const box = $('onair');
   if (!d){ box.hidden = true; onAirKey = ''; onAirUuid = ''; clearTimeout(songTimer); return; }
   const key = d.country + '|' + d.label + '|' + radioGenre + (d.pinned ? '|vast' : '');
-  $('onairKicker').textContent = d.pinned ? 'Zelf gekozen \u00b7 de dj staat uit' : 'Nu op de radio';
+  $('onairKicker').textContent = d.pinned ? t('pinnedKicker') : t('onAir');
   box.hidden = false;
   if (key === onAirKey) return;                  // niets veranderd: niet opnieuw opbouwen
   onAirKey = key;
   $('onairName').textContent = d.label;
-  $('onairCountry').textContent = `${flagOf(d.iso)} ${d.country}` + (radioGenre === 'popular' || d.pinned ? '' : d.fallback ? ` \u00b7 geen werkende ${GENRE_NAME()}zender gevonden, dit is de populairste zender` : ` \u00b7 ${GENRE_NAME()}`);
+  $('onairCountry').textContent = `${flagOf(d.iso)} ${countryName(d.iso, d.country)}` + (radioGenre === 'popular' || d.pinned ? '' : d.fallback ? ` \u00b7 ${t('genreFallback', {g: GENRE_NAME()})}` : ` \u00b7 ${GENRE_NAME()}`);
   const ic = $('onairIcon'); ic.innerHTML = '';
   if (d.icon){ const i = document.createElement('img'); i.src = d.icon; i.alt = ''; i.onerror = () => { i.remove(); ic.textContent = d.label.charAt(0); }; ic.append(i); }
   else ic.textContent = d.label.charAt(0);
@@ -1755,19 +1934,19 @@ function renderOnAir(d){
 /* Radiotekst: welk nummer speelt er nu? Via proxy.php?icy=<zender-ID>; werkt
    alleen bij zenders die de titel in hun stream meesturen. */
 let onAirUuid = '', songTimer = null, songReq = 0, songMisses = 0;
-function showSong(t){
+function showSong(song){
   const el = $('onairSong');
   el.classList.remove('note');
-  if (!t){ el.hidden = true; el.textContent = ''; return; }
-  if (!t.title){
+  if (!song){ el.hidden = true; el.textContent = ''; return; }
+  if (!song.title){
     // laten zien waarom er geen titel staat
-    el.textContent = t.error ? 'Titel kon niet worden opgehaald' : 'Deze zender stuurt geen titel mee';
+    el.textContent = song.error ? t('titleFail') : t('noTitle');
     el.classList.add('note'); el.hidden = false; return;
   }
   el.textContent = '';
   el.append('\u266a ');
-  if (t.artist && t.song){ const b = document.createElement('b'); b.textContent = t.song; el.append(b, ` \u00b7 ${t.artist}`); }
-  else el.append(t.title);
+  if (song.artist && song.song){ const b = document.createElement('b'); b.textContent = song.song; el.append(b, ` \u00b7 ${song.artist}`); }
+  else el.append(song.title);
   el.hidden = false;
 }
 async function fetchSong(){
@@ -1791,17 +1970,17 @@ async function fetchSong(){
 }
 
 const SOUND_TEXT = {
-  anthem: 'Zet geluid aan: de volksliederen van alle vliegtuigen in de buurt worden gemixt, het dichtstbijzijnde het hardst.',
+  anthem: t('txtAnthem'),
   radio:  CAN_VOLUME
-    ? 'Zet geluid aan: elk land krijgt zijn radiozender. De vliegtuigen zijn de dj en schuiven de mixer naar het land dat het dichtst bij is.'
-    : 'Zet geluid aan: de radiozender van het land van het dichtstbijzijnde vliegtuig speelt. Op iPhone en iPad schakelt hij direct over, zonder fade.',
+    ? t('txtRadio')
+    : t('txtRadioIOS'),
 };
 function setSoundMode(m){
   soundMode = m;
   try { localStorage.setItem('flySound', m); } catch(e){}
   document.querySelectorAll('.modes [data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
   $('anthemTitle').textContent = SOUND_TEXT[m];
-  $('genre').hidden = m !== 'radio';
+  $('genreBox').hidden = m !== 'radio';
   if (m !== 'radio' && pinned) backToLive();
   updateModeSwitch();
   updateMix();
@@ -1833,6 +2012,9 @@ $('genre').value = radioGenre; if (!$('genre').value) radioGenre = $('genre').va
 $('genre').onchange = e => setGenre(e.target.value);
 setSoundMode(soundMode);
 initTabs();
+
+applyI18n();
+document.querySelector('.langs').addEventListener('click', e => { const b = e.target.closest('[data-lang]'); if (b && b.dataset.lang !== LANG) setLang(b.dataset.lang); });
 
 /* ---------- Go ---------- */
 requestAnimationFrame(loop);
