@@ -122,6 +122,14 @@
   .pthumb img{width:100%;height:100%;object-fit:cover}
   .modes{display:flex;gap:8px;margin:0 0 10px;flex-wrap:wrap}
   .modes select{flex:1 1 9rem}
+  .modes:not(:has(select:not([hidden]))){display:none}
+  .back-live{display:block;width:100%;text-align:left;margin:0 0 10px;font-size:1.1rem;font-weight:600}
+  .back-live small{display:block;font-weight:400;font-size:.8rem}
+  ol.playlist .pl-play{flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:1px solid #4a4d50;background:var(--asphalt-2);color:var(--sign-yellow);cursor:pointer;font-size:.9rem;line-height:1}
+  ol.playlist .pl-play:hover{background:var(--sign-yellow);color:#000}
+  ol.playlist li.pinned .pl-play{background:var(--sign-yellow);color:#000}
+  .mode-switch{display:block;width:100%;text-align:left;margin:0 0 14px;font-size:1.05rem}
+  .mode-switch .fl{font-size:1.3em;vertical-align:-2px;margin-left:6px}
   .modes .btn[aria-pressed="true"]{background:var(--sign-yellow);color:#000;border-color:var(--sign-yellow)}
   .custom{display:flex;flex-wrap:wrap;gap:8px;margin:-8px 0 18px}
   .custom input{flex:1 1 240px;background:var(--asphalt-2);color:var(--runway-white);border:1px solid #4a4d50;border-radius:4px;padding:9px 12px;min-height:44px}
@@ -254,8 +262,6 @@
     <div class="col col-right">
       <section class="sound">
         <div class="modes" role="group" aria-label="Geluid">
-          <button type="button" class="btn" data-mode="anthem" aria-pressed="true">Volksliederen</button>
-          <button type="button" class="btn" data-mode="radio" aria-pressed="false">Radio</button>
           <select id="genre" aria-label="Genre van de radiozender" hidden>
             <option value="popular">Populairste zender</option>
             <option value="pop">Pop</option>
@@ -274,10 +280,12 @@
           <button class="btn" id="play" type="button" hidden>Speel volkslied</button>
           <button class="btn" id="stop" type="button" hidden>Stop</button>
         </div>
+        <button class="btn primary back-live" id="backLive" type="button" hidden>&#9664; Terug naar live <small>DJ Vliegtuig neemt het weer over</small></button>
         <a class="onair" id="onair" target="_blank" rel="noopener" hidden>
           <span class="onair-icon" id="onairIcon" aria-hidden="true"></span>
-          <span class="onair-text"><small>Nu op de radio</small><strong id="onairName"></strong><span class="onair-song" id="onairSong" hidden></span><span id="onairCountry"></span></span>
+          <span class="onair-text"><small id="onairKicker">Nu op de radio</small><strong id="onairName"></strong><span class="onair-song" id="onairSong" hidden></span><span id="onairCountry"></span></span>
         </a>
+        <button class="btn mode-switch" id="modeSwitch" type="button"></button>
         <div class="mixer" id="mixer" aria-label="Mixer"></div>
         <audio id="audio" preload="none"></audio>
         <h2>Speellijst</h2>
@@ -356,6 +364,7 @@ function setRadius(km){
 $('start').onclick = () => {
   soundOn = !soundOn;
   $('start').textContent = soundOn ? 'Geluid uit' : 'Start met geluid';
+  if (!soundOn && pinned) backToLive();
   if (soundOn) unlockAudio();
   if (!timer) startPolling();
   updateMix();
@@ -1185,11 +1194,12 @@ function renderHistory(){
    (rechterkolom) en wordt gekoppeld aan het vliegtuig dat op dat moment de dj
    was, zodat je het bij "Eerder overgekomen" terugziet. */
 const playLog = [];
+let playId = 0;
 const lastPlayKey = {};
 function logPlay(e){
   if (lastPlayKey[e.kind] === e.key) return;
   lastPlayKey[e.kind] = e.key;
-  e.time = new Date();
+  e.time = new Date(); e.id = ++playId;
   playLog.unshift(e);
   playLog.length = Math.min(playLog.length, 40);
   renderPlaylist();
@@ -1227,6 +1237,15 @@ function renderPlaylist(){
     }
     what.append(tx);
     li.append(what, el('span', 't', hhmm(e.time)));
+    if (e.st?.src){
+      const isPinned = pinned && pinned.src === e.st.src;
+      const b = el('button', 'pl-play', isPinned ? '\u25a0' : '\u25b6');
+      b.type = 'button'; b.dataset.id = e.id;
+      b.setAttribute('aria-label', isPinned ? `${e.st.name} speelt nu` : `Luister naar ${e.st.name}`);
+      b.title = isPinned ? 'Speelt nu (zelf gekozen)' : `Schakel over naar ${e.st.name}`;
+      if (isPinned) li.classList.add('pinned');
+      li.append(b);
+    }
     ol.append(li);
   });
 }
@@ -1553,7 +1572,7 @@ function mixDecks(set, mode, top, now){
         if (free.country !== country) return;
         if (i >= list.length){ free.missing = true; free.label = ''; renderMixer(); return; }
         const s = list[i++];
-        free.missing = false; free.label = s.name; free.uuid = s.uuid || ''; free.fallback = !!s.fallback; free.icon = s.icon || ''; free.home = s.home || '';
+        free.missing = false; free.streamSrc = s.src; free.label = s.name; free.uuid = s.uuid || ''; free.fallback = !!s.fallback; free.icon = s.icon || ''; free.home = s.home || '';
         free.el.onerror = tryNext;                         // zender werkt niet: volgende proberen
         free.el.src = s.src;
         free.el.play().catch(err => {
@@ -1614,7 +1633,7 @@ function updateMix(){
 
   updateSignTag();
   mixDecks(decks,      'anthem', soundMode === 'anthem' ? top : [], now);
-  mixDecks(radioDecks, 'radio',  soundMode === 'radio'  ? top : [], now);
+  mixDecks(radioDecks, 'radio',  soundMode === 'radio' && !pinned ? top : [], now);
   renderMixer();
 }
 
@@ -1623,19 +1642,65 @@ function updateSignTag(){
   const tag = $('signTag');
   const p = current && lastPlanes.find(x => x.hex === current);
   const t = p && anthemTarget(routeCache.get(p.callsign));
-  if (!soundOn || !t){ tag.hidden = true; return; }
+  if (!soundOn || !t || pinned){ tag.hidden = true; return; }
   const now = t.country === lastLead?.country;
   tag.textContent = now ? 'Now playing' : 'Up next';
   tag.classList.toggle('now', now);
   tag.hidden = false;
 }
+/* ---------- Zelf een zender kiezen uit de speellijst ----------
+   Met het afspeelknopje in de speellijst zet je de dj even uit: die zender
+   speelt dan vast, wat er ook overvliegt. "Terug naar live" zet de dj weer aan. */
+let pinned = null;
+const pinnedEl = new Audio(); pinnedEl.preload = 'none';
+function stationOf(d){                       // gegevens om later terug te kunnen schakelen
+  return {name: d.label, src: d.streamSrc || '', uuid: d.uuid || '', icon: d.icon || '', home: d.home || '', iso: d.iso, country: d.country};
+}
+function pinStation(st){
+  if (!st?.src) return;
+  unlockAudio();
+  if (!soundOn){ soundOn = true; $('start').textContent = 'Geluid uit'; if (!timer) startPolling(); }
+  if (soundMode !== 'radio') setSoundMode('radio');
+  pinned = st;
+  pinnedEl.src = st.src;
+  if (CAN_VOLUME) pinnedEl.volume = 1;
+  pinnedEl.play().catch(() => { $('play').hidden = false; $('play').textContent = 'Tik om geluid te starten'; });
+  $('backLive').hidden = false;
+  updateMix();
+}
+function backToLive(){
+  pinned = null;
+  pinnedEl.pause(); pinnedEl.removeAttribute('src'); pinnedEl.load();
+  $('backLive').hidden = true;
+  onAirKey = '';
+  updateMix();
+  renderPlaylist();
+}
+
+// Wisselknop onder het radiobord: "Doe mij maar het volkslied [vlag]" of terug naar de radio
+let modeSwitchKey = '';
+function updateModeSwitch(){
+  const b = $('modeSwitch');
+  const iso = (pinned ? pinned.iso : lastLead?.iso) || '';           // land van wat er nu speelt
+  const key = soundMode + '|' + iso;
+  if (key === modeSwitchKey) return;
+  modeSwitchKey = key;
+  b.textContent = '';
+  if (soundMode === 'radio'){
+    b.append('Doe mij maar het volkslied');
+    if (iso){ const f = document.createElement('span'); f.className = 'fl'; f.textContent = flagOf(iso); b.append(f); }
+  } else b.append('Doe mij maar de radio \ud83d\udcfb');
+}
 function renderMixer(){
+  updateModeSwitch();
   const box = $('mixer');
   const radio = soundMode === 'radio';
   const set = radio ? radioDecks : decks;
   const rows = set.filter(d=>d.country).sort((a,b)=>b.target-a.target);
   box.innerHTML = '';
-  renderOnAir(radio && soundOn ? rows.find(d => d.label && !d.missing) : null);
+  renderOnAir(pinned && soundOn ? {label: pinned.name, uuid: pinned.uuid, icon: pinned.icon, home: pinned.home, iso: pinned.iso, country: pinned.country, pinned: true}
+             : radio && soundOn ? rows.find(d => d.label && !d.missing) : null);
+  if (pinned){ box.innerHTML = ''; return; }
   if (!radio && soundOn){
     const lead = rows.find(d => !d.missing && d.el.src && !d.el.paused && d.target > 0.3);
     if (lead) logPlay({kind:'anthem', key:lead.country, country:lead.country, iso:lead.iso});
@@ -1659,7 +1724,8 @@ let onAirKey = '';
 function renderOnAir(d){
   const box = $('onair');
   if (!d){ box.hidden = true; onAirKey = ''; onAirUuid = ''; clearTimeout(songTimer); return; }
-  const key = d.country + '|' + d.label + '|' + radioGenre;
+  const key = d.country + '|' + d.label + '|' + radioGenre + (d.pinned ? '|vast' : '');
+  $('onairKicker').textContent = d.pinned ? 'Zelf gekozen \u00b7 de dj staat uit' : 'Nu op de radio';
   box.hidden = false;
   if (key === onAirKey) return;                  // niets veranderd: niet opnieuw opbouwen
   onAirKey = key;
@@ -1670,7 +1736,7 @@ function renderOnAir(d){
   else ic.textContent = d.label.charAt(0);
   if (d.home) box.href = d.home; else box.removeAttribute('href');
   onAirUuid = d.uuid || ''; songMisses = 0;
-  logPlay({kind:'station', key:key, station:d.label, country:d.country, iso:d.iso});
+  if (!d.pinned){ const deck = radioDecks.find(x => x.country === d.country && x.label === d.label); logPlay({kind:'station', key:key, station:d.label, country:d.country, iso:d.iso, st: deck ? stationOf(deck) : null}); }
   showSong(null);
   fetchSong();                                   // nieuwe zender: meteen vragen wat er speelt
 }
@@ -1706,7 +1772,8 @@ async function fetchSong(){
       showSong(j);
       if (!j.title && !j.error) songMisses++; else songMisses = 0;
       const st = radioDecks.find(d => d.uuid === uuid);
-      if (j?.title) logPlay({kind:'song', key:uuid + '|' + j.title, title:j.title, artist:j.artist, song:j.song, station:st?.label || '', country:st?.country, iso:st?.iso});
+      const stInfo = st ? stationOf(st) : (pinned?.uuid === uuid ? pinned : null);
+      if (j?.title) logPlay({kind:'song', key:uuid + '|' + j.title, title:j.title, artist:j.artist, song:j.song, station:stInfo?.name || '', country:stInfo?.country, iso:stInfo?.iso, st: stInfo});
     }
   } catch(e){ if (my === songReq && uuid === onAirUuid) showSong({title: null, error: true}); }
   if (my === songReq) songTimer = setTimeout(fetchSong, songMisses >= 3 ? 60000 : 20000);   // stuurt de zender nooit iets: minder vaak vragen
@@ -1724,6 +1791,8 @@ function setSoundMode(m){
   document.querySelectorAll('.modes [data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
   $('anthemTitle').textContent = SOUND_TEXT[m];
   $('genre').hidden = m !== 'radio';
+  if (m !== 'radio' && pinned) backToLive();
+  updateModeSwitch();
   updateMix();
 }
 function setGenre(g){
@@ -1735,12 +1804,20 @@ function setGenre(g){
 
 // compatibiliteit met bestaande aanroepen
 function maybePlayAnthem(){ updateMix(); }
-function stopAnthem(){ soundOn = false; updateMix(); }
+function stopAnthem(){ soundOn = false; if (pinned) backToLive(); updateMix(); }
 
 $('greetPlay').onclick = speakGreeting;
 if (window.speechSynthesis) speechSynthesis.getVoices();   // stemmen alvast laden
 
-document.querySelector('.modes').addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (b) setSoundMode(b.dataset.mode); });
+$('modeSwitch').onclick = () => setSoundMode(soundMode === 'radio' ? 'anthem' : 'radio');
+$('backLive').onclick = backToLive;
+$('playlist').addEventListener('click', ev => {
+  const b = ev.target.closest('.pl-play'); if (!b) return;
+  const e = playLog.find(x => x.id === +b.dataset.id);
+  if (!e?.st) return;
+  if (pinned && pinned.src === e.st.src) return;      // speelt al
+  pinStation(e.st); renderPlaylist();
+});
 $('genre').value = radioGenre; if (!$('genre').value) radioGenre = $('genre').value = 'popular';
 $('genre').onchange = e => setGenre(e.target.value);
 setSoundMode(soundMode);
