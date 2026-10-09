@@ -1189,6 +1189,88 @@ function predicted(p, now){
   return {x:x0 + Math.sin(hdg)*v*dt, y:y0 + Math.cos(hdg)*v*dt, hdg};
 }
 
+
+/* ---------- Referentie op de radar: plaatsnamen en landingsbanen ---------- */
+// Banen van Schiphol (baankoppen, OurAirports)
+const RUNWAYS = [
+  ['Polderbaan',        52.36270, 4.71193, 52.32860, 4.70884],
+  ['Zwanenburgbaan',    52.33140, 4.74003, 52.30180, 4.73750],
+  ['Aalsmeerbaan',      52.32130, 4.77996, 52.29080, 4.77735],
+  ['Kaagbaan',          52.28790, 4.73402, 52.30460, 4.77752],
+  ['Buitenveldertbaan', 52.31660, 4.74635, 52.31840, 4.79689],
+  ['Oostbaan',          52.30040, 4.78348, 52.31400, 4.80302],
+];
+// Reserve als OpenStreetMap niet bereikbaar is: plaatsen rond Schiphol
+const PLACES_FALLBACK = [
+  ['Amsterdam',52.3728,4.8936,'city'], ['Haarlem',52.3812,4.6369,'city'], ['Hoofddorp',52.3026,4.6892,'town'],
+  ['Amstelveen',52.3002,4.8636,'town'], ['Aalsmeer',52.2598,4.7613,'town'], ['Badhoevedorp',52.3389,4.7836,'village'],
+  ['Zwanenburg',52.3786,4.7445,'village'], ['Halfweg',52.3833,4.7514,'village'], ['Nieuw-Vennep',52.2644,4.6339,'town'],
+  ['Rijsenhout',52.2611,4.7069,'village'], ['Lijnden',52.3517,4.7553,'village'], ['Boesingheliede',52.3389,4.7206,'village'],
+  ['Zwaanshoek',52.3108,4.6497,'village'], ['Uithoorn',52.2386,4.8264,'town'], ['Spaarndam',52.4122,4.6867,'village'],
+];
+let places = null, placesKey = '';
+function placesAround(lat, lon){
+  const key = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+  if (key === placesKey) return;
+  placesKey = key;
+  const q = `[out:json][timeout:20];node(around:16000,${lat.toFixed(2)},${lon.toFixed(2)})[place~"^(city|town|village)$"][name];out body;`;
+  getJSON('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q))
+    .then(j => {
+      if (placesKey !== key) return;
+      const list = (j.elements || []).map(e => [e.tags['name:nl'] || e.tags.name, e.lat, e.lon, e.tags.place, +e.tags.population || 0]);
+      places = list.length ? list : PLACES_FALLBACK;
+    })
+    .catch(() => { if (placesKey === key){ places = PLACES_FALLBACK; placesKey = ''; } });   // later opnieuw proberen
+}
+const PLACE_RANK = {city: 3, town: 2, village: 1};
+
+function drawReference(ctx, C, scale, maxKm){
+  const toXY = (la, lo) => { const d = distKm(here.lat, here.lon, la, lo), b = bearing(here.lat, here.lon, la, lo);
+    return [C + Math.sin(b)*d*scale, C - Math.cos(b)*d*scale, d]; };
+  const inside = (x, y) => Math.hypot(x - C, y - C) < C - 4;
+
+  // banen
+  ctx.save(); ctx.lineCap = 'butt';
+  for (const [name, a1, o1, a2, o2] of RUNWAYS){
+    const [x1, y1, d1] = toXY(a1, o1), [x2, y2, d2] = toXY(a2, o2);
+    if (Math.min(d1, d2) > maxKm) continue;
+    ctx.strokeStyle = '#4d5054'; ctx.lineWidth = Math.max(4, 0.06*scale);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(242,242,236,.35)'; ctx.lineWidth = 1; ctx.setLineDash([6, 6]);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.restore();
+
+  // plaatsnamen: grote plaatsen eerst, geen overlappende labels
+  placesAround(here.lat, here.lon);
+  const list = (places || PLACES_FALLBACK)
+    .map(([name, la, lo, type, pop]) => { const [x, y, d] = toXY(la, lo); return {name, x, y, d, r: PLACE_RANK[type] || 0, pop: pop || 0}; })
+    .filter(p => p.d < maxKm && inside(p.x, p.y) && (p.r >= 2 || p.d < maxKm*0.75))
+    .sort((a, b) => b.r - a.r || b.pop - a.pop || a.d - b.d);
+  const boxes = [[C - 24, C - 24, C + 24, C + 24]];               // midden (jij) vrijhouden
+  ctx.save(); ctx.textBaseline = 'middle';
+  let n = 0;
+  for (const p of list){
+    if (n >= 18) break;
+    const size = p.r === 3 ? 28 : p.r === 2 ? 23 : 19;
+    ctx.font = `${p.r >= 2 ? 600 : 500} ${size}px "Barlow Condensed", sans-serif`;
+    const w = ctx.measureText(p.name).width;
+    const hit = bx => bx[2] > 2*C - 6 || bx[0] < 6 || boxes.some(b => bx[0] < b[2] && bx[2] > b[0] && bx[1] < b[3] && bx[3] > b[1]);
+    const right = [p.x + 6, p.y - size/2 - 2, p.x + 10 + w, p.y + size/2 + 2];
+    const left  = [p.x - 10 - w, right[1], p.x - 6, right[3]];
+    const above = [p.x - w/2, p.y - size - 8, p.x + w/2, p.y - 6];
+    const below = [p.x - w/2, p.y + 6, p.x + w/2, p.y + size + 8];
+    const box = [right, left, above, below].find(b => !hit(b));       // eerste plek die vrij is
+    if (!box) continue;
+    boxes.push(box); n++;
+    ctx.fillStyle = 'rgba(154,156,152,.55)';
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r >= 2 ? 3.5 : 2.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = p.r >= 2 ? 'rgba(242,242,236,.55)' : 'rgba(242,242,236,.38)';
+    ctx.fillText(p.name, box[0] + (box === right ? 4 : 0), (box[1] + box[3]) / 2);
+  }
+  ctx.restore();
+}
+
 function render(){
   const now = performance.now();
   const dt = Math.min((now - lastFrame)/1000, 0.25); lastFrame = now;
@@ -1199,6 +1281,7 @@ function render(){
   ctx.clearRect(0,0,W,W);
   ctx.strokeStyle='#45484b'; ctx.fillStyle='#7d807c'; ctx.lineWidth=1.5; ctx.font='20px Barlow, sans-serif';
   [1,5,10].filter(r=>r<=maxKm).forEach(r=>{ ctx.beginPath(); ctx.arc(C,C,r*scale,0,Math.PI*2); ctx.stroke(); ctx.fillText(`${r} km`, C+6, C-r*scale-6); });
+  drawReference(ctx, C, scale, maxKm);
   ctx.fillStyle='rgba(255,194,14,.10)'; ctx.beginPath(); ctx.arc(C,C,radiusKm*scale,0,Math.PI*2); ctx.fill();
   ctx.fillStyle='#f2f2ec'; ctx.beginPath(); ctx.arc(C,C,6,0,Math.PI*2); ctx.fill();
 

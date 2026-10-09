@@ -18,6 +18,7 @@ $allowed = [
     'de1.api.radio-browser.info' => 86400,  // radiozenders per land
     'at1.api.radio-browser.info' => 86400,
     'nl1.api.radio-browser.info' => 86400,
+    'overpass-api.de'            => 86400,  // plaatsnamen op de radar (OpenStreetMap)
 ];
 
 header('Cache-Control: no-store');
