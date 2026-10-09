@@ -106,8 +106,16 @@
   .cfacts dt{color:var(--muted);font-size:.78rem}
   .cfacts dd{margin:0;font-family:"Barlow Condensed",sans-serif;font-size:1.15rem;font-weight:500;line-height:1.2}
   .cfacts dd small{font-family:Barlow,sans-serif;font-size:.72rem;color:var(--muted);font-weight:400}
+  .onair{display:flex;gap:12px;align-items:center;margin:0 0 14px;padding:10px 12px;background:#000;border:3px solid var(--sign-yellow);border-radius:6px;color:inherit;text-decoration:none}
+  .onair-icon{flex:0 0 52px;height:52px;border-radius:4px;background:var(--asphalt-2);display:grid;place-items:center;overflow:hidden;font:700 1.6rem 'Barlow Condensed',sans-serif;color:var(--sign-yellow)}
+  .onair-icon img{width:100%;height:100%;object-fit:contain;background:#fff}
+  .onair-text{min-width:0;display:flex;flex-direction:column}
+  .onair-text small{color:var(--muted);font-size:.78rem}
+  .onair-text strong{font:700 clamp(1.4rem,6vw,2rem)/1.1 'Barlow Condensed',sans-serif;color:var(--sign-yellow);overflow-wrap:anywhere}
+  .onair-text span{font-size:.9rem}
+  .mix-row .n small{display:block;color:var(--muted);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mixer{display:flex;flex-direction:column;gap:6px;margin:-10px 0 22px}
-  .mix-row{display:grid;grid-template-columns:minmax(0,10rem) 1fr 3ch;gap:10px;align-items:center;font-size:.95rem}
+  .mix-row{display:grid;grid-template-columns:minmax(0,13rem) 1fr 3ch;gap:10px;align-items:center;font-size:.95rem}
   .mix-row .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mix-row .b{height:8px;background:#45484b;border-radius:4px;overflow:hidden}
   .mix-row .b span{display:block;height:100%;background:var(--sign-yellow);border-radius:4px;transition:width .25s linear}
@@ -209,6 +217,10 @@
     <button class="btn" id="play" type="button" hidden>Speel volkslied</button>
     <button class="btn" id="stop" type="button" hidden>Stop</button>
   </div>
+  <a class="onair" id="onair" target="_blank" rel="noopener" hidden>
+    <span class="onair-icon" id="onairIcon" aria-hidden="true"></span>
+    <span class="onair-text"><small>Nu op de radio</small><strong id="onairName"></strong><span id="onairCountry"></span></span>
+  </a>
   <div class="mixer" id="mixer" aria-label="Mixer"></div>
   <audio id="audio" preload="none"></audio>
 
@@ -1305,7 +1317,7 @@ function setLevel(d, v){
 function releaseDeck(d){
   d.el.pause();
   if (!d.wa){ d.el.removeAttribute('src'); d.el.load(); }   // stream echt stoppen (geen data meer)
-  d.country = null; d.iso = null; d.label = ''; d.zeroSince = 0; d.missing = false;
+  d.country = null; d.iso = null; d.label = ''; d.icon = ''; d.home = ''; d.zeroSince = 0; d.missing = false;
 }
 
 function planeWeight(st){
@@ -1342,7 +1354,7 @@ async function findRadio(iso){
   const hint = RADIO_HINT[iso];
   const pref = hint ? ok.filter(s => hint.test(s.name)) : [];
   const ordered = [...pref, ...ok.filter(s => !pref.includes(s))].slice(0, 4)
-    .map(s => ({name: s.name.trim(), src: s.url_resolved}));
+    .map(s => ({name: s.name.trim(), src: s.url_resolved, icon: /^https:/.test(s.favicon || '') ? s.favicon : '', home: /^https?:/.test(s.homepage || '') ? s.homepage : ''}));
   radioCache.set(iso, ordered);
   return ordered;
 }
@@ -1372,7 +1384,7 @@ function mixDecks(set, mode, top, now){
         if (free.country !== country) return;
         if (i >= list.length){ free.missing = true; free.label = ''; renderMixer(); return; }
         const s = list[i++];
-        free.missing = false; free.label = s.name;
+        free.missing = false; free.label = s.name; free.icon = s.icon || ''; free.home = s.home || '';
         free.el.onerror = tryNext;                         // zender werkt niet: volgende proberen
         free.el.src = s.src;
         free.el.play().catch(err => {
@@ -1422,20 +1434,39 @@ function updateMix(){
 
 function renderMixer(){
   const box = $('mixer');
-  const set = soundMode === 'radio' ? radioDecks : decks;
+  const radio = soundMode === 'radio';
+  const set = radio ? radioDecks : decks;
   const rows = set.filter(d=>d.country).sort((a,b)=>b.target-a.target);
   box.innerHTML = '';
+  renderOnAir(radio && soundOn ? rows.find(d => d.label && !d.missing) : null);
   if (!soundOn || !rows.length) return;
   rows.forEach(d => {
     const r = document.createElement('div'); r.className = 'mix-row';
     r.innerHTML = '<span class="n"></span><span class="b"><span></span></span><span class="v"></span>';
-    const what = d.missing ? (soundMode === 'radio' ? ' (geen zender)' : ' (geen opname)') : (d.label ? ` \u00b7 ${d.label}` : '');
-    r.querySelector('.n').textContent = `${flagOf(d.iso)} ${d.country}${what}`;
-    r.querySelector('.n').title = r.querySelector('.n').textContent;
+    const n = r.querySelector('.n');
+    n.textContent = `${flagOf(d.iso)} ${d.country}`;
+    const sub = d.missing ? (radio ? 'geen zender gevonden' : 'geen opname') : (radio ? (d.label || 'zender zoeken\u2026') : '');
+    if (sub){ const sm = document.createElement('small'); sm.textContent = sub; n.append(sm); }
+    n.title = d.label ? `${d.country} \u00b7 ${d.label}` : d.country;
     r.querySelector('.b span').style.width = `${Math.round(d.target*100)}%`;
     r.querySelector('.v').textContent = Math.round(d.target*100);
     box.append(r);
   });
+}
+let onAirKey = '';
+function renderOnAir(d){
+  const box = $('onair');
+  if (!d){ box.hidden = true; onAirKey = ''; return; }
+  const key = d.country + '|' + d.label;
+  box.hidden = false;
+  if (key === onAirKey) return;                  // niets veranderd: niet opnieuw opbouwen
+  onAirKey = key;
+  $('onairName').textContent = d.label;
+  $('onairCountry').textContent = `${flagOf(d.iso)} ${d.country}`;
+  const ic = $('onairIcon'); ic.innerHTML = '';
+  if (d.icon){ const i = document.createElement('img'); i.src = d.icon; i.alt = ''; i.onerror = () => { i.remove(); ic.textContent = d.label.charAt(0); }; ic.append(i); }
+  else ic.textContent = d.label.charAt(0);
+  if (d.home) box.href = d.home; else box.removeAttribute('href');
 }
 
 const SOUND_TEXT = {
