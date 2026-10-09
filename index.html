@@ -288,10 +288,14 @@ spotSel.onchange = () => {
   if (spotSel.value === 'custom'){ $('customInput').focus(); return; }
   if (spotSel.value === 'gps') return useGps();
   here = {...SPOTS.find(s => s.id === spotSel.value)}; showHere();
+  setRadius(1);                       // baankop: alleen wat echt over de kop komt
   current = null; tick();
 };
 $('gps').onclick = useGps;
-$('radius').oninput = e => { radiusKm = +e.target.value; $('radiusVal').textContent = `${radiusKm} km`; render(); };
+$('radius').oninput = e => setRadius(+e.target.value);
+function setRadius(km){
+  radiusKm = km; $('radius').value = km; $('radiusVal').textContent = `${String(km).replace('.', ',')} km`;
+}
 $('start').onclick = () => {
   soundOn = !soundOn;
   $('start').textContent = soundOn ? 'Geluid uit' : 'Start met geluid';
@@ -333,7 +337,7 @@ async function showHere(){
 /* ---------- Zelf een locatie invoeren ---------- */
 function setCustom(lat, lon, name){
   here = {id:'custom', name, lat, lon};
-  spotSel.value = 'custom'; current = null;
+  spotSel.value = 'custom'; current = null; setRadius(3);
   try { localStorage.setItem('flyCustom', JSON.stringify(here)); } catch(e){}
   showHere();
   if (!timer) startPolling(); else tick();
@@ -359,7 +363,7 @@ $('customForm').onsubmit = async e => {
 function useGps(){
   const fallback = msg => {
     // geen GPS: terug naar de eerste vaste plek, zodat er toch iets te zien is
-    here = {...SPOTS[0]}; spotSel.value = SPOTS[0].id; current = null; showHere();
+    here = {...SPOTS[0]}; spotSel.value = SPOTS[0].id; current = null; showHere(); setRadius(1);
     setStatus(msg, true);
     if (!timer) startPolling(); else tick();
   };
@@ -367,7 +371,7 @@ function useGps(){
   spotSel.value = 'gps';
   setStatus('Locatie opvragen\u2026');
   navigator.geolocation.getCurrentPosition(p => {
-    here = {id:'gps', name:'Mijn locatie', lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy};
+    here = {id:'gps', name:'Mijn locatie', lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy}; setRadius(3);
     showHere();
     spotSel.value = 'gps'; current = null;
     if (!timer) startPolling(); else tick();
@@ -1365,6 +1369,8 @@ async function findAnthem(country){
    van de straal 35 %, recht boven je 100 %. Per land telt het zwaarste toestel;
    de 3 zwaarste landen spelen tegelijk, elk op hun eigen volume. */
 const POOL = 3;
+const HOLD_LEVEL = 0.8;          // volume waarop het laatste land blijft spelen
+let lastLead = null;
 let soundMode = 'anthem';
 try { if (localStorage.getItem('flySound') === 'radio') soundMode = 'radio'; } catch(e){}
 
@@ -1458,7 +1464,7 @@ function soundSource(mode, c){
 
 function mixDecks(set, mode, top, now){
   const want = new Map(top.map(c=>[c.country, c]));
-  set.forEach(d => { d.target = want.has(d.country) ? want.get(d.country).w : 0; });
+  set.forEach(d => { const c = want.get(d.country); d.target = c ? c.w : 0; d.held = !!c?.held; });
 
   for (const c of top){
     if (set.some(d=>d.country===c.country)) continue;
@@ -1513,6 +1519,21 @@ function updateMix(){
       if (!cur || w > cur.w) byCountry.set(t.country, {country:t.country, iso:t.iso, w, cs:p.callsign});
     }
   }
+  // Vasthouden: het land van het laatste vliegtuig dat echt boven je was blijft
+  // spelen tot er een nieuw vliegtuig komt. Naarmate dat dichterbij komt, zakt
+  // het vastgehouden geluid weg en komt het nieuwe op.
+  if (!soundOn) lastLead = null;
+  let realTop = null;
+  byCountry.forEach(c => { if (!realTop || c.w > realTop.w) realTop = c; });
+  if (realTop && realTop.w >= 0.35) lastLead = {country: realTop.country, iso: realTop.iso};   // binnen je straal
+  if (soundOn && lastLead){
+    let other = 0;
+    byCountry.forEach(c => { if (c.country !== lastLead.country) other = Math.max(other, c.w); });
+    const hw = HOLD_LEVEL * (1 - Math.min(1, other / 0.75));
+    const cur = byCountry.get(lastLead.country);
+    if (hw > 0.01 && (!cur || (cur.w < 0.35 && hw > cur.w))) byCountry.set(lastLead.country, {...lastLead, w: hw, held: true});   // niet als het toestel zelf nog boven je is
+  }
+
   const pool = soundMode === 'radio' && !CAN_VOLUME ? 1 : POOL;
   const top = [...byCountry.values()].sort((a,b)=>b.w-a.w).slice(0, pool);
   const sum = top.reduce((a,c)=>a+c.w, 0);
@@ -1537,7 +1558,8 @@ function renderMixer(){
     r.innerHTML = '<span class="n"></span><span class="b"><span></span></span><span class="v"></span>';
     const n = r.querySelector('.n');
     n.textContent = `${flagOf(d.iso)} ${d.country}`;
-    const sub = d.missing ? (radio ? 'geen zender gevonden' : 'geen opname') : (radio ? (d.label || 'zender zoeken\u2026') : '');
+    const hold = d.held ? 'blijft spelen tot het volgende vliegtuig' : '';
+    const sub = d.missing ? (radio ? 'geen zender gevonden' : 'geen opname') : [radio ? (d.label || 'zender zoeken\u2026') : '', hold].filter(Boolean).join(' \u00b7 ');
     if (sub){ const sm = document.createElement('small'); sm.textContent = sub; n.append(sm); }
     n.title = d.label ? `${d.country} \u00b7 ${d.label}` : d.country;
     r.querySelector('.b span').style.width = `${Math.round(d.target*100)}%`;
