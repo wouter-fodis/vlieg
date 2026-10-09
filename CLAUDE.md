@@ -63,6 +63,9 @@ Let op: fodis.nl is een WordPress-site van het bedrijf. `public_html` in de thui
   - **Radio:** gewone audio-elementen; zenderstreams staan geen Web Audio toe. Fades via `audio.volume`. iOS negeert volume, dus daar speelt alleen het dichtstbijzijnde land.
   - **Genres** via de tags van radio-browser. Is er geen (werkende) genrezender, dan speelt de populairste, met een melding. Bij "Populairste zender" gaat de publieke jongerenzender voor (`RADIO_HINT`: 3FM, Trójka, NRK P3…).
   - **Speellijst:** met een afspeelknop kies je zelf een zender en staat de dj uit; "Terug naar live" zet hem weer aan.
+- **Menu** bovenin: RADIO en DISCOVER (/dj-vliegtuig-discovery/), met slogan per taal (`tagRadio`, `tagDiscover`).
+- **Delen** (`shareLink`, `applyShared`): knop "Deel" maakt een link met `spot=<baankop-id>` of `at=lat,lon` (~100 m) plus `name`, `r`, `mode` (radio/anthem) en `genre`. Een gedeelde link gaat voor op opgeslagen instellingen.
+- **Layout:** linkerkolom vlucht, radar, landinfo (radar boven de landinfo).
 - **Groet:** bij vertrek "Doei allemaal, goede vlucht!" in de taal van de bestemming (`GREET`, 41 talen). Bij landing "Welkom in <plaats>!" in de taal van het vliegtuig, plus een zin over het land van de luchthaven (`HOSTS`, 44 landen) in de taal van de app. Voorlezen via de spraak van de browser.
 
 ## Testen
