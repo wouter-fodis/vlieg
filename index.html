@@ -65,6 +65,37 @@
   .range{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.9rem;flex:1 1 100%}
   .range input{flex:1;accent-color:var(--sign-yellow)}
   [hidden]{display:none!important}
+  .tabs{display:flex;gap:2px;margin:14px -12px 0;padding:0 12px;border-bottom:2px solid var(--sign-yellow);overflow-x:auto}
+  .tabs button{flex:0 0 auto;background:none;border:0;border-radius:3px 3px 0 0;color:var(--muted);padding:8px 14px;min-height:44px;font:600 1.15rem "Barlow Condensed",sans-serif;cursor:pointer}
+  .tabs button:hover{color:var(--runway-white)}
+  .tabs button[aria-selected="true"]{background:var(--sign-yellow);color:#000}
+  .panel{padding-top:12px}
+  .ph{font:600 1.25rem/1.2 "Barlow Condensed",sans-serif;margin:14px 0 8px}
+  .panel > .ph:first-child,.art .ph{margin-top:0}
+  .pnote{color:var(--muted);margin:4px 0}
+  .psrc{color:var(--muted);font-size:.75rem;margin:8px 0 0}
+  .np1{display:flex;gap:12px;align-items:center;color:inherit;text-decoration:none}
+  .np1 img{width:72px;height:72px;border-radius:3px;flex:0 0 auto;background:#232527}
+  .np1 strong{display:block;font:700 1.6rem/1.1 "Barlow Condensed",sans-serif;color:var(--sign-yellow)}
+  .plist{margin:10px 0 0;padding-left:1.6em;font-size:.95rem}
+  .plist li{padding:2px 0}
+  .plist strong{font-weight:500}
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(6rem,1fr));gap:12px}
+  .pitem{display:flex;flex-direction:column;gap:2px;font-size:.95rem;line-height:1.25}
+  .pitem small{color:var(--muted);font-size:.78rem}
+  .pthumb{aspect-ratio:1;background:#232527;border-radius:3px;overflow:hidden;margin-bottom:4px;display:grid;place-items:center;font:700 2.2rem 'Barlow Condensed',sans-serif;color:#45484b}
+  .pthumb.wide{aspect-ratio:4/3}
+  .pthumb img{width:100%;height:100%;object-fit:cover}
+  .logos .pthumb{background:#f2f2ec;padding:10px;color:#9a9c98}
+  .logos .pthumb img{object-fit:contain}
+  .art{display:grid;grid-template-columns:minmax(0,9rem) 1fr;gap:14px;margin:0 0 16px}
+  .art img{width:100%;border-radius:3px;background:#232527}
+  .pmeta{color:var(--muted);font-size:.85rem;margin:0 0 6px}
+  .pstory{margin:0;font-size:.95rem;line-height:1.5}
+  .pstory a{color:var(--sign-yellow)}
+  @media (max-width:420px){.art{grid-template-columns:1fr}}
+  .modes{display:flex;gap:8px;margin:16px 0 10px}
+  .modes .btn[aria-pressed="true"]{background:var(--sign-yellow);color:#000;border-color:var(--sign-yellow)}
   .custom{display:flex;flex-wrap:wrap;gap:8px;margin:-8px 0 18px}
   .custom input{flex:1 1 240px;background:var(--asphalt-2);color:var(--runway-white);border:1px solid #4a4d50;border-radius:4px;padding:9px 12px;min-height:44px}
   .custom input::placeholder{color:var(--muted)}
@@ -81,9 +112,10 @@
   .mix-row .b{height:8px;background:#45484b;border-radius:4px;overflow:hidden}
   .mix-row .b span{display:block;height:100%;background:var(--sign-yellow);border-radius:4px;transition:width .25s linear}
   .mix-row .v{color:var(--muted);font-size:.85rem;text-align:right}
-  .country{display:flex;gap:14px;align-items:flex-start;background:var(--asphalt-2);padding:12px;border-radius:4px;margin:14px 0 0}
-  .country a{flex:0 0 auto;line-height:0}
-  .country img{width:96px;height:120px;object-fit:cover;object-position:50% 20%;border-radius:3px;background:#232527}
+  .country{background:var(--asphalt-2);padding:12px;border-radius:4px;margin:14px 0 0}
+  .chead{display:flex;gap:14px;align-items:center}
+  .chead a{flex:0 0 auto;line-height:0}
+  .chead img{width:96px;height:120px;object-fit:cover;object-position:50% 20%;border-radius:3px;background:#232527}
   .cinfo{flex:1;min-width:0}
   .crole{color:var(--muted);font-size:.85rem}
   .cname{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:1.5rem;line-height:1.15;margin-bottom:10px}
@@ -133,10 +165,20 @@
   </div>
 
   <section class="country" id="country" hidden aria-live="polite">
-    <a id="cLink" target="_blank" rel="noopener"><img id="cImg" alt=""></a>
-    <div class="cinfo">
-      <div class="crole" id="cRole"></div>
-      <div class="cname" id="cName"></div>
+    <div class="chead">
+      <a id="cLink" target="_blank" rel="noopener"><img id="cImg" alt=""></a>
+      <div class="cinfo">
+        <div class="crole" id="cRole"></div>
+        <div class="cname" id="cName"></div>
+      </div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Informatie over het land">
+      <button type="button" role="tab" data-tab="land" aria-controls="p-land">Land</button>
+      <button type="button" role="tab" data-tab="muziek" aria-controls="p-muziek">Muziek</button>
+      <button type="button" role="tab" data-tab="kunst" aria-controls="p-kunst">Kunst</button>
+      <button type="button" role="tab" data-tab="autos" aria-controls="p-autos">Auto&#39;s</button>
+    </div>
+    <div class="panel" id="p-land" role="tabpanel">
       <div class="demo" id="cDemo">
         <div class="demo-head"><span>Democratie-index</span><strong id="cScore">&#8211;</strong></div>
         <div class="ladder"><div class="ladder-fill" id="cBar" style="width:0"></div><i style="left:40%"></i><i style="left:60%"></i><i style="left:80%"></i></div>
@@ -145,6 +187,9 @@
       </div>
       <dl class="cfacts" id="cFacts"></dl>
     </div>
+    <div class="panel" id="p-muziek" role="tabpanel" hidden></div>
+    <div class="panel" id="p-kunst" role="tabpanel" hidden></div>
+    <div class="panel" id="p-autos" role="tabpanel" hidden></div>
   </section>
 
   <dl class="facts" id="facts" hidden>
@@ -155,7 +200,11 @@
     <div class="fact"><dt>Toestel</dt><dd id="fType">&#8211;</dd></div>
   </dl>
 
-  <div class="anthem" style="margin-top:16px">
+  <div class="modes" role="group" aria-label="Geluid">
+    <button type="button" class="btn" data-mode="anthem" aria-pressed="true">Volksliederen</button>
+    <button type="button" class="btn" data-mode="radio" aria-pressed="false">Radio</button>
+  </div>
+  <div class="anthem">
     <div class="title" id="anthemTitle">Zet geluid aan: de volksliederen van alle vliegtuigen in de buurt worden gemixt, het dichtstbijzijnde het hardst.</div>
     <button class="btn" id="play" type="button" hidden>Speel volkslied</button>
     <button class="btn" id="stop" type="button" hidden>Stop</button>
@@ -229,7 +278,7 @@ $('start').onclick = () => {
   if (!timer) startPolling();
   updateMix();
 };
-$('play').onclick = () => { unlockAudio(); soundOn = true; $('start').textContent = 'Geluid uit'; $('play').hidden = true; decks.forEach(d=>d.el.src && d.country && d.el.play().catch(()=>{})); };
+$('play').onclick = () => { unlockAudio(); soundOn = true; $('start').textContent = 'Geluid uit'; $('play').hidden = true; [...decks, ...radioDecks].forEach(d=>d.el.src && d.country && d.el.play().catch(()=>{})); };
 $('stop').onclick = () => { soundOn = false; $('start').textContent = 'Start met geluid'; updateMix(); };
 
 
@@ -652,15 +701,240 @@ function renderFacts(f, bm, wb, fx){
   dl.hidden = !dl.children.length;
 }
 
+
+/* ---------- Tabbladen op de landkaart: Land / Muziek / Kunst / Auto's ---------- */
+const TABS = ['land', 'muziek', 'kunst', 'autos'];
+let activeTab = 'land', tabISO = null, tabInfo = null;
+try { const t = localStorage.getItem('flyTab'); if (TABS.includes(t)) activeTab = t; } catch(e){}
+const tabCache = new Map();          // `${tab}:${ISO}` -> Promise<data>
+
+function selectTab(tab){
+  activeTab = tab;
+  try { localStorage.setItem('flyTab', tab); } catch(e){}
+  document.querySelectorAll('.tabs [data-tab]').forEach(b => {
+    const on = b.dataset.tab === tab;
+    b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1;
+  });
+  TABS.forEach(t => { $('p-' + t).hidden = t !== tab; });
+  if (tab !== 'land' && tabISO) loadTab(tab, tabISO, tabInfo);
+}
+function initTabs(){
+  const bar = document.querySelector('.tabs');
+  bar.addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) selectTab(b.dataset.tab); });
+  bar.addEventListener('keydown', e => {
+    if (!['ArrowLeft','ArrowRight'].includes(e.key)) return;
+    const i = TABS.indexOf(activeTab), n = TABS[(i + (e.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length];
+    selectTab(n); bar.querySelector(`[data-tab="${n}"]`).focus();
+  });
+  selectTab(activeTab);
+}
+// aangeroepen vanuit showCountry
+function setTabCountry(ISO, info){
+  if (tabISO === ISO) return;
+  tabISO = ISO; tabInfo = info;
+  ['muziek','kunst','autos'].forEach(t => { $('p-' + t).innerHTML = ''; $('p-' + t).dataset.iso = ''; });
+  if (activeTab !== 'land') loadTab(activeTab, ISO, info);
+}
+
+const LOADERS = {muziek: loadMusic, kunst: loadArt, autos: loadCars};
+const RENDER  = {muziek: renderMusic, kunst: renderArt, autos: renderCars};
+async function loadTab(tab, ISO, info){
+  const panel = $('p-' + tab);
+  if (panel.dataset.iso === ISO) return;                 // staat er al
+  panel.dataset.iso = ISO;
+  panel.innerHTML = '<p class="pnote">Laden\u2026</p>';
+  const key = `${tab}:${ISO}`;
+  if (!tabCache.has(key)) tabCache.set(key, LOADERS[tab](ISO, info).catch(() => null));
+  const data = await tabCache.get(key);
+  if (tabISO !== ISO || panel.dataset.iso !== ISO) return;
+  if (!data) tabCache.delete(key);                       // bij een fout later opnieuw proberen
+  panel.innerHTML = '';
+  RENDER[tab](panel, data, info);
+}
+
+/* --- kleine DOM-helpers --- */
+function el(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function thumbBox(url, name, cls){
+  const box = el('div', cls || 'pthumb');
+  if (url){ const i = el('img'); i.src = url; i.alt = ''; i.loading = 'lazy'; i.onerror = () => { i.remove(); box.textContent = (name || '?').trim().charAt(0); }; box.append(i); }
+  else box.textContent = (name || '?').trim().charAt(0);
+  return box;
+}
+function commonsThumb(url, w){ if (!url) return null; url = url.replace(/^http:/, 'https:'); return url + (url.includes('?') ? '&' : '?') + 'width=' + w; }
+function srcLine(panel, text){ panel.append(el('p', 'psrc', text)); }
+function emptyLine(panel, text){ panel.append(el('p', 'pnote', text)); }
+const yearOf = v => v ? String(parseInt(String(v).replace(/^\+/, ''), 10)) : '';
+
+async function sparql(q){
+  const j = await getJSON('https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(q));
+  return j.results.bindings;
+}
+const val = (r, k) => r?.[k]?.value;
+function uniqBy(rows, k){ const seen = new Set(); return rows.filter(r => { const id = val(r, k); if (seen.has(id)) return false; seen.add(id); return true; }); }
+const COUNTRY = iso => `?c wdt:P297 "${iso}" . FILTER NOT EXISTS { ?c wdt:P576 ?gone }`;
+
+/* --- Muziek: hitlijst van nu (Apple Music) + bekende bands (Wikidata) --- */
+async function loadMusic(ISO){
+  const chart = getJSON(`https://rss.marketingtools.apple.com/api/v2/${ISO.toLowerCase()}/music/most-played/5/songs.json`)
+    .then(j => j?.feed?.results || null).catch(() => null);
+  const bands = sparql(`SELECT ?b ?bLabel ?img ?start ?sl WHERE {
+    ${COUNTRY(ISO)}
+    { ?b wdt:P31 wd:Q215380 } UNION { ?b wdt:P31 ?t . ?t wdt:P279 wd:Q215380 }
+    ?b wdt:P495 ?c ; wikibase:sitelinks ?sl .
+    OPTIONAL { ?b wdt:P18 ?img } OPTIONAL { ?b wdt:P571 ?start }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en". }
+  } ORDER BY DESC(?sl) LIMIT 20`).then(r => uniqBy(r, 'b').slice(0, 6)).catch(() => null);
+  const [c, b] = await Promise.all([chart, bands]);
+  return (c || b) ? {chart: c, bands: b} : null;
+}
+function renderMusic(panel, d, info){
+  const land = info?.name || 'dit land';
+  if (!d){ emptyLine(panel, 'Muziekinfo kon niet worden geladen.'); return; }
+  if (d.chart?.length){
+    const [one, ...rest] = d.chart;
+    panel.append(el('h3', 'ph', `Nu op 1 in ${land}`));
+    const top = el('a', 'np1'); top.href = one.url; top.target = '_blank'; top.rel = 'noopener';
+    if (one.artworkUrl100){ const im = el('img'); im.src = one.artworkUrl100.replace('100x100', '200x200'); im.alt = ''; im.loading = 'lazy'; im.onerror = () => im.remove(); top.append(im); }
+    const tx = el('span'); tx.append(el('strong', null, one.name), el('span', null, one.artistName)); top.append(tx);
+    panel.append(top);
+    if (rest.length){
+      const ol = el('ol', 'plist'); ol.start = 2;
+      rest.forEach(s => { const li = el('li'); li.append(el('strong', null, s.name), document.createTextNode(` \u00b7 ${s.artistName}`)); ol.append(li); });
+      panel.append(ol);
+    }
+    srcLine(panel, 'Meest gespeeld op Apple Music, vandaag');
+  } else emptyLine(panel, `Geen actuele hitlijst beschikbaar voor ${land}.`);
+
+  if (d.bands?.length){
+    panel.append(el('h3', 'ph', `Bekende bands uit ${land}`));
+    const g = el('div', 'pgrid');
+    d.bands.forEach(r => {
+      const item = el('div', 'pitem');
+      item.append(thumbBox(commonsThumb(val(r, 'img'), 200), val(r, 'bLabel')), el('strong', null, val(r, 'bLabel')));
+      if (val(r, 'start')) item.append(el('small', null, `sinds ${yearOf(val(r, 'start'))}`));
+      g.append(item);
+    });
+    panel.append(g);
+    srcLine(panel, 'Bron: Wikidata, gesorteerd op bekendheid (aantal Wikipedia-talen)');
+  }
+}
+
+/* --- Kunst: beroemde werken met kort verhaal (Wikidata + Wikipedia) --- */
+async function wikiSummary(nlUrl, enUrl){
+  for (const u of [nlUrl, enUrl]){
+    if (!u) continue;
+    const m = u.match(/^https:\/\/(nl|en)\.wikipedia\.org\/wiki\/(.+)$/);
+    if (!m) continue;
+    try {
+      const j = await getJSON(`https://${m[1]}.wikipedia.org/api/rest_v1/page/summary/${m[2]}`);
+      if (j?.extract) return {text: j.extract, url: u};
+    } catch(e){}
+  }
+  return null;
+}
+function shortStory(t, max = 320){
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max), dot = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '));
+  return dot > 120 ? cut.slice(0, dot + 1) : cut.replace(/\s+\S*$/, '') + '\u2026';
+}
+async function loadArt(ISO){
+  const rows = await sparql(`SELECT ?w ?wLabel ?img ?creatorLabel ?incep ?locLabel ?nl ?en ?sl WHERE {
+    ${COUNTRY(ISO)}
+    VALUES ?type { wd:Q3305213 wd:Q860861 }
+    ?w wdt:P31 ?type ; (wdt:P17|wdt:P495) ?c ; wikibase:sitelinks ?sl .
+    FILTER(?sl > 8)
+    OPTIONAL { ?w wdt:P18 ?img } OPTIONAL { ?w wdt:P170 ?creator } OPTIONAL { ?w wdt:P571 ?incep }
+    OPTIONAL { ?w wdt:P276 ?loc }
+    OPTIONAL { ?nl schema:about ?w ; schema:isPartOf <https://nl.wikipedia.org/> }
+    OPTIONAL { ?en schema:about ?w ; schema:isPartOf <https://en.wikipedia.org/> }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en". }
+  } ORDER BY DESC(?sl) LIMIT 30`);
+  const works = uniqBy(rows, 'w').slice(0, 3);
+  if (!works.length) return [];
+  return Promise.all(works.map(async r => ({
+    title: val(r, 'wLabel'), creator: val(r, 'creatorLabel'), year: yearOf(val(r, 'incep')),
+    place: val(r, 'locLabel'), img: commonsThumb(val(r, 'img'), 640),
+    story: await wikiSummary(val(r, 'nl'), val(r, 'en')),
+  })));
+}
+function renderArt(panel, works, info){
+  const land = info?.name || 'dit land';
+  if (!works){ emptyLine(panel, 'Kunstinfo kon niet worden geladen.'); return; }
+  if (!works.length){ emptyLine(panel, `Geen bekende kunstwerken gevonden voor ${land}.`); return; }
+  works.forEach(w => {
+    const card = el('article', 'art');
+    if (w.img){ const i = el('img'); i.src = w.img; i.alt = w.title; i.loading = 'lazy'; card.append(i); }
+    const body = el('div');
+    body.append(el('h3', 'ph', w.title));
+    const meta = [w.creator, w.year, w.place].filter(Boolean).join(' \u00b7 ');
+    if (meta) body.append(el('p', 'pmeta', meta));
+    if (w.story){
+      const p = el('p', 'pstory', shortStory(w.story.text) + ' ');
+      const a = el('a', null, 'Lees verder'); a.href = w.story.url; a.target = '_blank'; a.rel = 'noopener';
+      p.append(a); body.append(p);
+    }
+    card.append(body); panel.append(card);
+  });
+  srcLine(panel, 'Bron: Wikidata en Wikipedia');
+}
+
+/* --- Auto's: merken en bekendste modellen (Wikidata) --- */
+async function loadCars(ISO){
+  const brands = sparql(`SELECT ?m ?mLabel ?logo ?incep ?sl WHERE {
+    ${COUNTRY(ISO)}
+    { ?m wdt:P31 wd:Q786820 } UNION { ?m wdt:P31 ?t . ?t wdt:P279 wd:Q786820 }
+    ?m wdt:P17 ?c ; wikibase:sitelinks ?sl .
+    FILTER NOT EXISTS { ?m wdt:P576 ?dissolved }
+    OPTIONAL { ?m wdt:P154 ?logo } OPTIONAL { ?m wdt:P571 ?incep }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en". }
+  } ORDER BY DESC(?sl) LIMIT 20`).then(r => uniqBy(r, 'm').slice(0, 8)).catch(() => null);
+  const models = sparql(`SELECT ?x ?xLabel ?mLabel ?img ?sl WHERE {
+    ${COUNTRY(ISO)}
+    ?m wdt:P31 wd:Q786820 ; wdt:P17 ?c .
+    ?x wdt:P31 wd:Q3231690 ; wdt:P176 ?m ; wikibase:sitelinks ?sl .
+    OPTIONAL { ?x wdt:P18 ?img }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en". }
+  } ORDER BY DESC(?sl) LIMIT 15`).then(r => uniqBy(r, 'x').slice(0, 5)).catch(() => null);
+  const [b, m] = await Promise.all([brands, models]);
+  return (b || m) ? {brands: b || [], models: m || []} : null;
+}
+function renderCars(panel, d, info){
+  const land = info?.name || 'dit land';
+  if (!d){ emptyLine(panel, 'Auto-info kon niet worden geladen.'); return; }
+  if (!d.brands.length && !d.models.length){ emptyLine(panel, `Geen automerken gevonden uit ${land}.`); return; }
+  if (d.brands.length){
+    panel.append(el('h3', 'ph', `Automerken uit ${land}`));
+    const g = el('div', 'pgrid logos');
+    d.brands.forEach(r => {
+      const item = el('div', 'pitem');
+      item.append(thumbBox(commonsThumb(val(r, 'logo'), 200), val(r, 'mLabel')), el('strong', null, val(r, 'mLabel')));
+      if (val(r, 'incep')) item.append(el('small', null, `sinds ${yearOf(val(r, 'incep'))}`));
+      g.append(item);
+    });
+    panel.append(g);
+  }
+  if (d.models.length){
+    panel.append(el('h3', 'ph', 'Bekendste modellen'));
+    const g = el('div', 'pgrid');
+    d.models.forEach(r => {
+      const item = el('div', 'pitem');
+      item.append(thumbBox(commonsThumb(val(r, 'img'), 320), val(r, 'xLabel'), 'pthumb wide'), el('strong', null, val(r, 'xLabel')), el('small', null, val(r, 'mLabel')));
+      g.append(item);
+    });
+    panel.append(g);
+  }
+  srcLine(panel, 'Bron: Wikidata, gesorteerd op bekendheid (aantal Wikipedia-talen)');
+}
+
 async function showCountry(t, hex){
   const box = $('country');
   if (!t?.iso){ box.hidden = true; return; }
   const ISO = (t.iso||'').toUpperCase();
   const [info, d, f, bmMap, fx] = await Promise.all([countryInfo(t.iso), democracyScore(ISO), countryFacts(ISO), loadBigMac(), loadRates()]);
   const wb = await worldBank(info?.iso3);
-  if (current !== hex) return;
   if (current !== hex) return;                   // inmiddels ander toestel
   if (!info){ box.hidden = true; return; }
+  setTabCountry(ISO, info);
 
   const L = info.leader;
   if (L?.img){
@@ -978,20 +1252,32 @@ async function findAnthem(country){
   return hit;
 }
 
-/* ---------- Mixer: volksliederen op afstand mengen ----------
-   Elk laag vliegend toestel binnen 1,6\u00d7 je straal krijgt een gewicht:
-   aan de rand van de straal 35 %, recht boven je 100 %, daarbuiten loopt het af naar 0.
-   Per land telt het zwaarste toestel; de 3 zwaarste landen spelen tegelijk (in een lus),
-   elk op zijn eigen volume. Komt er een toestel aan terwijl een ander wegvliegt, dan
-   schuiven de volumes vanzelf in elkaar over. Volume via Web Audio (iOS laat
-   audio.volume niet toe). */
+/* ---------- Mixer: geluid van alle vliegtuigen in de buurt ----------
+   Twee standen:
+   - Volksliederen: zoals altijd, via Web Audio (vloeiende fades, ook op iPhone).
+   - Radio: per land een populaire zender (live stream). De vliegtuigen zijn de dj:
+     komt er een ander land dichterbij, dan schuift de mixer naar die zender.
+   Elk laag vliegend toestel binnen 1,6x je straal krijgt een gewicht: aan de rand
+   van de straal 35 %, recht boven je 100 %. Per land telt het zwaarste toestel;
+   de 3 zwaarste landen spelen tegelijk, elk op hun eigen volume. */
 const POOL = 3;
-const decks = [audio, new Audio(), new Audio()].map(el => {
-  el.crossOrigin = 'anonymous'; el.preload = 'auto'; el.loop = true;
-  return {el, gain:null, country:null, iso:null, target:0, level:0, zeroSince:0};
+let soundMode = 'anthem';
+try { if (localStorage.getItem('flySound') === 'radio') soundMode = 'radio'; } catch(e){}
+
+const mkDecks = (els, opts) => els.map(el => {
+  if (opts.cors) el.crossOrigin = 'anonymous';
+  el.preload = opts.preload; el.loop = opts.loop;
+  return {el, gain:null, country:null, iso:null, label:'', target:0, level:0, zeroSince:0, missing:false, wa:opts.wa};
 });
+const decks      = mkDecks([audio, new Audio(), new Audio()], {cors:true,  wa:true,  loop:true,  preload:'auto'});
+const radioDecks = mkDecks([new Audio(), new Audio(), new Audio()], {cors:false, wa:false, loop:false, preload:'none'});
 const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
 let ac = null, useWA = false;
+
+// iPhone/iPad negeren audio.volume. Dan speelt in de radiostand alleen het
+// dichtstbijzijnde land (geen fade mogelijk zonder Web Audio, en radiostreams
+// staan Web Audio niet toe).
+const CAN_VOLUME = (() => { try { const a = new Audio(); a.volume = 0.5; return Math.abs(a.volume - 0.5) < 0.01; } catch(e){ return false; } })();
 
 function unlockAudio(){                       // moet binnen een tik/klik gebeuren
   if (!ac){
@@ -1006,13 +1292,20 @@ function unlockAudio(){                       // moet binnen een tik/klik gebeur
     }
   }
   if (ac) ac.resume();
-  decks.forEach(d => { if (d.el.paused && !d.country){ d.el.src = SILENT; d.el.play().then(()=>d.el.pause()).catch(()=>{}); } });
+  [...decks, ...radioDecks].forEach(d => { if (d.el.paused && !d.country){ d.el.src = SILENT; d.el.play().then(() => { if (!d.country) d.el.pause(); }).catch(()=>{}); } });
 }
 
 function setLevel(d, v){
   d.level = v;
-  if (useWA) d.gain.gain.setTargetAtTime(v, ac.currentTime, 0.35);   // vloeiend naar het doel
-  else d.el.volume += (v - d.el.volume) * 0.5;                        // reserve: stapjes
+  if (d.wa && useWA){ d.gain.gain.setTargetAtTime(v, ac.currentTime, 0.35); return; }   // vloeiend naar het doel
+  if (!CAN_VOLUME) return;                                                               // iOS: aan/uit
+  const next = d.el.volume + (v - d.el.volume) * 0.3;                                    // ~3 s fade bij 4 stappen/s
+  d.el.volume = Math.min(1, Math.max(0, Math.abs(next - v) < 0.01 ? v : next));
+}
+function releaseDeck(d){
+  d.el.pause();
+  if (!d.wa){ d.el.removeAttribute('src'); d.el.load(); }   // stream echt stoppen (geen data meer)
+  d.country = null; d.iso = null; d.label = ''; d.zeroSince = 0; d.missing = false;
 }
 
 function planeWeight(st){
@@ -1022,9 +1315,88 @@ function planeWeight(st){
   return 0.35*(1 - (st.d - R)/(outer - R));
 }
 
+/* --- Radiozenders (radio-browser.info, community-database, geen sleutel) ---
+   Voorkeur voor de publieke jongeren-/popzender ("Radio 3") van een land als die
+   erin staat; anders de meest beluisterde zender met een https-stream. */
+const RADIO_HINT = {
+  NL:/\b3FM\b/i, BE:/Studio Brussel|StuBru/i, DE:/1LIVE|Einslive|N-JOY|SWR3|Fritz/i, AT:/\u00d63|OE3/i,
+  CH:/SRF 3|Couleur 3/i, GB:/BBC Radio 1\b/i, IE:/2FM/i, FR:/Mouv/i, ES:/Radio 3/i, PT:/Antena 3/i,
+  IT:/Rai Radio 2/i, DK:/\bP3\b/i, NO:/NRK P3/i, SE:/\bP3\b/i, FI:/YleX/i, PL:/Tr\u00f3jka|Trojka|Program III/i,
+  HU:/Pet\u0151fi/i, TR:/TRT FM/i, CZ:/Radio Wave/i, IS:/R\u00e1s 2/i,
+};
+const RADIO_HOSTS = ['de1', 'at1', 'nl1'];
+const radioCache = new Map();
+async function findRadio(iso){
+  iso = (iso || '').toUpperCase();
+  if (!/^[A-Z]{2}$/.test(iso)) return null;
+  if (radioCache.has(iso)) return radioCache.get(iso);
+  let list = null;
+  for (const h of RADIO_HOSTS){
+    try {
+      list = await getJSON(`https://${h}.api.radio-browser.info/json/stations/search?countrycode=${iso}&hidebroken=true&is_https=true&order=clickcount&reverse=true&limit=80`);
+      if (Array.isArray(list)) break;
+    } catch(e){ list = null; }
+  }
+  if (!Array.isArray(list)) return null;                 // niet cachen: later opnieuw
+  const ok = list.filter(s => /^https:/.test(s.url_resolved || '') && !+s.hls && !/m3u8/i.test(s.url_resolved));
+  const hint = RADIO_HINT[iso];
+  const pref = hint ? ok.filter(s => hint.test(s.name)) : [];
+  const ordered = [...pref, ...ok.filter(s => !pref.includes(s))].slice(0, 4)
+    .map(s => ({name: s.name.trim(), src: s.url_resolved}));
+  radioCache.set(iso, ordered);
+  return ordered;
+}
+
+function soundSource(mode, c){
+  if (mode === 'anthem') return findAnthem(c.country).then(a => a ? [{name:'', src:a.src}] : []);
+  return findRadio(c.iso).then(l => l || []);
+}
+
+function mixDecks(set, mode, top, now){
+  const want = new Map(top.map(c=>[c.country, c]));
+  set.forEach(d => { d.target = want.has(d.country) ? want.get(d.country).w : 0; });
+
+  for (const c of top){
+    if (set.some(d=>d.country===c.country)) continue;
+    const free = set.find(d=>!d.country) || set.filter(d=>!want.has(d.country)).sort((a,b)=>a.level-b.level)[0];
+    if (!free) continue;
+    if (free.country) releaseDeck(free);
+    free.country = c.country; free.iso = c.iso; free.target = c.w; free.level = 0; free.label = '';
+    if (free.wa && free.gain){ free.gain.gain.cancelScheduledValues(ac.currentTime); free.gain.gain.value = 0; }
+    else if (CAN_VOLUME) free.el.volume = 0;
+    const country = c.country;
+    soundSource(mode, c).then(list => {
+      if (free.country !== country) return;
+      let i = 0;
+      const tryNext = () => {
+        if (free.country !== country) return;
+        if (i >= list.length){ free.missing = true; free.label = ''; renderMixer(); return; }
+        const s = list[i++];
+        free.missing = false; free.label = s.name;
+        free.el.onerror = tryNext;                         // zender werkt niet: volgende proberen
+        free.el.src = s.src;
+        free.el.play().catch(err => {
+          if (err && err.name === 'NotAllowedError'){ $('play').hidden = false; $('play').textContent = 'Tik om geluid te starten'; }
+          else if (err && err.name === 'AbortError') return;   // onderbroken door een nieuwe bron: geen fout
+          else tryNext();
+        });
+        renderMixer();
+      };
+      tryNext();
+    });
+  }
+
+  set.forEach(d => {
+    if (!d.country) return;
+    setLevel(d, d.target);
+    if (d.target > 0.01) d.zeroSince = 0;
+    else if (!d.zeroSince) d.zeroSince = now;
+    else if (now - d.zeroSince > (CAN_VOLUME || d.wa ? 2500 : 0)) releaseDeck(d);
+  });
+}
+
 function updateMix(){
   const now = performance.now();
-  // gewichten per land
   const byCountry = new Map();
   if (soundOn){
     for (const p of lastPlanes){
@@ -1037,54 +1409,47 @@ function updateMix(){
       if (!cur || w > cur.w) byCountry.set(t.country, {country:t.country, iso:t.iso, w, cs:p.callsign});
     }
   }
-  const top = [...byCountry.values()].sort((a,b)=>b.w-a.w).slice(0, POOL);
+  const pool = soundMode === 'radio' && !CAN_VOLUME ? 1 : POOL;
+  const top = [...byCountry.values()].sort((a,b)=>b.w-a.w).slice(0, pool);
   const sum = top.reduce((a,c)=>a+c.w, 0);
-  const norm = sum > 1 ? 1/sum : 1;                                   // samen niet te hard
+  if (sum > 1) top.forEach(c => c.w /= sum);                        // samen niet te hard
+  if (pool === 1) top.forEach(c => c.w = 1);                        // iOS-radio: gewoon aan
 
-  // landen die al een deck hebben houden dat
-  const want = new Map(top.map(c=>[c.country, c]));
-  decks.forEach(d => { d.target = want.has(d.country) ? want.get(d.country).w*norm : 0; });
-
-  // nieuwe landen op een vrij deck zetten
-  for (const c of top){
-    if (decks.some(d=>d.country===c.country)) continue;
-    const free = decks.find(d=>!d.country) || decks.filter(d=>!want.has(d.country)).sort((a,b)=>a.level-b.level)[0];
-    if (!free) continue;
-    free.country = c.country; free.iso = c.iso; free.target = c.w*norm; free.level = 0;
-    if (free.gain){ free.gain.gain.cancelScheduledValues(ac.currentTime); free.gain.gain.value = 0; } else free.el.volume = 0;
-    findAnthem(c.country).then(a => {
-      if (free.country !== c.country) return;
-      if (!a){ free.missing = true; return; }
-      free.missing = false;
-      free.el.src = a.src;
-      free.el.play().catch(() => { $('play').hidden = false; $('play').textContent = 'Tik om geluid te starten'; });
-    });
-  }
-
-  // volumes zetten; stil geworden decks na 2 s vrijgeven
-  decks.forEach(d => {
-    if (!d.country) return;
-    setLevel(d, d.target);
-    if (d.target > 0.01) d.zeroSince = 0;
-    else if (!d.zeroSince) d.zeroSince = now;
-    else if (now - d.zeroSince > 2000){ d.el.pause(); d.country = null; d.iso = null; d.zeroSince = 0; }
-  });
+  mixDecks(decks,      'anthem', soundMode === 'anthem' ? top : [], now);
+  mixDecks(radioDecks, 'radio',  soundMode === 'radio'  ? top : [], now);
   renderMixer();
 }
 
 function renderMixer(){
   const box = $('mixer');
-  const rows = decks.filter(d=>d.country).sort((a,b)=>b.target-a.target);
-  if (!soundOn || !rows.length){ box.innerHTML=''; return; }
+  const set = soundMode === 'radio' ? radioDecks : decks;
+  const rows = set.filter(d=>d.country).sort((a,b)=>b.target-a.target);
   box.innerHTML = '';
+  if (!soundOn || !rows.length) return;
   rows.forEach(d => {
     const r = document.createElement('div'); r.className = 'mix-row';
     r.innerHTML = '<span class="n"></span><span class="b"><span></span></span><span class="v"></span>';
-    r.querySelector('.n').textContent = `${flagOf(d.iso)} ${d.country}${d.missing ? ' (geen opname)' : ''}`;
+    const what = d.missing ? (soundMode === 'radio' ? ' (geen zender)' : ' (geen opname)') : (d.label ? ` \u00b7 ${d.label}` : '');
+    r.querySelector('.n').textContent = `${flagOf(d.iso)} ${d.country}${what}`;
+    r.querySelector('.n').title = r.querySelector('.n').textContent;
     r.querySelector('.b span').style.width = `${Math.round(d.target*100)}%`;
     r.querySelector('.v').textContent = Math.round(d.target*100);
     box.append(r);
   });
+}
+
+const SOUND_TEXT = {
+  anthem: 'Zet geluid aan: de volksliederen van alle vliegtuigen in de buurt worden gemixt, het dichtstbijzijnde het hardst.',
+  radio:  CAN_VOLUME
+    ? 'Zet geluid aan: elk land krijgt zijn radiozender. De vliegtuigen zijn de dj en schuiven de mixer naar het land dat het dichtst bij is.'
+    : 'Zet geluid aan: de radiozender van het land van het dichtstbijzijnde vliegtuig speelt. Op iPhone en iPad schakelt hij direct over, zonder fade.',
+};
+function setSoundMode(m){
+  soundMode = m;
+  try { localStorage.setItem('flySound', m); } catch(e){}
+  document.querySelectorAll('.modes [data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
+  $('anthemTitle').textContent = SOUND_TEXT[m];
+  updateMix();
 }
 
 // compatibiliteit met bestaande aanroepen
@@ -1093,6 +1458,10 @@ function stopAnthem(){ soundOn = false; updateMix(); }
 
 $('greetPlay').onclick = speakGreeting;
 if (window.speechSynthesis) speechSynthesis.getVoices();   // stemmen alvast laden
+
+document.querySelector('.modes').addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (b) setSoundMode(b.dataset.mode); });
+setSoundMode(soundMode);
+initTabs();
 
 /* ---------- Go ---------- */
 requestAnimationFrame(loop);

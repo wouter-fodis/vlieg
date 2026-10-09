@@ -12,6 +12,12 @@ $allowed = [
     'raw.githubusercontent.com'  => 86400,  // Big Mac-index (CSV van The Economist)
     'api.frankfurter.dev'        => 3600,   // wisselkoersen (dagelijks bijgewerkt)
     'api.worldbank.org'          => 86400,  // inwoners, bbp, levensverwachting
+    'rss.marketingtools.apple.com' => 3600, // hitlijsten per land (Apple Music)
+    'nl.wikipedia.org'           => 86400,  // korte verhalen bij kunstwerken
+    'en.wikipedia.org'           => 86400,
+    'de1.api.radio-browser.info' => 86400,  // radiozenders per land
+    'at1.api.radio-browser.info' => 86400,
+    'nl1.api.radio-browser.info' => 86400,
 ];
 
 header('Cache-Control: no-store');
