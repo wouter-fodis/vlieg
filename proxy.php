@@ -6,6 +6,7 @@ $allowed = [
     'api.adsb.lol'               => 1,      // cache in seconden
     'api.airplanes.live'         => 1,
     'api.adsbdb.com'             => 86400,  // routes veranderen niet
+    'hexdb.io'                   => 86400,  // reserve voor routes en luchthavens
     'commons.wikimedia.org'      => 86400,
     'query.wikidata.org'         => 86400,  // leiders, democratie-index, landenfeiten
     'nominatim.openstreetmap.org'=> 86400,  // plaatsnaam bij je GPS-locatie

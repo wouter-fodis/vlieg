@@ -117,7 +117,8 @@
   .pitem small{color:var(--muted);font-size:.78rem}
   .pthumb{aspect-ratio:1;background:#232527;border-radius:3px;overflow:hidden;margin-bottom:4px;display:grid;place-items:center;font:700 2.2rem 'Barlow Condensed',sans-serif;color:#45484b}
   .pthumb img{width:100%;height:100%;object-fit:cover}
-  .modes{display:flex;gap:8px;margin:0 0 10px}
+  .modes{display:flex;gap:8px;margin:0 0 10px;flex-wrap:wrap}
+  .modes select{flex:1 1 9rem}
   .modes .btn[aria-pressed="true"]{background:var(--sign-yellow);color:#000;border-color:var(--sign-yellow)}
   .custom{display:flex;flex-wrap:wrap;gap:8px;margin:-8px 0 18px}
   .custom input{flex:1 1 240px;background:var(--asphalt-2);color:var(--runway-white);border:1px solid #4a4d50;border-radius:4px;padding:9px 12px;min-height:44px}
@@ -248,6 +249,18 @@
         <div class="modes" role="group" aria-label="Geluid">
           <button type="button" class="btn" data-mode="anthem" aria-pressed="true">Volksliederen</button>
           <button type="button" class="btn" data-mode="radio" aria-pressed="false">Radio</button>
+          <select id="genre" aria-label="Genre van de radiozender" hidden>
+            <option value="popular">Populairste zender</option>
+            <option value="pop">Pop</option>
+            <option value="rock">Rock</option>
+            <option value="folk">Folk</option>
+            <option value="jazz">Jazz</option>
+            <option value="classical">Klassiek</option>
+            <option value="dance">Dance</option>
+            <option value="hip hop">Hiphop</option>
+            <option value="oldies">Oldies</option>
+            <option value="news">Nieuws</option>
+          </select>
         </div>
         <div class="anthem">
           <div class="title" id="anthemTitle">Zet geluid aan: de volksliederen van alle vliegtuigen in de buurt worden gemixt, het dichtstbijzijnde het hardst.</div>
@@ -940,14 +953,46 @@ function prefetchRoutes(){
   }));
 }
 
+async function adsbdbRoute(cs){
+  const j = await getJSON(`https://api.adsbdb.com/v0/callsign/${encodeURIComponent(cs)}`);
+  return j?.response?.flightroute || null;
+}
+// Reserve: hexdb.io kent routes die adsbdb mist; luchthavens daarna los opvragen
+const airportCache = new Map();
+async function hexdbAirport(icao){
+  if (!airportCache.has(icao)) airportCache.set(icao, getJSON(`https://hexdb.io/api/v1/airport/icao/${icao}`).catch(() => null));
+  const a = await airportCache.get(icao);
+  if (!a?.icao) return null;
+  const city = (a.airport || icao).replace(/\b(International|Intl\.?|Regional)\b|\bAirport\b|\bAirfield\b/gi, '').replace(/\s{2,}/g, ' ').trim();
+  return {icao_code: a.icao, iata_code: a.iata, country_iso_name: a.country_code, country_name: a.region_name,
+          municipality: city || a.icao, name: a.airport, latitude: a.latitude, longitude: a.longitude};
+}
+async function hexdbRoute(cs){
+  const j = await getJSON(`https://hexdb.io/api/v1/route/icao/${encodeURIComponent(cs)}`);
+  const m = /^([A-Z0-9]{4})-(?:.*-)?([A-Z0-9]{4})$/.exec(j?.route || '');   // "MMMX-EHAM" (of met tussenstop)
+  if (!m) return null;
+  const [origin, destination] = await Promise.all([hexdbAirport(m[1]), hexdbAirport(m[2])]);
+  return origin && destination ? {origin, destination, source: 'hexdb'} : null;
+}
 async function getRoute(cs){
   if (!cs) return null;
   if (routeCache.has(cs)) return routeCache.get(cs);
-  let route=null;
-  try {
-    const j = await getJSON(`https://api.adsbdb.com/v0/callsign/${encodeURIComponent(cs)}`);
-    route = j?.response?.flightroute || null;
-  } catch(e){ return null; }        // bij een fout niet cachen, later opnieuw proberen
+  // AMX025 heet bij sommige bronnen AMX25: probeer ook zonder voorloopnullen
+  const variants = [cs];
+  const z = /^([A-Z]{3})0+(\d+[A-Z]*)$/.exec(cs);
+  if (z) variants.push(z[1] + z[2]);
+  let route = null, failed = false;
+  for (const v of variants){
+    try { route = await adsbdbRoute(v); } catch(e){ failed = true; }
+    if (route) break;
+  }
+  if (!route){
+    for (const v of variants){
+      try { route = await hexdbRoute(v); } catch(e){}
+      if (route) break;
+    }
+  }
+  if (!route && failed) return null;   // bron haperde: niet onthouden, later opnieuw proberen
   routeCache.set(cs, route);
   return route;
 }
@@ -1427,26 +1472,43 @@ const RADIO_HINT = {
 };
 const RADIO_HOSTS = ['de1', 'at1', 'nl1'];
 const radioCache = new Map();
-async function findRadio(iso){
+let radioGenre = 'popular';
+try { const g = localStorage.getItem('flyGenre'); if (g) radioGenre = g; } catch(e){}
+async function radioSearch(iso, tag){
+  const q = `countrycode=${iso}&hidebroken=true&is_https=true&order=clickcount&reverse=true&limit=80` + (tag ? `&tag=${encodeURIComponent(tag)}` : '');
+  for (const h of RADIO_HOSTS){
+    try { const list = await getJSON(`https://${h}.api.radio-browser.info/json/stations/search?${q}`); if (Array.isArray(list)) return list; } catch(e){}
+  }
+  return null;
+}
+async function findRadio(iso, genre = radioGenre){
   iso = (iso || '').toUpperCase();
   if (!/^[A-Z]{2}$/.test(iso)) return null;
-  if (radioCache.has(iso)) return radioCache.get(iso);
-  let list = null;
-  for (const h of RADIO_HOSTS){
-    try {
-      list = await getJSON(`https://${h}.api.radio-browser.info/json/stations/search?countrycode=${iso}&hidebroken=true&is_https=true&order=clickcount&reverse=true&limit=80`);
-      if (Array.isArray(list)) break;
-    } catch(e){ list = null; }
+  const key = iso + '|' + genre;
+  if (radioCache.has(key)) return radioCache.get(key);
+  const usable = l => (l || []).filter(s => /^https:/.test(s.url_resolved || '') && !+s.hls && !/m3u8/i.test(s.url_resolved));
+  let ok = [], fallback = false;
+  if (genre !== 'popular'){
+    const l = await radioSearch(iso, genre);
+    if (!l) return null;                                 // niet cachen: later opnieuw
+    ok = usable(l);
+    if (!ok.length) fallback = true;                     // geen zender in dit genre: populaire zender
   }
-  if (!Array.isArray(list)) return null;                 // niet cachen: later opnieuw
-  const ok = list.filter(s => /^https:/.test(s.url_resolved || '') && !+s.hls && !/m3u8/i.test(s.url_resolved));
-  const hint = RADIO_HINT[iso];
-  const pref = hint ? ok.filter(s => hint.test(s.name)) : [];
+  let pref = [];
+  if (genre === 'popular' || fallback){
+    const l = await radioSearch(iso, '');
+    if (!l) return null;
+    ok = usable(l);
+    const hint = RADIO_HINT[iso];
+    pref = hint ? ok.filter(s => hint.test(s.name)) : [];
+  }
   const ordered = [...pref, ...ok.filter(s => !pref.includes(s))].slice(0, 4)
-    .map(s => ({name: s.name.trim(), uuid: s.stationuuid || '', src: s.url_resolved, icon: /^https:/.test(s.favicon || '') ? s.favicon : '', home: /^https?:/.test(s.homepage || '') ? s.homepage : ''}));
-  radioCache.set(iso, ordered);
+    .map(s => ({name: s.name.trim(), uuid: s.stationuuid || '', src: s.url_resolved, fallback,
+                icon: /^https:/.test(s.favicon || '') ? s.favicon : '', home: /^https?:/.test(s.homepage || '') ? s.homepage : ''}));
+  radioCache.set(key, ordered);
   return ordered;
 }
+const GENRE_NAME = () => $('genre').selectedOptions[0]?.textContent.toLowerCase() || '';
 
 function soundSource(mode, c){
   if (mode === 'anthem') return findAnthem(c.country).then(a => a ? [{name:'', src:a.src}] : []);
@@ -1473,7 +1535,7 @@ function mixDecks(set, mode, top, now){
         if (free.country !== country) return;
         if (i >= list.length){ free.missing = true; free.label = ''; renderMixer(); return; }
         const s = list[i++];
-        free.missing = false; free.label = s.name; free.uuid = s.uuid || ''; free.icon = s.icon || ''; free.home = s.home || '';
+        free.missing = false; free.label = s.name; free.uuid = s.uuid || ''; free.fallback = !!s.fallback; free.icon = s.icon || ''; free.home = s.home || '';
         free.el.onerror = tryNext;                         // zender werkt niet: volgende proberen
         free.el.src = s.src;
         free.el.play().catch(err => {
@@ -1566,12 +1628,12 @@ let onAirKey = '';
 function renderOnAir(d){
   const box = $('onair');
   if (!d){ box.hidden = true; onAirKey = ''; onAirUuid = ''; clearTimeout(songTimer); return; }
-  const key = d.country + '|' + d.label;
+  const key = d.country + '|' + d.label + '|' + radioGenre;
   box.hidden = false;
   if (key === onAirKey) return;                  // niets veranderd: niet opnieuw opbouwen
   onAirKey = key;
   $('onairName').textContent = d.label;
-  $('onairCountry').textContent = `${flagOf(d.iso)} ${d.country}`;
+  $('onairCountry').textContent = `${flagOf(d.iso)} ${d.country}` + (radioGenre === 'popular' ? '' : d.fallback ? ` \u00b7 geen ${GENRE_NAME()}zender gevonden, dit is de populairste` : ` \u00b7 ${GENRE_NAME()}`);
   const ic = $('onairIcon'); ic.innerHTML = '';
   if (d.icon){ const i = document.createElement('img'); i.src = d.icon; i.alt = ''; i.onerror = () => { i.remove(); ic.textContent = d.label.charAt(0); }; ic.append(i); }
   else ic.textContent = d.label.charAt(0);
@@ -1621,6 +1683,13 @@ function setSoundMode(m){
   try { localStorage.setItem('flySound', m); } catch(e){}
   document.querySelectorAll('.modes [data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
   $('anthemTitle').textContent = SOUND_TEXT[m];
+  $('genre').hidden = m !== 'radio';
+  updateMix();
+}
+function setGenre(g){
+  radioGenre = g; $('genre').value = g;
+  try { localStorage.setItem('flyGenre', g); } catch(e){}
+  radioDecks.forEach(d => { if (d.country) releaseDeck(d); });   // andere zenders kiezen
   updateMix();
 }
 
@@ -1632,6 +1701,8 @@ $('greetPlay').onclick = speakGreeting;
 if (window.speechSynthesis) speechSynthesis.getVoices();   // stemmen alvast laden
 
 document.querySelector('.modes').addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (b) setSoundMode(b.dataset.mode); });
+$('genre').value = radioGenre; if (!$('genre').value) radioGenre = $('genre').value = 'popular';
+$('genre').onchange = e => setGenre(e.target.value);
 setSoundMode(soundMode);
 initTabs();
 
