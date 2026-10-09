@@ -1539,7 +1539,7 @@ async function findRadio(iso, genre = radioGenre){
     const hint = RADIO_HINT[iso];
     pref = hint ? ok.filter(s => hint.test(s.name)) : [];
   }
-  const ordered = [...pref, ...ok.filter(s => !pref.includes(s))].slice(0, 4)
+  const ordered = [...pref, ...ok.filter(s => !pref.includes(s))].slice(0, 6)
     .map(s => ({name: s.name.trim(), uuid: s.stationuuid || '', src: s.url_resolved, fallback,
                 icon: /^https:/.test(s.favicon || '') ? s.favicon : '', home: /^https?:/.test(s.homepage || '') ? s.homepage : ''}));
   radioCache.set(key, ordered);
@@ -1567,10 +1567,21 @@ function mixDecks(set, mode, top, now){
     const country = c.country;
     soundSource(mode, c).then(list => {
       if (free.country !== country) return;
-      let i = 0;
+      let i = 0, triedPopular = mode !== 'radio' || radioGenre === 'popular';
       const tryNext = () => {
         if (free.country !== country) return;
-        if (i >= list.length){ free.missing = true; free.label = ''; renderMixer(); return; }
+        if (i >= list.length){
+          // geen (werkende) zender in dit genre: dan de populairste zenders van het land
+          if (!triedPopular){
+            triedPopular = true;
+            findRadio(c.iso, 'popular').then(l2 => {
+              if (free.country !== country) return;
+              list = (l2 || []).map(s => ({...s, fallback: true})); i = 0; tryNext();
+            });
+            return;
+          }
+          free.missing = true; free.label = ''; renderMixer(); return;
+        }
         const s = list[i++];
         free.missing = false; free.streamSrc = s.src; free.label = s.name; free.uuid = s.uuid || ''; free.fallback = !!s.fallback; free.icon = s.icon || ''; free.home = s.home || '';
         free.el.onerror = tryNext;                         // zender werkt niet: volgende proberen
@@ -1712,7 +1723,7 @@ function renderMixer(){
     const n = r.querySelector('.n');
     n.textContent = `${flagOf(d.iso)} ${d.country}`;
     const hold = d.held ? 'blijft spelen tot het volgende vliegtuig' : '';
-    const sub = d.missing ? (radio ? 'geen zender gevonden' : 'geen opname') : [radio ? (d.label || 'zender zoeken\u2026') : '', hold].filter(Boolean).join(' \u00b7 ');
+    const sub = d.missing ? (radio ? 'geen werkende zender gevonden in dit land' : 'geen opname') : [radio ? (d.label || 'zender zoeken\u2026') : '', hold].filter(Boolean).join(' \u00b7 ');
     if (sub){ const sm = document.createElement('small'); sm.textContent = sub; n.append(sm); }
     n.title = d.label ? `${d.country} \u00b7 ${d.label}` : d.country;
     r.querySelector('.b span').style.width = `${Math.round(d.target*100)}%`;
@@ -1730,7 +1741,7 @@ function renderOnAir(d){
   if (key === onAirKey) return;                  // niets veranderd: niet opnieuw opbouwen
   onAirKey = key;
   $('onairName').textContent = d.label;
-  $('onairCountry').textContent = `${flagOf(d.iso)} ${d.country}` + (radioGenre === 'popular' ? '' : d.fallback ? ` \u00b7 geen ${GENRE_NAME()}zender gevonden, dit is de populairste` : ` \u00b7 ${GENRE_NAME()}`);
+  $('onairCountry').textContent = `${flagOf(d.iso)} ${d.country}` + (radioGenre === 'popular' || d.pinned ? '' : d.fallback ? ` \u00b7 geen werkende ${GENRE_NAME()}zender gevonden, dit is de populairste zender` : ` \u00b7 ${GENRE_NAME()}`);
   const ic = $('onairIcon'); ic.innerHTML = '';
   if (d.icon){ const i = document.createElement('img'); i.src = d.icon; i.alt = ''; i.onerror = () => { i.remove(); ic.textContent = d.label.charAt(0); }; ic.append(i); }
   else ic.textContent = d.label.charAt(0);
