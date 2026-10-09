@@ -38,7 +38,7 @@ function icy_title($url) {
         CURLOPT_REDIR_PROTOCOLS=> CURLPROTO_HTTP | CURLPROTO_HTTPS,
         CURLOPT_CONNECTTIMEOUT => 4,
         CURLOPT_TIMEOUT        => 8,
-        CURLOPT_USERAGENT      => 'SchipholOverhead/1.0 (https://fodis.nl/fly)',
+        CURLOPT_USERAGENT      => 'DJVliegtuig/1.0 (https://fodis.nl/fly)',
         CURLOPT_HEADERFUNCTION => function ($ch, $h) use (&$metaint) {
             if (preg_match('/^icy-metaint:\s*(\d+)/i', $h, $m)) $metaint = (int)$m[1];
             return strlen($h);
@@ -102,7 +102,7 @@ if (isset($_GET['icy']) && !defined('ICY_TEST')) {
     if (!$station) {
         foreach (['de1', 'at1', 'nl1'] as $h) {
             $ch = curl_init("https://$h.api.radio-browser.info/json/stations/byuuid/$uuid");
-            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 6, CURLOPT_USERAGENT => 'SchipholOverhead/1.0 (https://fodis.nl/fly)']);
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 6, CURLOPT_USERAGENT => 'DJVliegtuig/1.0 (https://fodis.nl/fly)']);
             $arr = json_decode((string)curl_exec($ch), true);
             curl_close($ch);
             if (!empty($arr[0]['url_resolved'])) { $station = ['url' => $arr[0]['url_resolved'], 'name' => $arr[0]['name'] ?? '']; break; }
@@ -162,7 +162,7 @@ curl_setopt_array($ch, [
     CURLOPT_CONNECTTIMEOUT => 4,
     CURLOPT_FOLLOWLOCATION => true,
     CURLOPT_MAXREDIRS      => 2,
-    CURLOPT_USERAGENT      => 'SchipholOverhead/1.0 (https://fodis.nl/fly)', // o.a. adsb.lol en Nominatim eisen een User-Agent
+    CURLOPT_USERAGENT      => 'DJVliegtuig/1.0 (https://fodis.nl/fly)', // o.a. adsb.lol en Nominatim eisen een User-Agent
     CURLOPT_HTTPHEADER     => [$isCsv ? 'Accept: text/csv,text/plain' : 'Accept: application/json'],
 ]);
 $body = curl_exec($ch);
