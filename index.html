@@ -1572,25 +1572,26 @@ function updateMix(){
       if (!cur || w > cur.w) byCountry.set(t.country, {country:t.country, iso:t.iso, w, cs:p.callsign});
     }
   }
-  // Vasthouden: het land van het laatste vliegtuig dat echt boven je was blijft
-  // spelen tot er een nieuw vliegtuig komt. Naarmate dat dichterbij komt, zakt
-  // het vastgehouden geluid weg en komt het nieuwe op.
+  // Vasthouden: het land van het vliegtuig dat als laatste echt boven je was
+  // (binnen je straal) is de dj. Die blijft minstens op HOLD_LEVEL spelen, ook als
+  // het toestel wegvliegt, tot een nieuw vliegtuig binnen je straal komt. Andere
+  // toestellen in de buurt klinken zacht mee in de ruimte die overblijft.
   if (!soundOn) lastLead = null;
   let realTop = null;
   byCountry.forEach(c => { if (!realTop || c.w > realTop.w) realTop = c; });
   if (realTop && realTop.w >= 0.35) lastLead = {country: realTop.country, iso: realTop.iso};   // binnen je straal
   if (soundOn && lastLead){
-    let other = 0;
-    byCountry.forEach(c => { if (c.country !== lastLead.country) other = Math.max(other, c.w); });
-    const hw = HOLD_LEVEL * (1 - Math.min(1, other / 0.75));
     const cur = byCountry.get(lastLead.country);
-    if (hw > 0.01 && (!cur || (cur.w < 0.35 && hw > cur.w))) byCountry.set(lastLead.country, {...lastLead, w: hw, held: true});   // niet als het toestel zelf nog boven je is
+    if (!cur || cur.w < HOLD_LEVEL) byCountry.set(lastLead.country, {...lastLead, w: HOLD_LEVEL, held: !cur || cur.w < 0.35});
   }
 
   const pool = soundMode === 'radio' && !CAN_VOLUME ? 1 : POOL;
   const top = [...byCountry.values()].sort((a,b)=>b.w-a.w).slice(0, pool);
-  const sum = top.reduce((a,c)=>a+c.w, 0);
-  if (sum > 1) top.forEach(c => c.w /= sum);                        // samen niet te hard
+  const lead = top.find(c => c.country === lastLead?.country);
+  const rest = top.filter(c => c !== lead);
+  const room = Math.max(0, 1 - (lead ? lead.w : 0));                 // samen niet harder dan 100%
+  const restSum = rest.reduce((a,c)=>a+c.w, 0);
+  if (restSum > room) rest.forEach(c => c.w *= room / restSum);
   if (pool === 1) top.forEach(c => c.w = 1);                        // iOS-radio: gewoon aan
 
   mixDecks(decks,      'anthem', soundMode === 'anthem' ? top : [], now);
