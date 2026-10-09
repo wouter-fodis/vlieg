@@ -62,6 +62,7 @@
   .greet-rest{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:-10px 0 22px}
   .greet-rest #greetText{flex:1 1 220px;font-family:"Barlow Condensed",sans-serif;font-weight:500;font-size:clamp(1.25rem,5vw,1.7rem);line-height:1.25;unicode-bidi:plaintext}
   .greet-rest .btn{white-space:nowrap}
+  .greet-host{order:3;flex:1 1 100%;font-family:"Barlow Condensed",sans-serif;font-weight:500;font-size:clamp(1.1rem,4.4vw,1.45rem);line-height:1.25;color:var(--sign-yellow)}
   .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:2px;margin-top:2px}
   .fact{background:var(--asphalt-2);padding:8px 12px}
   .fact:last-child{grid-column:1/-1}
@@ -227,6 +228,7 @@
         </section>
         <div class="greet-rest" id="greetRest" hidden>
           <span id="greetText" dir="auto"></span>
+          <span id="greetHost" class="greet-host" hidden></span>
           <button class="btn" id="greetPlay" type="button">&#128266; <span data-i18n="listen">Luister</span></button>
         </div>
         <dl class="facts" id="facts" hidden>
@@ -358,7 +360,7 @@ const I18N = {
     txtAnthem:'Zet geluid aan: de volksliederen van alle vliegtuigen in de buurt worden gemixt, het dichtstbijzijnde het hardst.',
     txtRadio:'Zet geluid aan: elk land krijgt zijn radiozender. De vliegtuigen zijn de dj en schuiven de mixer naar het land dat het dichtst bij is.',
     txtRadioIOS:'Zet geluid aan: de radiozender van het land van het dichtstbijzijnde vliegtuig speelt. Op iPhone en iPad schakelt hij direct over, zonder fade.',
-    end:'kop', d_n:'noord', d_s:'zuid', d_e:'oost', d_w:'west', d_ne:'noordoost', d_sw:'zuidwest', language:'Taal', runway:'Baan', d_se:'zuidoost', d_nw:'noordwest', pickRunwayAria:'Kies een baankop',
+    end:'kop', d_n:'noord', d_s:'zuid', d_e:'oost', d_w:'west', d_ne:'noordoost', d_sw:'zuidwest', language:'Taal', welcomeHost:'Welkom {c}, het land van {x}!', runway:'Baan', d_se:'zuidoost', d_nw:'noordwest', pickRunwayAria:'Kies een baankop',
   },
   en: {
     pickSpot:'Choose a spot or airport', useGps:'Use my location', soundOn:'Start sound', soundOff:'Sound off',
@@ -400,7 +402,7 @@ const I18N = {
     txtAnthem:'Turn the sound on: the anthems of all nearby planes are mixed, the closest one loudest.',
     txtRadio:'Turn the sound on: every country gets its radio station. The planes are the DJ and slide the mixer to the country that is closest.',
     txtRadioIOS:'Turn the sound on: the radio station of the closest plane\u2019s country plays. On iPhone and iPad it switches straight away, without a fade.',
-    end:'end', d_n:'north', d_s:'south', d_e:'east', d_w:'west', d_ne:'northeast', d_sw:'southwest', language:'Language', runway:'Runway', d_se:'southeast', d_nw:'northwest', pickRunwayAria:'Choose a runway end',
+    end:'end', d_n:'north', d_s:'south', d_e:'east', d_w:'west', d_ne:'northeast', d_sw:'southwest', language:'Language', welcomeHost:'Welcome {c}, the land of {x}!', runway:'Runway', d_se:'southeast', d_nw:'northwest', pickRunwayAria:'Choose a runway end',
   },
   de: {
     pickSpot:'Ort oder Flughafen w\u00e4hlen', useGps:'Meinen Standort verwenden', soundOn:'Ton starten', soundOff:'Ton aus',
@@ -442,7 +444,7 @@ const I18N = {
     txtAnthem:'Schalte den Ton ein: Die Hymnen aller Flugzeuge in der N\u00e4he werden gemischt, das n\u00e4chste am lautesten.',
     txtRadio:'Schalte den Ton ein: Jedes Land bekommt seinen Radiosender. Die Flugzeuge sind der DJ und schieben den Mixer zum Land, das am n\u00e4chsten ist.',
     txtRadioIOS:'Schalte den Ton ein: Der Radiosender des Landes des n\u00e4chsten Flugzeugs l\u00e4uft. Auf iPhone und iPad schaltet er sofort um, ohne \u00dcberblendung.',
-    end:'Schwelle', d_n:'Nord', d_s:'S\u00fcd', d_e:'Ost', d_w:'West', d_ne:'Nordost', d_sw:'S\u00fcdwest', language:'Sprache', runway:'Bahn', d_se:'S\u00fcdost', d_nw:'Nordwest', pickRunwayAria:'Bahnende w\u00e4hlen',
+    end:'Schwelle', d_n:'Nord', d_s:'S\u00fcd', d_e:'Ost', d_w:'West', d_ne:'Nordost', d_sw:'S\u00fcdwest', language:'Sprache', welcomeHost:'Willkommen {c}, dem Land von {x}!', runway:'Bahn', d_se:'S\u00fcdost', d_nw:'Nordwest', pickRunwayAria:'Bahnende w\u00e4hlen',
   },
 };
 const LANGS = ['nl', 'en', 'de'];
@@ -1333,19 +1335,81 @@ const COUNTRY_LANG = Object.fromEntries((
   'JP ja,KR ko,TH th,ID id,MY ms,VN vi,KE sw,TZ sw'
 ).split(',').map(x => x.split(' ')));
 
+
+/* Welkom in het land van de luchthaven: per land "in X" en drie dingen waar het
+   bekend om staat, in de taal van de app. */
+const HOSTS = {
+  AL:{nl:['in Albani\u00eb','byrek, adelaars en de Albanese Rivi\u00e8ra'], en:['to Albania','byrek, eagles and the Albanian Riviera'], de:['in Albanien','Byrek, Adlern und der Albanischen Riviera']},
+  AT:{nl:['in Oostenrijk','schnitzel, Mozart en sachertaart'], en:['to Austria','schnitzel, Mozart and Sachertorte'], de:['in \u00d6sterreich','Schnitzel, Mozart und Sachertorte']},
+  BA:{nl:['in Bosni\u00eb en Herzegovina','\u0107evapi, de Oude Brug en sterke koffie'], en:['to Bosnia and Herzegovina','\u0107evapi, the Old Bridge and strong coffee'], de:['in Bosnien und Herzegowina','\u0106evapi, der Alten Br\u00fccke und starkem Kaffee']},
+  BE:{nl:['in Belgi\u00eb','frietjes, wafels en chocolade'], en:['to Belgium','fries, waffles and chocolate'], de:['in Belgien','Pommes, Waffeln und Schokolade']},
+  BG:{nl:['in Bulgarije','yoghurt, rozenolie en de Zwarte Zee'], en:['to Bulgaria','yoghurt, rose oil and the Black Sea'], de:['in Bulgarien','Joghurt, Rosen\u00f6l und dem Schwarzen Meer']},
+  BY:{nl:['in Belarus','draniki, bossen en meren'], en:['to Belarus','draniki, forests and lakes'], de:['in Belarus','Draniki, W\u00e4ldern und Seen']},
+  CH:{nl:['in Zwitserland','kaasfondue, chocolade en de Alpen'], en:['to Switzerland','cheese fondue, chocolate and the Alps'], de:['in der Schweiz','K\u00e4sefondue, Schokolade und den Alpen']},
+  CY:{nl:['op Cyprus','halloumi, zon en zee'], en:['to Cyprus','halloumi, sunshine and the sea'], de:['auf Zypern','Halloumi, Sonne und Meer']},
+  CZ:{nl:['in Tsjechi\u00eb','pilsener, knedl\u00edky en de Karelsbrug'], en:['to Czechia','pilsner, dumplings and the Charles Bridge'], de:['in Tschechien','Pilsner, Kn\u00f6deln und der Karlsbr\u00fccke']},
+  DE:{nl:['in Duitsland','braadworst, brezels en de Autobahn'], en:['to Germany','bratwurst, pretzels and the Autobahn'], de:['in Deutschland','Bratwurst, Brezeln und der Autobahn']},
+  DK:{nl:['in Denemarken','sm\u00f8rrebr\u00f8d, LEGO en hygge'], en:['to Denmark','sm\u00f8rrebr\u00f8d, LEGO and hygge'], de:['in D\u00e4nemark','Sm\u00f8rrebr\u00f8d, LEGO und Hygge']},
+  EE:{nl:['in Estland','sauna\u2019s, zangfestivals en snel internet'], en:['to Estonia','saunas, song festivals and fast internet'], de:['in Estland','Saunen, S\u00e4ngerfesten und schnellem Internet']},
+  ES:{nl:['in Spanje','paella, tapas en flamenco'], en:['to Spain','paella, tapas and flamenco'], de:['in Spanien','Paella, Tapas und Flamenco']},
+  FI:{nl:['in Finland','sauna\u2019s, meren en het noorderlicht'], en:['to Finland','saunas, lakes and the northern lights'], de:['in Finnland','Saunen, Seen und Nordlichtern']},
+  FO:{nl:['op de Faer\u00f6er','schapen, kliffen en wind'], en:['to the Faroe Islands','sheep, cliffs and wind'], de:['auf den F\u00e4r\u00f6ern','Schafen, Klippen und Wind']},
+  FR:{nl:['in Frankrijk','croissants, kaas en de Eiffeltoren'], en:['to France','croissants, cheese and the Eiffel Tower'], de:['in Frankreich','Croissants, K\u00e4se und dem Eiffelturm']},
+  GB:{nl:['in het Verenigd Koninkrijk','fish-and-chips, thee en rode dubbeldekkers'], en:['to the United Kingdom','fish and chips, tea and red double-deckers'], de:['im Vereinigten K\u00f6nigreich','Fish and Chips, Tee und roten Doppeldeckern']},
+  GI:{nl:['in Gibraltar','de Rots, apen en zon'], en:['to Gibraltar','the Rock, monkeys and sunshine'], de:['in Gibraltar','dem Felsen, Affen und Sonne']},
+  GR:{nl:['in Griekenland','feta, olijven en eilanden'], en:['to Greece','feta, olives and islands'], de:['in Griechenland','Feta, Oliven und Inseln']},
+  HR:{nl:['in Kroati\u00eb','eilanden, de Adriatische Zee en peka'], en:['to Croatia','islands, the Adriatic and peka'], de:['in Kroatien','Inseln, der Adria und Peka']},
+  HU:{nl:['in Hongarije','goulash, paprika en thermale baden'], en:['to Hungary','goulash, paprika and thermal baths'], de:['in Ungarn','Gulasch, Paprika und Thermalb\u00e4dern']},
+  IE:{nl:['in Ierland','groene heuvels, Guinness en Ierse muziek'], en:['to Ireland','green hills, Guinness and Irish music'], de:['in Irland','gr\u00fcnen H\u00fcgeln, Guinness und irischer Musik']},
+  IM:{nl:['op het eiland Man','TT-races, katten zonder staart en kliffen'], en:['to the Isle of Man','the TT races, tailless cats and sea cliffs'], de:['auf der Isle of Man','TT-Rennen, schwanzlosen Katzen und Klippen']},
+  IS:{nl:['in IJsland','geisers, vulkanen en het noorderlicht'], en:['to Iceland','geysers, volcanoes and the northern lights'], de:['in Island','Geysiren, Vulkanen und Nordlichtern']},
+  IT:{nl:['in Itali\u00eb','pizza, pasta en espresso'], en:['to Italy','pizza, pasta and espresso'], de:['in Italien','Pizza, Pasta und Espresso']},
+  LT:{nl:['in Litouwen','cepelinai, barnsteen en basketbal'], en:['to Lithuania','cepelinai, amber and basketball'], de:['in Litauen','Cepelinai, Bernstein und Basketball']},
+  LU:{nl:['in Luxemburg','kastelen, wijn en een groothertog'], en:['to Luxembourg','castles, wine and a Grand Duke'], de:['in Luxemburg','Burgen, Wein und einem Gro\u00dfherzog']},
+  LV:{nl:['in Letland','roggebrood, zangfestivals en de Oostzee'], en:['to Latvia','rye bread, song festivals and the Baltic Sea'], de:['in Lettland','Roggenbrot, S\u00e4ngerfesten und der Ostsee']},
+  MD:{nl:['in Moldavi\u00eb','wijnkelders, pl\u0103cint\u0103 en zonnebloemen'], en:['to Moldova','wine cellars, pl\u0103cint\u0103 and sunflowers'], de:['in Moldau','Weinkellern, Pl\u0103cint\u0103 und Sonnenblumen']},
+  ME:{nl:['in Montenegro','bergen, de Baai van Kotor en de Adriatische Zee'], en:['to Montenegro','mountains, the Bay of Kotor and the Adriatic'], de:['in Montenegro','Bergen, der Bucht von Kotor und der Adria']},
+  MK:{nl:['in Noord-Macedoni\u00eb','ajvar, het Ohridmeer en oude kerkjes'], en:['to North Macedonia','ajvar, Lake Ohrid and old churches'], de:['in Nordmazedonien','Ajvar, dem Ohridsee und alten Kirchen']},
+  MT:{nl:['op Malta','pastizzi, zon en ridders'], en:['to Malta','pastizzi, sunshine and knights'], de:['auf Malta','Pastizzi, Sonne und Rittern']},
+  NL:{nl:['in Nederland','bitterballen, kaas en oranje'], en:['to the Netherlands','bitterballen, cheese and orange'], de:['in den Niederlanden','Bitterballen, K\u00e4se und Orange']},
+  NO:{nl:['in Noorwegen','fjorden, bruine kaas en het noorderlicht'], en:['to Norway','fjords, brown cheese and the northern lights'], de:['in Norwegen','Fjorden, braunem K\u00e4se und Nordlichtern']},
+  PL:{nl:['in Polen','pierogi, \u017curek en Chopin'], en:['to Poland','pierogi, \u017curek and Chopin'], de:['in Polen','Pierogi, \u017burek und Chopin']},
+  PT:{nl:['in Portugal','past\u00e9is de nata, fado en de oceaan'], en:['to Portugal','past\u00e9is de nata, fado and the ocean'], de:['in Portugal','Past\u00e9is de Nata, Fado und dem Ozean']},
+  RO:{nl:['in Roemeni\u00eb','mici, de Karpaten en kastelen'], en:['to Romania','mici, the Carpathians and castles'], de:['in Rum\u00e4nien','Mici, den Karpaten und Burgen']},
+  RS:{nl:['in Servi\u00eb','\u0107evapi, ajvar en de Donau'], en:['to Serbia','\u0107evapi, ajvar and the Danube'], de:['in Serbien','\u0106evapi, Ajvar und der Donau']},
+  RU:{nl:['in Rusland','borsjt, ballet en matroesjka\u2019s'], en:['to Russia','borscht, ballet and matryoshka dolls'], de:['in Russland','Borschtsch, Ballett und Matrjoschkas']},
+  SE:{nl:['in Zweden','kanelbullar, fika en ABBA'], en:['to Sweden','cinnamon buns, fika and ABBA'], de:['in Schweden','Zimtschnecken, Fika und ABBA']},
+  SI:{nl:['in Sloveni\u00eb','de Alpen, het meer van Bled en grotten'], en:['to Slovenia','the Alps, Lake Bled and caves'], de:['in Slowenien','den Alpen, dem Bleder See und H\u00f6hlen']},
+  SK:{nl:['in Slowakije','bryndzov\u00e9 halu\u0161ky, kastelen en de Tatra'], en:['to Slovakia','bryndzov\u00e9 halu\u0161ky, castles and the Tatras'], de:['in der Slowakei','Bryndzov\u00e9 Halu\u0161ky, Burgen und der Tatra']},
+  TR:{nl:['in Turkije','baklava, thee en de Bosporus'], en:['to T\u00fcrkiye','baklava, tea and the Bosphorus'], de:['in der T\u00fcrkei','Baklava, Tee und dem Bosporus']},
+  XK:{nl:['in Kosovo','flija, bergen en sterke koffie'], en:['to Kosovo','flija, mountains and strong coffee'], de:['im Kosovo','Flija, Bergen und starkem Kaffee']},
+};
+function hostLine(iso){
+  const h = HOSTS[(iso || '').toUpperCase()];
+  if (!h) return null;
+  const [where, things] = h[LANG] || h.en;
+  return t('welcomeHost', {c: where, x: things});
+}
+
 function greetingFor(route){
   const tgt = anthemTarget(route);
   if (!tgt) return null;
   const arriving = tgt.why === 'komt uit';
-  // de welkomstzin gaat over Nederland, dus alleen bij landingen op Schiphol
-  if (arriving && route.destination?.icao_code !== HOME_ICAO) return null;
   const lang = COUNTRY_LANG[(tgt.iso||'').toUpperCase()] || 'en';
   const g = GREET[lang], [big, rest] = arriving ? g.arr : g.dep;
   const full = rest.startsWith('|');
-  const restText = (full ? rest.slice(1) : rest).replace('{p}', placeLabel());
-  return {lang, voice:g.v, big, rest:restText, say: full ? restText : `${big} ${restText}`};
+  let body = full ? rest.slice(1) : rest;
+  // landing: alleen "welkom in <plaats>!" in de taal van het vliegtuig; het land
+  // van de luchthaven komt in een eigen zin in de taal van de app
+  let extra = null;
+  if (arriving){
+    const first = body.match(/^.*?\{p\}[^!\uff01]*[!\uff01]/);
+    if (first) body = first[0];
+    extra = hostLine(route.destination?.country_iso_name);
+  }
+  const restText = body.replace('{p}', placeLabel());
+  return {lang, voice:g.v, big, rest:restText, say: full ? restText : `${big} ${restText}`, extra};
 }
-
 let greetNow = null;
 function showGreeting(route){
   const g = route ? greetingFor(route) : null;
@@ -1354,18 +1418,23 @@ function showGreeting(route){
   if (!g){ big.hidden = true; rest.hidden = true; return; }
   big.textContent = g.big; big.lang = g.lang;
   $('greetText').textContent = g.rest; $('greetText').lang = g.lang;
+  $('greetHost').textContent = g.extra || ''; $('greetHost').hidden = !g.extra;
   big.hidden = false; rest.hidden = false;
+}
+function sayIn(text, voiceTag){
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = voiceTag;
+  const pre = voiceTag.split('-')[0];
+  const voices = speechSynthesis.getVoices();
+  u.voice = voices.find(v => v.lang.replace('_','-') === voiceTag) || voices.find(v => v.lang.startsWith(pre)) || null;
+  u.rate = 0.95;
+  speechSynthesis.speak(u);                     // spreekt na elkaar, in de wachtrij
 }
 function speakGreeting(){
   if (!greetNow || !window.speechSynthesis) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(greetNow.say);
-  u.lang = greetNow.voice;
-  const pre = greetNow.voice.split('-')[0];
-  const voices = speechSynthesis.getVoices();
-  u.voice = voices.find(v => v.lang.replace('_','-') === greetNow.voice) || voices.find(v => v.lang.startsWith(pre)) || null;
-  u.rate = 0.95;
-  speechSynthesis.speak(u);
+  sayIn(greetNow.say, greetNow.voice);
+  if (greetNow.extra) sayIn(greetNow.extra, LOCALE);
 }
 
 function showRoute(p, route){
