@@ -1,4 +1,6 @@
-# DJ VLIEGTUIG: overdracht
+# DJ VLIEGTUIG RADIO: overdracht
+
+Zusterproject: DJ Vliegtuig Discovery (`wouter-fodis/dj-vliegtuig-discovery`, fodis.nl/discovery). Wijzigingen voor Discovery horen niet in deze repo.
 
 Webapp die laat zien welk vliegtuig er nu boven je vliegt (bij Schiphol of een andere Europese luchthaven), en daar muziek en landinfo bij toont. De vliegtuigen zijn de dj: het land van het toestel dat boven je is, bepaalt welk volkslied of welke radiozender er speelt.
 

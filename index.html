@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DJ VLIEGTUIG</title>
+<title>DJ VLIEGTUIG RADIO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -42,7 +42,9 @@
 
   .controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
   select,.btn{background:var(--asphalt-2);color:var(--runway-white);border:1px solid #4a4d50;border-radius:4px;padding:9px 12px;min-height:44px}
-  select{flex:1 1 220px}
+  select{flex:1 1 220px;min-width:0;max-width:100%}
+  .brand{flex-wrap:wrap}
+  .brand h1 .sub{color:var(--runway-white);font-weight:600}
   #runway{flex:1 1 200px}
   .btn{cursor:pointer}
   .btn.primary{background:var(--sign-yellow);color:#000;border-color:var(--sign-yellow);font-weight:500}
@@ -186,7 +188,7 @@
 <main>
   <header class="top">
   <div class="brand">
-    <h1>DJ VLIEGTUIG</h1>
+    <h1>DJ VLIEGTUIG <span class="sub">RADIO</span></h1>
     <div class="langs" role="group" data-i18n-attr="aria-label:language">
       <button type="button" data-lang="nl">NL</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="de">DE</button>
     </div>
