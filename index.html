@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DJ VLIEGTUIG RADIO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;1,700&family=Barlow:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --asphalt:#2b2d2f;
@@ -195,6 +195,108 @@
   .ladder i{position:absolute;top:0;bottom:0;width:2px;background:var(--asphalt-2)}
   .demo-cat{font-size:.9rem}
   .demo-src{font-size:.75rem;color:var(--muted);margin-top:4px}
+
+  /* ================= Old-school luchthaven (jaren 60/70) =================
+     Walnoten lattenplafond, creme wanden, terrazzo, oranje/roest/mosterd stoelen,
+     split-flap vertrekborden in een groen frame en aluminium bewegwijzering.
+     Terug naar het oude ontwerp: branch voor-retro-design. */
+  :root{
+    --asphalt:#2e1c11; --asphalt-2:#4a2f1e; --sign-yellow:#e9a33b; --runway-white:#f4ead6;
+    --muted:#c4ad8b; --mandatory-red:#b5391d;
+    --wood:#3d2415; --cream:#efe4cc; --cream-2:#e2d3b2; --ink:#2b1a0e; --navy:#1f3a6e;
+    --board:#121212; --frame:#2f5d50; --frame-hi:#4a7f6f; --orange:#d9661f; --rust:#a63a1c; --alu:#b9bcbd;
+    --line:rgba(244,234,214,.16);
+  }
+  html{background-color:#2a190f;
+    background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 2px,rgba(255,200,150,.03) 2px 3px,transparent 3px 16px),
+      linear-gradient(180deg,#4a2b17 0,#2e1c11 480px,#2a190f 900px)}
+  body{background:transparent}
+  main{padding-top:26px}
+  /* titel met 70's streep */
+  .brand{padding-bottom:16px;margin-bottom:18px;position:relative}
+  .brand::after{content:'';position:absolute;left:0;right:0;bottom:0;height:9px;
+    background:linear-gradient(180deg,#e0a526 0 3px,var(--orange) 3px 6px,var(--rust) 6px 9px)}
+  h1{font:italic 700 2.1rem/1 "Barlow Condensed",sans-serif;letter-spacing:.02em;color:var(--orange);text-shadow:0 2px 0 rgba(0,0,0,.35)}
+  .brand h1 .sub{color:var(--cream);font-style:normal}
+  /* knoppen en keuzelijsten: houten balie */
+  select,.btn,.custom input{background:#4a2f1e;color:var(--runway-white);border:1px solid rgba(244,234,214,.22);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+  .btn.primary,.modes .btn[aria-pressed="true"]{background:var(--orange);border-color:#f08a44;color:#fff6e8;font-weight:600;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+  .wa-btn{background:#25d366;color:#0b141a;border-color:#25d366}
+  .langs{border-color:rgba(244,234,214,.22)}
+  .langs button[aria-pressed="true"]{background:var(--cream);color:var(--navy)}
+  /* RADIO / DISCOVER: zwart "Flight Information"-bord */
+  .apps{background:#141414;border:0;border-radius:2px;padding:5px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+  .apps a strong{font-family:Barlow,sans-serif;font-weight:500;letter-spacing:.02em;font-size:1.2rem}
+  .apps a[aria-current="page"]{background:var(--cream);color:var(--ink)}
+  .apps a:hover{background:#262626}
+
+  /* vluchtnummer: split-flap vertrekbord in een groen frame */
+  .sign-loc{background:var(--board);border:10px solid var(--frame);border-bottom-width:6px;border-radius:4px 4px 0 0;
+    box-shadow:inset 0 0 0 2px #000,inset 0 0 0 3px var(--frame-hi),0 8px 18px rgba(0,0,0,.35);padding:16px 16px 12px;align-items:center}
+  .callsign{font-family:"Space Mono",monospace;font-weight:700;color:#f3eedf;font-size:clamp(2.2rem,10vw,5rem);letter-spacing:0;line-height:1.1}
+  .flight .callsign{font-size:clamp(2.6rem,6vw,5rem)}
+  .callsign.idle{font-family:"Space Mono",monospace;font-weight:400;font-size:clamp(1.2rem,5vw,1.7rem);color:#d8d0bf;text-transform:uppercase;letter-spacing:.06em}
+  .flap{display:inline-block;position:relative;min-width:.74em;text-align:center;margin:0 .05em .06em 0;padding:.02em .05em;
+    background:linear-gradient(180deg,#2a2a2a 0 49%,#1c1c1c 51% 100%);border-radius:.07em;box-shadow:0 .03em 0 #000}
+  .flap::after{content:'';position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:rgba(0,0,0,.9)}
+  .flap.flip{animation:flap .09s linear}
+  @keyframes flap{0%{transform:scaleY(1)}50%{transform:scaleY(.15)}100%{transform:scaleY(1)}}
+  .sign-tag{font-family:"Space Mono",monospace;font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;border-color:var(--sign-yellow);color:var(--sign-yellow);border-radius:2px}
+  .sign-tag.now{background:var(--sign-yellow);color:#111}
+  /* route: creme bord in aluminium lijst (zoals Airline Ticket Offices) */
+  .sign-dir{background:linear-gradient(180deg,var(--cream) 0,var(--cream-2) 100%);color:var(--navy);
+    border:6px solid var(--alu);border-top:0;border-radius:0 0 4px 4px;
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.5),0 8px 18px rgba(0,0,0,.3);
+    font:italic 700 clamp(1.3rem,5.4vw,1.9rem)/1.2 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.02em}
+  .sign-dir .arrow{color:var(--rust);font-style:normal}
+  .greet-big{color:var(--cream);font-style:italic}
+  .greet-host{color:var(--sign-yellow)}
+  /* vluchtgegevens: tegels van het bord */
+  .facts{gap:4px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+  .fact{background:#161616;border-top:3px solid var(--frame);border-radius:2px}
+  .fact dt{font-family:"Space Mono",monospace;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#a99f8c}
+  .fact dd{font-family:"Space Mono",monospace;font-weight:700;font-size:1.05rem;line-height:1.35;color:#f3eedf}
+
+  /* radar: scherm in de verkeerstoren, groen omlijst */
+  canvas{background:radial-gradient(circle at 50% 50%,#13201b 0,#0d1512 70%,#0a100e 100%);border:8px solid var(--frame);border-radius:6px;
+    box-shadow:inset 0 0 0 2px #000,0 8px 18px rgba(0,0,0,.35)}
+  .zoom{top:16px;right:16px}
+  .zoom button{background:rgba(20,20,20,.85);border-color:var(--frame-hi);color:#f3eedf;border-radius:3px}
+  .radar-note,.status{color:var(--muted)}
+  .status.error{background:var(--rust)}
+
+  /* koppen: zwarte bewegwijzering */
+  h2{display:inline-block;background:#141414;color:#f4ead6;font:500 1.05rem/1 Barlow,sans-serif;letter-spacing:.03em;padding:8px 12px 8px 10px;border-left:6px solid var(--orange);border-radius:1px}
+  /* speellijst en eerder overgekomen: vertrekbord-regels */
+  ol.history li,ol.playlist li{border-bottom:1px solid var(--line)}
+  ol.playlist{border-top:1px solid var(--line)}
+  ol.history .cs{font-family:"Space Mono",monospace;font-weight:700;font-size:1rem;color:var(--sign-yellow);letter-spacing:.04em}
+  ol.history .t,ol.playlist .t{font-family:"Space Mono",monospace;font-size:.8rem}
+  ol.playlist li:first-child:not(.empty) b{color:var(--sign-yellow)}
+  ol.playlist .pl-play{background:#4a2f1e;border-color:rgba(244,234,214,.25);color:var(--sign-yellow)}
+  ol.playlist .pl-play:hover,ol.playlist li.pinned .pl-play{background:var(--orange);color:#fff6e8}
+  /* nu op de radio: klein vertrekbord */
+  .onair{background:var(--board);border:6px solid var(--frame);border-radius:4px;box-shadow:inset 0 0 0 2px #000,0 6px 14px rgba(0,0,0,.3)}
+  .onair-icon{background:#1e1e1e}
+  .onair-text strong{color:#f3eedf;font-family:"Space Mono",monospace;font-size:clamp(1.15rem,5vw,1.6rem);letter-spacing:.02em}
+  .onair-text small{font-family:"Space Mono",monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--sign-yellow)}
+  .mix-row .b,.ladder{background:rgba(244,234,214,.14)}
+  .mix-row .b span{background:linear-gradient(90deg,var(--rust),var(--orange),var(--sign-yellow))}
+
+  /* landinfo: creme kaart met terrazzo-spikkels, eigen kleuren */
+  .country{--runway-white:var(--ink);--muted:#6e5a42;--asphalt-2:var(--cream-2);--sign-yellow:var(--rust);--line:rgba(43,26,14,.15);
+    color:var(--ink);background-color:var(--cream);border-radius:3px;border:6px solid var(--alu);
+    background-image:radial-gradient(circle at 20% 30%,rgba(166,58,28,.18) 0 1.5px,transparent 2px),radial-gradient(circle at 70% 60%,rgba(31,58,110,.14) 0 1.5px,transparent 2px),radial-gradient(circle at 45% 85%,rgba(43,26,14,.15) 0 1px,transparent 1.5px);
+    background-size:37px 41px,53px 47px,29px 31px;box-shadow:0 8px 18px rgba(0,0,0,.3)}
+  .country .tabs{border-bottom-color:var(--navy)}
+  .country .tabs button{color:#6e5a42}
+  .country .tabs button[aria-selected="true"]{background:var(--navy);color:var(--cream)}
+  .country .ladder i{background:var(--cream)}
+  .country .demo-head strong{color:var(--rust)}
+  .country .pthumb,.country .chead img,.country .np1 img{background:var(--cream-2)}
+  .country .np1 strong{color:var(--navy)}
+  .country a{color:var(--navy)}
+  .here a{color:var(--sign-yellow)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -1322,14 +1424,14 @@ function anthemTarget(route){
 
 function showIdle(){
   showGreeting(null);
-  const c=$('callsign'); c.textContent=t('nothingOver'); c.classList.add('idle');
+  const c=$('callsign'); c.dataset.flaps=''; c.textContent=t('nothingOver'); c.classList.add('idle');
   $('flag').textContent=''; $('route').textContent=t('waitingNext');
   $('facts').hidden=true;
   $('country').hidden=true;
 }
 
 function showPlane(p, pick){
-  const c=$('callsign'); c.textContent=p.callsign||p.r||p.hex.toUpperCase(); c.classList.remove('idle');
+  const c=$('callsign'); c.classList.remove('idle'); setFlaps(c, p.callsign||p.r||p.hex.toUpperCase());
   $('facts').hidden=false;
   const st = pick.st;
   $('fEta').textContent = pick.inside
@@ -1603,6 +1705,32 @@ function renderPlaylist(){
   });
 }
 
+/* ---------- Split-flap: het vluchtnummer klappert zoals een oud vertrekbord ----------
+   Elk teken een eigen tegel; bij een nieuw nummer bladert elke tegel even door
+   willekeurige tekens voordat hij stopt (van links naar rechts). */
+const FLAP_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function setFlaps(box, text){
+  text = String(text).toUpperCase().trim();
+  if (box.dataset.flaps === text) return;
+  box.dataset.flaps = text;
+  box.textContent = '';
+  box.setAttribute('aria-label', text);
+  const tiles = [...text].map(ch => { const s = el('span', 'flap', ch === ' ' ? '\u00a0' : ch); s.setAttribute('aria-hidden', 'true'); box.append(s); return s; });
+  if (REDUCED) return;
+  tiles.forEach((tile, i) => {
+    const end = tile.textContent; let n = 4 + i * 2 + Math.floor(Math.random() * 3);
+    tile.textContent = FLAP_CHARS[Math.floor(Math.random() * FLAP_CHARS.length)];
+    const step = () => {
+      if (box.dataset.flaps !== text) return;               // inmiddels een ander vliegtuig
+      tile.classList.remove('flip'); void tile.offsetWidth; tile.classList.add('flip');
+      tile.textContent = --n > 0 ? FLAP_CHARS[Math.floor(Math.random() * FLAP_CHARS.length)] : end;
+      if (n > 0) setTimeout(step, 70);
+    };
+    setTimeout(step, 70);
+  });
+}
+
 /* ---------- Radar met vloeiende beweging ----------
    Tussen twee updates rekenen we elke frame door waar het toestel nu is
    (positie + snelheid \u00d7 verstreken tijd, in de vliegrichting). Komt er nieuwe
@@ -1726,7 +1854,7 @@ function render(){
   const cv=$('radar'), ctx=cv.getContext('2d'), W=cv.width, C=W/2, maxKm=viewKm;
   const scale=(C-20)/maxKm;
   ctx.clearRect(0,0,W,W);
-  ctx.strokeStyle='#45484b'; ctx.fillStyle='#7d807c'; ctx.lineWidth=1.5; ctx.font='20px Barlow, sans-serif';
+  ctx.strokeStyle='rgba(120,180,150,.35)'; ctx.fillStyle='rgba(160,205,180,.75)'; ctx.lineWidth=1.5; ctx.font='18px "Space Mono", monospace';
   // ringen: een paar ronde afstanden die bij deze zoom passen
   [0.5,1,2,5,10,20].filter(r=>r<=maxKm*0.98 && r>=maxKm/12).slice(-3).forEach(r=>{ ctx.beginPath(); ctx.arc(C,C,r*scale,0,Math.PI*2); ctx.stroke(); ctx.fillText(`${Number(r).toLocaleString(LOCALE)} km`, C+6, C-r*scale-6); });
   drawReference(ctx, C, scale, maxKm);

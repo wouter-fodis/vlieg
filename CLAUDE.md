@@ -14,6 +14,12 @@ Live: https://fodis.nl/fly/ · Repo: `wouter-fodis/vlieg` (publiek, geen geheime
 | `proxy.php` | Haalt alle externe data op namens de browser (CORS), met een cache en een whitelist van hosts. Bevat ook `?icy=<zender-uuid>` voor de radiotekst. |
 | `deploy/deploy-fly.php` | Deployscript. Staat op de server in `/home/fodis/deploy-fly.php`, niet in deze map. |
 
+## Vormgeving
+
+Old-school luchthaven (jaren 60/70), sinds 10 okt 2026. Alles staat in een eigen blok onderaan de `<style>` ("Old-school luchthaven"), dat de oude variabelen overschrijft: walnoten lattenplafond als achtergrond, oranje/roest/mosterd-streep onder de titel, vluchtnummer als **split-flap-bord** in een groen frame (`setFlaps()`: elk teken een tegel die even doorbladert, niet bij `prefers-reduced-motion`), route op een creme bord in een aluminium lijst, koppen als zwarte bewegwijzering, landinfo als creme kaart met terrazzo-spikkels (eigen kleurvariabelen binnen `.country`), radar als groen omlijst torenscherm. Lettertypen: Barlow (Condensed) plus Space Mono voor alles wat van een vertrekbord komt.
+
+**Terug naar het oude ontwerp:** de branch `voor-retro-design` is de versie van daarvoor. Terugzetten = de bestanden van die branch op `main` zetten en pushen.
+
 ## Afspraken in de code
 
 - **`index.html` is puur ASCII.** Speciale tekens staan als `\uXXXX` in JS of als `&#NNN;` in HTML. Reden: de server/editor verminkte UTF-8 (pijl werd `&#8594;`, puntje werd `�`). Schrijf je nieuwe tekst met speciale tekens, zet die dan om voordat je opslaat.
