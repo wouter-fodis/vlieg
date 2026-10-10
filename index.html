@@ -297,6 +297,35 @@
   .country .np1 strong{color:var(--navy)}
   .country a{color:var(--navy)}
   .here a{color:var(--sign-yellow)}
+
+  /* ---------- Radar in een oude tv (jaren 60, lichte kast, aluminium paneel) ---------- */
+  .tv{position:relative;max-width:560px;margin:0 auto 8px;padding:clamp(16px,5vw,30px) clamp(16px,5vw,30px) 0;background:linear-gradient(180deg,#f1efe9 0,#e4e1d9 100%);
+    border-radius:10px 10px 6px 6px;box-shadow:-12px 8px 0 -3px #cfcbc2,-12px 8px 0 -2px rgba(0,0,0,.08),0 22px 36px rgba(0,0,0,.45)}
+  .tv-tube{position:relative;background:#0b0b0b;padding:3.2%;border-radius:12% / 13%;
+    box-shadow:inset 0 0 0 2px #2a2a2a,inset 0 3px 6px rgba(255,255,255,.08),0 2px 0 rgba(255,255,255,.7)}
+  .tv-tube canvas{border:0;border-radius:10% / 11%;box-shadow:none;
+    background:radial-gradient(ellipse at 50% 45%,#1a2c27 0,#0f1b17 65%,#08100d 100%)}
+  .tv-glass{position:absolute;inset:3.2%;border-radius:10% / 11%;pointer-events:none;
+    background:radial-gradient(ellipse 60% 45% at 28% 18%,rgba(255,255,255,.14),transparent 70%),
+      repeating-linear-gradient(180deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);
+    box-shadow:inset 0 0 40px rgba(0,0,0,.75),inset 0 0 6px rgba(0,0,0,.9)}
+  .tv-panel{display:flex;align-items:center;gap:4%;margin:clamp(14px,4vw,24px) calc(-1 * clamp(16px,5vw,30px)) 0;padding:clamp(10px,3vw,16px) clamp(16px,5vw,30px);
+    background:linear-gradient(180deg,#d6d7d6 0,#c2c3c3 55%,#b5b6b6 100%);border-top:1px solid #9fa0a0;border-radius:0 0 6px 6px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+  .tv-grille{flex:0 0 26%;height:52px;background:repeating-linear-gradient(90deg,#3a3a3a 0 2px,transparent 2px 6px);opacity:.75;border-radius:1px}
+  .tv-mid{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:0}
+  .tv-brand{font:700 .72rem/1 Barlow,sans-serif;letter-spacing:.02em;color:#2b2b2b}
+  .tv-scale{display:flex;gap:3px;width:100%;max-width:120px}
+  .tv-scale i{flex:1;height:7px;background:#f4f1ea;border:1px solid #9a9a9a;border-radius:1px}
+  .tv-scale i:nth-child(2){background:linear-gradient(90deg,#f4f1ea 0 40%,#c8102e 40% 47%,#f4f1ea 47%)}
+  .tv-panel .zoom{position:static;flex-direction:row;gap:10px}
+  .tv-panel .zoom button{width:38px;height:38px;border-radius:50%;border:0;padding:0;cursor:pointer;color:#e9e6dd;
+    background:radial-gradient(circle at 35% 30%,#5a5a5a 0,#2c2c2c 55%,#1a1a1a 100%);
+    box-shadow:0 3px 0 #7d7e7e,0 4px 6px rgba(0,0,0,.35),inset 0 -2px 0 rgba(0,0,0,.4);
+    font:700 1.2rem/1 Barlow,sans-serif;display:grid;place-items:center;transition:transform .2s}
+  .tv-panel .zoom button:active{transform:rotate(25deg)}
+  .tv-panel .zoom button:disabled{opacity:.45;cursor:default}
+  .radar-note{text-align:center;margin-top:14px}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -368,10 +397,22 @@
 
       <section class="radar-box">
         <div class="radar-wrap">
-          <canvas id="radar" width="700" height="700" data-i18n-attr="aria-label:radarAria"></canvas>
-          <div class="zoom" role="group" data-i18n-attr="aria-label:zoom">
-            <button type="button" id="zoomIn" data-i18n-attr="aria-label:zoomIn">+</button>
-            <button type="button" id="zoomOut" data-i18n-attr="aria-label:zoomOut">&#8722;</button>
+          <div class="tv">
+            <div class="tv-tube">
+              <canvas id="radar" width="700" height="700" data-i18n-attr="aria-label:radarAria"></canvas>
+              <div class="tv-glass" aria-hidden="true"></div>
+            </div>
+            <div class="tv-panel">
+              <div class="tv-grille" aria-hidden="true"></div>
+              <div class="tv-mid">
+                <span class="tv-brand" aria-hidden="true">dj vliegtuig</span>
+                <span class="tv-scale" aria-hidden="true"><i></i><i></i><i></i></span>
+              </div>
+              <div class="zoom" role="group" data-i18n-attr="aria-label:zoom">
+                <button type="button" id="zoomOut" data-i18n-attr="aria-label:zoomOut"><span>&#8722;</span></button>
+                <button type="button" id="zoomIn" data-i18n-attr="aria-label:zoomIn"><span>+</span></button>
+              </div>
+            </div>
           </div>
           <div class="radar-note" data-i18n="radarNote">Ringen op 1, 5 en 10 km. Noord is boven. Tik op een baankop om erheen te gaan; geel = in gebruik.</div>
         </div>
