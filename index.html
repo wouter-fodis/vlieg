@@ -284,11 +284,20 @@
   .mix-row .b,.ladder{background:rgba(242,242,239,.14)}
   .mix-row .b span{background:linear-gradient(90deg,var(--alu),var(--sign))}
 
-  /* landinfo: licht terrazzo met zwarte en grijze spikkels, zwarte letters */
+  /* landinfo: effen licht vlak (geen spikkels meer), standaard ingeklapt */
   .country{--runway-white:var(--ink);--muted:#5d6061;--asphalt-2:#dcdbd5;--sign-yellow:var(--ink);--line:rgba(20,20,20,.14);
-    color:var(--ink);background-color:var(--terrazzo);border-radius:2px;border:4px solid var(--ink);
-    background-image:radial-gradient(circle at 20% 30%,rgba(20,20,20,.18) 0 1.1px,transparent 1.6px),radial-gradient(circle at 70% 60%,rgba(110,112,112,.24) 0 1.5px,transparent 2px),radial-gradient(circle at 45% 85%,rgba(20,20,20,.12) 0 .9px,transparent 1.4px),radial-gradient(circle at 85% 15%,rgba(150,150,145,.28) 0 1.2px,transparent 1.7px);
-    background-size:23px 27px,31px 29px,17px 19px,41px 37px;box-shadow:0 10px 24px rgba(0,0,0,.3)}
+    color:var(--ink);background:var(--terrazzo);border-radius:2px;border:4px solid var(--ink);box-shadow:0 10px 24px rgba(0,0,0,.3)}
+  .ctoggle{display:block;text-align:left;background:none;border:0;padding:4px 0;margin:0;color:inherit;font:inherit;cursor:pointer;min-height:44px}
+  .ctoggle .crole,.ctoggle .cname{display:block}
+  .country .ctoggle .cname{margin-bottom:6px}
+  .cmore{display:inline-flex;align-items:center;gap:8px;font:600 1rem/1 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--ink)}
+  .cmore::after{content:'';flex:0 0 auto;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .2s}
+  .ctoggle[aria-expanded="true"] .cmore::after{transform:translateY(2px) rotate(-135deg)}
+  .ctoggle:hover .cmore{text-decoration:underline}
+  .ctoggle:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  /* ingeklapt: kleiner portret, compacte kaart */
+  .country:not(.open) .chead img{width:56px;height:70px}
+  .country:not(.open) .cname{font-size:1.25rem}
   .country .tabs{border-bottom-color:var(--ink)}
   .country .tabs button{color:#5d6061}
   .country .tabs button[aria-selected="true"]{background:var(--ink);color:var(--sign)}
@@ -422,11 +431,13 @@
       <section class="country" id="country" hidden aria-live="polite">
         <div class="chead">
           <a id="cLink" target="_blank" rel="noopener"><img id="cImg" alt=""></a>
-          <div class="cinfo">
-            <div class="crole" id="cRole"></div>
-            <div class="cname" id="cName"></div>
-          </div>
+          <button type="button" class="cinfo ctoggle" id="cToggle" aria-expanded="false" aria-controls="cBody">
+            <span class="crole" id="cRole"></span>
+            <span class="cname" id="cName"></span>
+            <span class="cmore" id="cMore"></span>
+          </button>
         </div>
+        <div class="cbody" id="cBody" hidden>
         <div class="tabs" role="tablist" data-i18n-attr="aria-label:countryInfo">
           <button type="button" role="tab" data-tab="land" aria-controls="p-land" data-i18n="tabLand">Land</button>
           <button type="button" role="tab" data-tab="muziek" aria-controls="p-muziek" data-i18n="tabMusic">Muziek</button>
@@ -441,6 +452,7 @@
           <dl class="cfacts" id="cFacts"></dl>
         </div>
         <div class="panel" id="p-muziek" role="tabpanel" hidden></div>
+        </div>
       </section>
     </div>
 
@@ -496,7 +508,7 @@ const I18N = {
     overhead:'Boven je = binnen', searchPh:'Adres, plaats of co\u00f6rdinaten (bijv. Heathrow of 52.36, 4.71)', searchAria:'Locatie invoeren', search:'Zoek',
     waiting:'Wachten op een vliegtuig', pickRunway:'Kies een plek bij een baan', listen:'Luister',
     alt:'Hoogte', overYou:'Boven je', dist:'Afstand', speed:'Snelheid', aircraft:'Toestel',
-    countryInfo:'Informatie over het land', tabLand:'Land', tabMusic:'Muziek', demoIndex:'Democratie-index',
+    countryInfo:'Informatie over het land', countryMore:'Meer over het land', countryLess:'Inklappen', tabLand:'Land', tabMusic:'Muziek', demoIndex:'Democratie-index',
     radarAria:'Kaart met vliegtuigen in de buurt', zoom:'Zoom', zoomIn:'Inzoomen', zoomOut:'Uitzoomen', radarNote:'Knijp, scroll of gebruik + en \u2212 om te zoomen. Noord is boven. Tik op een baankop om erheen te gaan; geel = in gebruik.', inUse:'in gebruik', notStarted:'Nog niet gestart.',
     sound:'Geluid', iLove:'Ik houd van:', genreAria:'Genre van de radiozender',
     g_popular:'Populairste zender', g_pop:'Pop', g_rock:'Rock', g_folk:'Folk', g_jazz:'Jazz', g_classical:'Klassiek', g_dance:'Dance', g_hiphop:'Hiphop', g_oldies:'Oldies', g_news:'Nieuws',
@@ -547,7 +559,7 @@ const I18N = {
     overhead:'Overhead = within', searchPh:'Address, place or coordinates (e.g. Heathrow or 52.36, 4.71)', searchAria:'Enter a location', search:'Search',
     waiting:'Waiting for a plane', pickRunway:'Choose a spot near a runway', listen:'Listen',
     alt:'Altitude', overYou:'Overhead', dist:'Distance', speed:'Speed', aircraft:'Aircraft',
-    countryInfo:'About the country', tabLand:'Country', tabMusic:'Music', demoIndex:'Democracy index',
+    countryInfo:'About the country', countryMore:'More about the country', countryLess:'Collapse', tabLand:'Country', tabMusic:'Music', demoIndex:'Democracy index',
     radarAria:'Map of nearby aircraft', zoom:'Zoom', zoomIn:'Zoom in', zoomOut:'Zoom out', radarNote:'Pinch, scroll or use + and \u2212 to zoom. North is up. Tap a runway end to go there; yellow = in use.', inUse:'in use', notStarted:'Not started yet.',
     sound:'Sound', iLove:'I love:', genreAria:'Radio station genre',
     g_popular:'Most popular station', g_pop:'Pop', g_rock:'Rock', g_folk:'Folk', g_jazz:'Jazz', g_classical:'Classical', g_dance:'Dance', g_hiphop:'Hip-hop', g_oldies:'Oldies', g_news:'News',
@@ -598,7 +610,7 @@ const I18N = {
     overhead:'\u00dcber dir = innerhalb', searchPh:'Adresse, Ort oder Koordinaten (z. B. Heathrow oder 52.36, 4.71)', searchAria:'Ort eingeben', search:'Suchen',
     waiting:'Warten auf ein Flugzeug', pickRunway:'W\u00e4hle einen Ort an einer Bahn', listen:'Anh\u00f6ren',
     alt:'H\u00f6he', overYou:'\u00dcber dir', dist:'Entfernung', speed:'Geschwindigkeit', aircraft:'Flugzeug',
-    countryInfo:'Infos zum Land', tabLand:'Land', tabMusic:'Musik', demoIndex:'Demokratieindex',
+    countryInfo:'Infos zum Land', countryMore:'Mehr zum Land', countryLess:'Einklappen', tabLand:'Land', tabMusic:'Musik', demoIndex:'Demokratieindex',
     radarAria:'Karte mit Flugzeugen in der N\u00e4he', zoom:'Zoom', zoomIn:'Hineinzoomen', zoomOut:'Herauszoomen', radarNote:'Zum Zoomen zusammenziehen, scrollen oder + und \u2212 nutzen. Norden ist oben. Tippe auf ein Bahnende, um dorthin zu wechseln; gelb = in Betrieb.', inUse:'in Betrieb', notStarted:'Noch nicht gestartet.',
     sound:'Ton', iLove:'Ich liebe:', genreAria:'Genre des Radiosenders',
     g_popular:'Beliebtester Sender', g_pop:'Pop', g_rock:'Rock', g_folk:'Folk', g_jazz:'Jazz', g_classical:'Klassik', g_dance:'Dance', g_hiphop:'Hip-Hop', g_oldies:'Oldies', g_news:'Nachrichten',
@@ -1257,6 +1269,21 @@ function initTabs(){
     selectTab(n); bar.querySelector(`[data-tab="${n}"]`).focus();
   });
   selectTab(activeTab);
+  initCountryToggle();
+}
+// landkaart in- en uitklappen; standaard ingeklapt, keuze onthouden
+function setCountryOpen(open){
+  $('country').classList.toggle('open', open);
+  $('cBody').hidden = !open;
+  $('cToggle').setAttribute('aria-expanded', open);
+  $('cMore').textContent = t(open ? 'countryLess' : 'countryMore');
+  try { localStorage.setItem('flyCountryOpen', open ? '1' : '0'); } catch(e){}
+}
+function initCountryToggle(){
+  let open = false;
+  try { open = localStorage.getItem('flyCountryOpen') === '1'; } catch(e){}
+  $('cToggle').addEventListener('click', () => setCountryOpen(!$('country').classList.contains('open')));
+  setCountryOpen(open);
 }
 // aangeroepen vanuit showCountry
 function setTabCountry(ISO, info){
