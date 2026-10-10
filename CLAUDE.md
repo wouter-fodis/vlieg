@@ -2,7 +2,7 @@
 
 Zusterproject: DJ Vliegtuig Discovery (`wouter-fodis/dj-vliegtuig-discovery`, fodis.nl/dj-vliegtuig-discovery). Wijzigingen voor Discovery horen niet in deze repo.
 
-Webapp die laat zien welk vliegtuig er nu boven je vliegt (bij Schiphol of een andere Europese luchthaven), en daar muziek en landinfo bij toont. De vliegtuigen zijn de dj: het land van het toestel dat boven je is, bepaalt welk volkslied of welke radiozender er speelt.
+Webapp die laat zien welk vliegtuig er nu boven je vliegt (bij Schiphol of een andere grote luchthaven, wereldwijd), en daar muziek en landinfo bij toont. De vliegtuigen zijn de dj: het land van het toestel dat boven je is, bepaalt welk volkslied of welke radiozender er speelt.
 
 Live: https://fodis.nl/fly/ · Repo: `wouter-fodis/vlieg` (publiek, geen geheimen erin).
 
@@ -62,7 +62,8 @@ Let op: fodis.nl is een WordPress-site van het bedrijf. `public_html` in de thui
 
 - **Boven je:** het toestel dat binnen `LOOKAHEAD_S` (40 s) je straal in komt, berekend met doorgerekende positie, snelheid en richting (dichtstbijzijnd punt). Het huidige toestel blijft staan, tenzij een ander minstens 8 s eerder boven je is.
 - **Straal:** 1 km bij een baankop, 3 km bij Mijn locatie of Zelf invoeren.
-- **Plekken:** 256 grote Europese luchthavens (OurAirports `large_airport` met lijnvluchten). Per baankop een punt 100 m voorbij de kop, op het verlengde van de middenlijn. Schiphol houdt zijn baannamen (Polderbaan enz.); standaardplek is `polderbaan-18r`.
+- **Plekken:** 1094 grote luchthavens wereldwijd (OurAirports `large_airport` met lijnvluchten, banen vanaf 4000 ft met coördinaten; sinds 10 okt 2026, daarvoor 256 in Europa). `AIRPORTS` = `[icao, iata, naam, land, lat, lon, werelddeel, plaats]` (plaats leeg als die al in de naam staat). Per baankop een punt 100 m voorbij de kop, op het verlengde van de middenlijn. Schiphol houdt zijn baannamen (Polderbaan enz.); standaardplek is `polderbaan-18r`.
+- **Plek kiezen:** knop `#spotBtn` opent een zoekbaar bord (`<dialog id="spotDlg">`): zoeken op naam, stad, land, IATA of ICAO (accentongevoelig, plus `CITY_ALIAS` voor Nederlandse/Duitse stadsnamen), tabjes Recent (`localStorage` `flyRecent`), Dichtbij (25 dichtstbijzijnde vanaf de huidige plek) en per werelddeel, met een rij landen om naar te springen. De verborgen `<select id="spot">` blijft de bron van waarheid; de knoptekst volgt zijn `value` via een eigen setter (`syncSpotBtn`).
 - **Land van een toestel** (`anthemTarget`): bij een vertrekker de bestemming; bij een lander (bestemming binnen 60 km van je plek) het land van herkomst.
 - **Geluid (de mixer):** maximaal 3 landen tegelijk, volume naar afstand. De dj (het laatste toestel dat binnen je straal was) blijft op minstens `HOLD_LEVEL` (80%) spelen tot er een nieuw toestel binnen je straal komt. Andere toestellen klinken zacht mee in de ruimte die overblijft. **Overgang:** is het dj-toestel uit je straal en nadert een nieuw toestel (tussen 1,6× en 1× de straal), dan zakt de dj geleidelijk van 80% naar 50% en komt het nieuwe land op van 0 naar 50%; bij binnenkomst neemt het nieuwe land over. Volumes veranderen hooguit 20% per seconde (radio, `setLevel`) of met een tijdconstante van 0,8 s (volksliederen).
   - **Volksliederen:** via Web Audio, met fades, ook op iOS.
