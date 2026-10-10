@@ -86,6 +86,10 @@
   .anthem .title strong{color:var(--runway-white);font-weight:500}
 
   .radar-wrap{position:relative}
+  #radar{touch-action:pan-y}
+  .zoom{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px}
+  .zoom button{width:40px;height:40px;border-radius:4px;border:1px solid #45484b;background:rgba(35,37,39,.85);color:var(--sign-yellow,#ffc20e);font:600 1.5rem/1 "Barlow Condensed",sans-serif;cursor:pointer}
+  .zoom button:disabled{opacity:.35;cursor:default}
   canvas{width:100%;aspect-ratio:1;display:block;background:#232527;border-radius:4px}
   .radar-note{color:var(--muted);font-size:.85rem;margin-top:6px}
 
@@ -263,6 +267,10 @@
       <section class="radar-box">
         <div class="radar-wrap">
           <canvas id="radar" width="700" height="700" data-i18n-attr="aria-label:radarAria"></canvas>
+          <div class="zoom" role="group" data-i18n-attr="aria-label:zoom">
+            <button type="button" id="zoomIn" data-i18n-attr="aria-label:zoomIn">+</button>
+            <button type="button" id="zoomOut" data-i18n-attr="aria-label:zoomOut">&#8722;</button>
+          </div>
           <div class="radar-note" data-i18n="radarNote">Ringen op 1, 5 en 10 km. Noord is boven. Tik op een baankop om erheen te gaan; geel = in gebruik.</div>
         </div>
         <p class="status" id="status" data-i18n="notStarted">Nog niet gestart.</p>
@@ -346,7 +354,7 @@ const I18N = {
     waiting:'Wachten op een vliegtuig', pickRunway:'Kies een plek bij een baan', listen:'Luister',
     alt:'Hoogte', overYou:'Boven je', dist:'Afstand', speed:'Snelheid', aircraft:'Toestel',
     countryInfo:'Informatie over het land', tabLand:'Land', tabMusic:'Muziek', demoIndex:'Democratie-index',
-    radarAria:'Kaart met vliegtuigen in de buurt', radarNote:'Ringen op 1, 5 en 10 km. Noord is boven. Tik op een baankop om erheen te gaan; geel = in gebruik.', inUse:'in gebruik', notStarted:'Nog niet gestart.',
+    radarAria:'Kaart met vliegtuigen in de buurt', zoom:'Zoom', zoomIn:'Inzoomen', zoomOut:'Uitzoomen', radarNote:'Knijp, scroll of gebruik + en \u2212 om te zoomen. Noord is boven. Tik op een baankop om erheen te gaan; geel = in gebruik.', inUse:'in gebruik', notStarted:'Nog niet gestart.',
     sound:'Geluid', iLove:'Ik houd van:', genreAria:'Genre van de radiozender',
     g_popular:'Populairste zender', g_pop:'Pop', g_rock:'Rock', g_folk:'Folk', g_jazz:'Jazz', g_classical:'Klassiek', g_dance:'Dance', g_hiphop:'Hiphop', g_oldies:'Oldies', g_news:'Nieuws',
     playAnthem:'Speel volkslied', stop:'Stop', backLive:'Terug naar live', backLiveSub:'DJ Vliegtuig neemt het weer over',
@@ -397,7 +405,7 @@ const I18N = {
     waiting:'Waiting for a plane', pickRunway:'Choose a spot near a runway', listen:'Listen',
     alt:'Altitude', overYou:'Overhead', dist:'Distance', speed:'Speed', aircraft:'Aircraft',
     countryInfo:'About the country', tabLand:'Country', tabMusic:'Music', demoIndex:'Democracy index',
-    radarAria:'Map of nearby aircraft', radarNote:'Rings at 1, 5 and 10 km. North is up. Tap a runway end to go there; yellow = in use.', inUse:'in use', notStarted:'Not started yet.',
+    radarAria:'Map of nearby aircraft', zoom:'Zoom', zoomIn:'Zoom in', zoomOut:'Zoom out', radarNote:'Pinch, scroll or use + and \u2212 to zoom. North is up. Tap a runway end to go there; yellow = in use.', inUse:'in use', notStarted:'Not started yet.',
     sound:'Sound', iLove:'I love:', genreAria:'Radio station genre',
     g_popular:'Most popular station', g_pop:'Pop', g_rock:'Rock', g_folk:'Folk', g_jazz:'Jazz', g_classical:'Classical', g_dance:'Dance', g_hiphop:'Hip-hop', g_oldies:'Oldies', g_news:'News',
     playAnthem:'Play anthem', stop:'Stop', backLive:'Back to live', backLiveSub:'DJ Vliegtuig takes over again',
@@ -448,7 +456,7 @@ const I18N = {
     waiting:'Warten auf ein Flugzeug', pickRunway:'W\u00e4hle einen Ort an einer Bahn', listen:'Anh\u00f6ren',
     alt:'H\u00f6he', overYou:'\u00dcber dir', dist:'Entfernung', speed:'Geschwindigkeit', aircraft:'Flugzeug',
     countryInfo:'Infos zum Land', tabLand:'Land', tabMusic:'Musik', demoIndex:'Demokratieindex',
-    radarAria:'Karte mit Flugzeugen in der N\u00e4he', radarNote:'Ringe bei 1, 5 und 10 km. Norden ist oben. Tippe auf ein Bahnende, um dorthin zu wechseln; gelb = in Betrieb.', inUse:'in Betrieb', notStarted:'Noch nicht gestartet.',
+    radarAria:'Karte mit Flugzeugen in der N\u00e4he', zoom:'Zoom', zoomIn:'Hineinzoomen', zoomOut:'Herauszoomen', radarNote:'Zum Zoomen zusammenziehen, scrollen oder + und \u2212 nutzen. Norden ist oben. Tippe auf ein Bahnende, um dorthin zu wechseln; gelb = in Betrieb.', inUse:'in Betrieb', notStarted:'Noch nicht gestartet.',
     sound:'Ton', iLove:'Ich liebe:', genreAria:'Genre des Radiosenders',
     g_popular:'Beliebtester Sender', g_pop:'Pop', g_rock:'Rock', g_folk:'Folk', g_jazz:'Jazz', g_classical:'Klassik', g_dance:'Dance', g_hiphop:'Hip-Hop', g_oldies:'Oldies', g_news:'Nachrichten',
     playAnthem:'Hymne abspielen', stop:'Stopp', backLive:'Zur\u00fcck zu live', backLiveSub:'DJ Vliegtuig \u00fcbernimmt wieder',
@@ -561,7 +569,13 @@ const DEFAULT_SPOT = SPOTS.find(s => s.id === 'polderbaan-18r') || SPOTS[0];
 const airportOf = icao => AIRPORTS.find(a => a[0] === icao);
 const POLL_MS = 2000;
 const LOOKAHEAD_S = 40;      // toestel al tonen als het binnen zoveel seconden boven je is
-const FETCH_NM = 8;          // straal voor de radar
+/* Zoom op de radar: viewKm = straal van wat je ziet (km). Knijpen, scrollwiel of +/-.
+   De ophaalstraal groeit mee als je verder uitzoomt dan 8 NM (~15 km). */
+const VIEW_MIN = 2, VIEW_MAX = 30, VIEW_DEFAULT = 8 * 1.852;
+let viewTarget = VIEW_DEFAULT;
+try { const z = parseFloat(localStorage.getItem('flyZoom')); if (z >= VIEW_MIN && z <= VIEW_MAX) viewTarget = z; } catch(e){}
+let viewKm = viewTarget;
+const fetchNm = () => Math.max(8, Math.ceil(viewTarget / 1.852));
 const MAX_ALT_FT = 7000;     // hoger dan dit telt niet als "over je heen"
 const HOME_ICAO = 'EHAM';
 
@@ -769,7 +783,7 @@ async function doTick(){
   let data=null;
   for (let i=0;i<FEEDS.length && !data;i++){
     const idx=(feedIdx+i)%FEEDS.length;
-    try { data = await getJSON(FEEDS[idx](here.lat.toFixed(4), here.lon.toFixed(4), FETCH_NM)); feedIdx=idx; }
+    try { data = await getJSON(FEEDS[idx](here.lat.toFixed(4), here.lon.toFixed(4), fetchNm())); feedIdx=idx; }
     catch(e){ /* volgende bron proberen */ }
   }
   if (!data) {
@@ -791,7 +805,7 @@ async function doTick(){
     alt:altFt(p),
     t0:performance.now() - (feedAge + (p.seen_pos||0))*1000
   }));
-  setStatus(t(lastPlanes.length === 1 ? 'statusLine1' : 'statusLine', {n: lastPlanes.length, km: Math.round(FETCH_NM*1.852), t: new Date().toLocaleTimeString(LOCALE)}));
+  setStatus(t(lastPlanes.length === 1 ? 'statusLine1' : 'statusLine', {n: lastPlanes.length, km: Math.round(fetchNm()*1.852), t: new Date().toLocaleTimeString(LOCALE)}));
   prefetchRoutes();
   evaluateOverhead();
   render();
@@ -1617,10 +1631,11 @@ const PLACES_FALLBACK = [
 ];
 let places = null, placesKey = '';
 function placesAround(lat, lon){
-  const key = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+  const rad = viewTarget > 15 ? 32000 : 16000;                  // uitgezoomd: verder zoeken
+  const key = `${lat.toFixed(2)},${lon.toFixed(2)},${rad}`;
   if (key === placesKey) return;
   placesKey = key;
-  const q = `[out:json][timeout:20];node(around:16000,${lat.toFixed(2)},${lon.toFixed(2)})[place~"^(city|town|village)$"][name];out body;`;
+  const q = `[out:json][timeout:20];node(around:${rad},${lat.toFixed(2)},${lon.toFixed(2)})[place~"^(city|town|village)$"][name];out body;`;
   getJSON('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q))
     .then(j => {
       if (placesKey !== key) return;
@@ -1639,7 +1654,7 @@ function drawReference(ctx, C, scale, maxKm){
   // banen
   ctx.save(); ctx.lineCap = 'butt';
   for (const [, , , a1, o1, a2, o2] of RWYS){
-    if (Math.abs(a1 - here.lat) > 0.3 || Math.abs(o1 - here.lon) > 0.5) continue;   // snel overslaan: ver weg
+    if (Math.abs(a1 - here.lat) > 0.5 || Math.abs(o1 - here.lon) > 0.8) continue;   // snel overslaan: ver weg
     const [x1, y1, d1] = toXY(a1, o1), [x2, y2, d2] = toXY(a2, o2);
     if (Math.min(d1, d2) > maxKm) continue;
     ctx.strokeStyle = '#4d5054'; ctx.lineWidth = Math.max(4, 0.06*scale);
@@ -1654,7 +1669,7 @@ function drawReference(ctx, C, scale, maxKm){
   const nowMs = Date.now();
   ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const sp of SPOTS){
-    if (Math.abs(sp.lat - here.lat) > 0.3 || Math.abs(sp.lon - here.lon) > 0.5) continue;
+    if (Math.abs(sp.lat - here.lat) > 0.5 || Math.abs(sp.lon - here.lon) > 0.8) continue;
     const [x, y, d] = toXY(sp.lat, sp.lon);
     if (d > maxKm || !inside(x, y)) continue;
     const act = nowMs - (rwyActive.get(sp.id) || 0) < ACTIVE_MS, sel = here.id === sp.id;
@@ -1662,9 +1677,11 @@ function drawReference(ctx, C, scale, maxKm){
     ctx.fillStyle = act ? '#ffc20e' : '#2d3033';
     ctx.strokeStyle = sel ? '#f2f2ec' : act ? '#ffc20e' : '#6f726e'; ctx.lineWidth = sel ? 3 : 1.5;
     ctx.beginPath(); ctx.arc(x, y, act ? 7 : 5.5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    ctx.font = `${act || sel ? 700 : 600} 17px "Barlow Condensed", sans-serif`;
-    ctx.fillStyle = act ? '#ffc20e' : sel ? '#f2f2ec' : 'rgba(242,242,236,.55)';
-    ctx.fillText(sp.end, lx, ly);
+    if (maxKm <= 16 || sel){                  // ver uitgezoomd: alleen stippen, anders lopen de labels door elkaar
+      ctx.font = `${act || sel ? 700 : 600} 17px "Barlow Condensed", sans-serif`;
+      ctx.fillStyle = act ? '#ffc20e' : sel ? '#f2f2ec' : 'rgba(242,242,236,.55)';
+      ctx.fillText(sp.end, lx, ly);
+    }
     radarHits.push({x, y, lx, ly, id: sp.id});
   }
   ctx.restore();
@@ -1679,7 +1696,7 @@ function drawReference(ctx, C, scale, maxKm){
   ctx.save(); ctx.textBaseline = 'middle';
   let n = 0;
   for (const p of list){
-    if (n >= 18) break;
+    if (n >= (maxKm > 16 ? 24 : 18)) break;
     const size = p.r === 3 ? 28 : p.r === 2 ? 23 : 19;
     ctx.font = `${p.r >= 2 ? 600 : 500} ${size}px "Barlow Condensed", sans-serif`;
     const w = ctx.measureText(p.name).width;
@@ -1704,11 +1721,14 @@ function render(){
   const dt = Math.min((now - lastFrame)/1000, 0.25); lastFrame = now;
   const k = 1 - Math.exp(-dt/0.25);                       // afvlakking
 
-  const cv=$('radar'), ctx=cv.getContext('2d'), W=cv.width, C=W/2, maxKm=FETCH_NM*1.852;
+  viewKm += (viewTarget - viewKm) * (1 - Math.exp(-dt/0.12));      // zachte zoom
+  if (Math.abs(viewTarget - viewKm) < 0.005) viewKm = viewTarget;
+  const cv=$('radar'), ctx=cv.getContext('2d'), W=cv.width, C=W/2, maxKm=viewKm;
   const scale=(C-20)/maxKm;
   ctx.clearRect(0,0,W,W);
   ctx.strokeStyle='#45484b'; ctx.fillStyle='#7d807c'; ctx.lineWidth=1.5; ctx.font='20px Barlow, sans-serif';
-  [1,5,10].filter(r=>r<=maxKm).forEach(r=>{ ctx.beginPath(); ctx.arc(C,C,r*scale,0,Math.PI*2); ctx.stroke(); ctx.fillText(`${r} km`, C+6, C-r*scale-6); });
+  // ringen: een paar ronde afstanden die bij deze zoom passen
+  [0.5,1,2,5,10,20].filter(r=>r<=maxKm*0.98 && r>=maxKm/12).slice(-3).forEach(r=>{ ctx.beginPath(); ctx.arc(C,C,r*scale,0,Math.PI*2); ctx.stroke(); ctx.fillText(`${Number(r).toLocaleString(LOCALE)} km`, C+6, C-r*scale-6); });
   drawReference(ctx, C, scale, maxKm);
   ctx.fillStyle='rgba(255,194,14,.10)'; ctx.beginPath(); ctx.arc(C,C,radiusKm*scale,0,Math.PI*2); ctx.fill();
   ctx.fillStyle='#f2f2ec'; ctx.beginPath(); ctx.arc(C,C,6,0,Math.PI*2); ctx.fill();
@@ -1731,13 +1751,14 @@ function render(){
 
     // spoor achter vliegende toestellen
     if (flying){
+      // spoor in km (niet in pixels), zodat het na zoomen nog klopt
       const last = d.trail[d.trail.length-1];
-      if (!last || Math.hypot(last[0]-x, last[1]-y) > 4) { d.trail.push([x,y]); if (d.trail.length>40) d.trail.shift(); }
+      if (!last || Math.hypot(last[0]-d.x, last[1]-d.y) > 0.08) { d.trail.push([d.x,d.y]); if (d.trail.length>60) d.trail.shift(); }
       if (d.trail.length>1){
         ctx.strokeStyle = isTop ? 'rgba(255,194,14,.45)' : 'rgba(242,242,236,.18)';
         ctx.lineWidth = isTop ? 3 : 2;
-        ctx.beginPath(); ctx.moveTo(d.trail[0][0], d.trail[0][1]);
-        d.trail.forEach(([tx,ty])=>ctx.lineTo(tx,ty)); ctx.lineTo(x,y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(C+d.trail[0][0]*scale, C-d.trail[0][1]*scale);
+        d.trail.forEach(([tx,ty])=>ctx.lineTo(C+tx*scale, C-ty*scale)); ctx.lineTo(x,y); ctx.stroke();
       }
     }
 
@@ -1746,7 +1767,7 @@ function render(){
     const s = isTop ? 13 : 8;
     ctx.beginPath(); ctx.moveTo(0,-s); ctx.lineTo(s*.65,s); ctx.lineTo(0,s*.55); ctx.lineTo(-s*.65,s); ctx.closePath(); ctx.fill();
     ctx.restore();
-    if (isTop || (low && p.d<maxKm*.6)){
+    if (isTop || (low && p.d<maxKm*.6 && maxKm<=16)){
       ctx.fillStyle = isTop ? '#ffc20e' : '#b9bbb6';
       ctx.font = `${isTop?600:500} ${isTop?24:18}px "Barlow Condensed", sans-serif`;
       ctx.fillText(p.callsign||p.hex, x+14, y+6);
@@ -1802,6 +1823,28 @@ setInterval(trackRunways, 1000);
   };
   cv.addEventListener('click', e => { const h = hitAt(e); if (h && h.id !== here.id) selectSpot(h.id); });
   cv.addEventListener('mousemove', e => { cv.style.cursor = hitAt(e) ? 'pointer' : ''; });
+}
+{ // zoomen: knoppen, scrollwiel (alleen met de muis boven de radar) en knijpen met twee vingers
+  const cv = $('radar');
+  const setZoom = km => {
+    viewTarget = Math.min(VIEW_MAX, Math.max(VIEW_MIN, km));
+    $('zoomIn').disabled = viewTarget <= VIEW_MIN + 0.01;
+    $('zoomOut').disabled = viewTarget >= VIEW_MAX - 0.01;
+    try { localStorage.setItem('flyZoom', viewTarget.toFixed(2)); } catch(e){}
+  };
+  setZoom(viewTarget);
+  $('zoomIn').onclick = () => setZoom(viewTarget / 1.5);
+  $('zoomOut').onclick = () => { const was = fetchNm(); setZoom(viewTarget * 1.5); if (fetchNm() > was && timer) tick(); };
+  cv.addEventListener('wheel', e => { e.preventDefault(); setZoom(viewTarget * Math.exp(e.deltaY * 0.0015)); }, {passive: false});
+  let pinch = null;
+  const span = ts => Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY);
+  cv.addEventListener('touchstart', e => { if (e.touches.length === 2) pinch = {d: span(e.touches), km: viewTarget}; }, {passive: true});
+  cv.addEventListener('touchmove', e => {
+    if (!pinch || e.touches.length !== 2) return;
+    e.preventDefault();
+    setZoom(pinch.km * pinch.d / Math.max(span(e.touches), 1));
+  }, {passive: false});
+  cv.addEventListener('touchend', e => { if (e.touches.length < 2 && pinch){ pinch = null; if (timer) tick(); } });
 }
 
 
@@ -2278,7 +2321,7 @@ function applyShared(){
    (nieuwste eerst, max. 8 regels), zodat het in WhatsApp meteen leesbaar is. */
 function shareMessage(){
   const lines = [`\u2708\ufe0f ${t('shareText')}`];
-  lines.push(`\ud83d\udccd ${t('shareWhere', {p: here.name || t('myLocation'), r: `${Number(radiusKm).toLocaleString(LOCALE)} km`})}`);
+  lines.push(`\ud83d\udccd ${t('shareWhere', {p: here.id === 'gps' && (herePlace?.plaats || herePlace?.stad) ? (herePlace.plaats || herePlace.stad) : here.name || t('myLocation'), r: `${Number(radiusKm).toLocaleString(LOCALE)} km`})}`);
   const g = $('genre').selectedOptions[0]?.textContent || radioGenre;
   lines.push(`\ud83d\udcfb ${soundMode === 'radio' ? t('shareRadio', {g}) : t('shareAnthem')}`);
   if (pinned) lines.push(`\ud83d\udccc ${t('sharePinned', {s: pinned.name})}`);
