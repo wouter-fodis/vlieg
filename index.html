@@ -46,6 +46,7 @@
   .brand{flex-wrap:wrap}
   .brand-tools{display:flex;gap:8px;align-items:center}
   .share-btn{min-height:38px;padding:6px 12px}
+  .wa-btn{background:#25d366;color:#0b141a;border-color:#25d366}
   .apps{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 16px;padding:4px;background:#000;border:2px solid var(--asphalt-2);border-radius:8px}
   .apps a{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border-radius:5px;color:var(--runway-white);text-decoration:none;min-width:0}
   .apps a strong{font:700 1.25rem/1 'Barlow Condensed',sans-serif;letter-spacing:.08em}
@@ -204,6 +205,7 @@
     <h1>DJ VLIEGTUIG <span class="sub">RADIO</span></h1>
     <div class="brand-tools">
     <button class="btn share-btn" id="share" type="button" data-i18n-attr="title:shareTitle">&#8599; <span data-i18n="share">Deel</span></button>
+    <button class="btn share-btn wa-btn" id="shareWa" type="button" data-i18n-attr="title:shareWaTitle">WhatsApp</button>
     <div class="langs" role="group" data-i18n-attr="aria-label:language">
       <button type="button" data-lang="nl">NL</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="de">DE</button>
     </div>
@@ -387,6 +389,7 @@ const I18N = {
     linkCopied:'Link gekopieerd!',
     sharedSpot:'Gedeelde plek',
     shareText:'Luister mee met DJ VLIEGTUIG RADIO',
+    shareWaTitle:'Deel via WhatsApp, met je instellingen en wat je al hoorde', shareWhere:'{p} \u00b7 straal {r}', shareRadio:'Radio \u00b7 genre: {g}', shareAnthem:'Volksliederen', sharePinned:'Nu vast op: {s}', shareHeard:'Al gehoord:',
   },
   en: {
     pickSpot:'Choose a spot or airport', useGps:'Use my location', soundOn:'Start sound', soundOff:'Sound off',
@@ -437,6 +440,7 @@ const I18N = {
     linkCopied:'Link copied!',
     sharedSpot:'Shared spot',
     shareText:'Listen along with DJ VLIEGTUIG RADIO',
+    shareWaTitle:'Share via WhatsApp, with your settings and what you heard', shareWhere:'{p} \u00b7 radius {r}', shareRadio:'Radio \u00b7 genre: {g}', shareAnthem:'National anthems', sharePinned:'Now fixed on: {s}', shareHeard:'Already heard:',
   },
   de: {
     pickSpot:'Ort oder Flughafen w\u00e4hlen', useGps:'Meinen Standort verwenden', soundOn:'Ton starten', soundOff:'Ton aus',
@@ -487,6 +491,7 @@ const I18N = {
     linkCopied:'Link kopiert!',
     sharedSpot:'Geteilter Ort',
     shareText:'H\u00f6r mit bei DJ VLIEGTUIG RADIO',
+    shareWaTitle:'Per WhatsApp teilen, mit deinen Einstellungen und dem, was du geh\u00f6rt hast', shareWhere:'{p} \u00b7 Radius {r}', shareRadio:'Radio \u00b7 Genre: {g}', shareAnthem:'Nationalhymnen', sharePinned:'Jetzt fest auf: {s}', shareHeard:'Schon geh\u00f6rt:',
   },
 };
 const LANGS = ['nl', 'en', 'de'];
@@ -2269,10 +2274,33 @@ function applyShared(){
   if (!timer) startPolling();
   return true;
 }
+/* Het bericht bij een gedeelde link: plek, straal, modus/genre en wat er al te horen was
+   (nieuwste eerst, max. 8 regels), zodat het in WhatsApp meteen leesbaar is. */
+function shareMessage(){
+  const lines = [`\u2708\ufe0f ${t('shareText')}`];
+  lines.push(`\ud83d\udccd ${t('shareWhere', {p: here.name || t('myLocation'), r: `${Number(radiusKm).toLocaleString(LOCALE)} km`})}`);
+  const g = $('genre').selectedOptions[0]?.textContent || radioGenre;
+  lines.push(`\ud83d\udcfb ${soundMode === 'radio' ? t('shareRadio', {g}) : t('shareAnthem')}`);
+  if (pinned) lines.push(`\ud83d\udccc ${t('sharePinned', {s: pinned.name})}`);
+  const heard = playLog.slice(0, 8);
+  if (heard.length){
+    lines.push('', t('shareHeard'));
+    heard.forEach(e => {
+      let line = `${hhmm(e.time)} ${flagOf(e.iso) || '\u266a'} ${playText(e)}`;
+      if (e.kind === 'song' && e.station) line += ` (${e.station})`;
+      lines.push(line);
+    });
+  }
+  return lines.join('\n');
+}
+$('shareWa').onclick = () => {
+  const text = `${shareMessage()}\n\n${shareLink()}`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
+};
 $('share').onclick = async () => {
   const url = shareLink();
   if (navigator.share){
-    try { await navigator.share({title: document.title, text: t('shareText'), url}); return; }
+    try { await navigator.share({title: document.title, text: shareMessage(), url}); return; }
     catch(e){ if (e.name === 'AbortError') return; }
   }
   const b = $('share'), label = b.querySelector('span');
