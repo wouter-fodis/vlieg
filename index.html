@@ -343,6 +343,41 @@
   .sd-dist{flex:0 0 auto;font:400 .85rem "Space Mono",monospace;color:#555}
   .sd-empty{padding:18px 12px;color:#555}
   .sd-count{padding:10px 12px 18px;font-size:.8rem;color:#555}
+  /* ---------- Cureerpagina (?cureer): zenders beluisteren, favoriet maken of afkeuren ---------- */
+  .curate{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;background:var(--sign);color:var(--ink);
+    padding:max(12px,env(safe-area-inset-top)) 0 env(safe-area-inset-bottom)}
+  .curate[hidden]{display:none}
+  body.curating{overflow:hidden}
+  .cu-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:0 12px}
+  .cu-head h2{margin:0;font-size:1.3rem}
+  .cu-help{margin:6px 12px 8px;font-size:.8rem;line-height:1.35;color:#444;max-width:640px}
+  .cu-bar{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 10px;border-bottom:3px solid var(--ink)}
+  .cu-bar select{flex:1 1 160px;background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:2px;min-height:44px;padding:8px;font:600 1rem Barlow,sans-serif}
+  .cu-nav{flex:0 0 44px;min-height:44px;background:var(--ink);color:var(--sign);border:0;border-radius:2px;cursor:pointer;font-size:.9rem}
+  .cu-now{padding:8px 12px;font-size:.85rem;background:#dcdcd7;border-bottom:1px solid rgba(20,20,20,.18)}
+  .cu-now ol{margin:4px 0 0;padding-left:1.4em;columns:2;column-gap:18px}
+  .cu-now li{break-inside:avoid}
+  .cu-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .cu-sec{position:sticky;top:0;z-index:1;background:#dcdcd7;padding:6px 12px;font:700 .85rem/1.2 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em}
+  .cu-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(20,20,20,.12);min-height:56px}
+  .cu-row.blocked{opacity:.45}
+  .cu-row.blocked .cu-name{text-decoration:line-through}
+  .cu-row img,.cu-ico{flex:0 0 36px;width:36px;height:36px;border-radius:2px;object-fit:contain;background:#e2e2dd}
+  .cu-main{flex:1;min-width:0}
+  .cu-name{display:block;font:600 1rem/1.2 Barlow,sans-serif;overflow-wrap:anywhere}
+  .cu-sub{display:block;font-size:.78rem;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cu-tag{display:inline-block;margin-left:6px;padding:1px 5px;font:700 .7rem/1.3 "Space Mono",monospace;text-transform:uppercase;border:1px solid var(--ink);border-radius:2px;vertical-align:middle}
+  .cu-tag.bad{background:var(--mandatory-red);color:#fff;border-color:var(--mandatory-red)}
+  .cu-btn{flex:0 0 40px;width:40px;height:40px;border:2px solid var(--ink);border-radius:2px;background:none;color:var(--ink);cursor:pointer;font-size:1.05rem;line-height:1;padding:0}
+  .cu-btn.play[aria-pressed="true"]{background:var(--sign-yellow);border-color:var(--sign-yellow)}
+  .cu-btn.fav[aria-pressed="true"]{background:var(--ink);color:var(--sign-yellow)}
+  .cu-btn.block[aria-pressed="true"]{background:var(--mandatory-red);border-color:var(--mandatory-red);color:#fff}
+  .cu-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;border-top:3px solid var(--ink)}
+  .cu-foot span{flex:1 1 100%;font-size:.85rem;color:#444}
+  .cu-foot button{flex:1 1 auto;min-height:40px;padding:6px 10px;background:none;color:var(--ink);border:2px solid var(--ink);border-radius:2px;cursor:pointer;font:600 .95rem "Barlow Condensed",sans-serif}
+  .cu-foot .cu-export{background:var(--ink);color:var(--sign)}
+  .curate textarea{margin:0 12px 10px;font:.75rem "Space Mono",monospace;border:2px solid var(--ink);border-radius:2px;padding:6px}
+  .cu-empty{padding:18px 12px;color:#555}
   /* ---------- Radar in een oude tv (jaren 60, lichte kast, aluminium paneel) ---------- */
   .tv{position:relative;max-width:560px;margin:0 auto 8px;padding:clamp(16px,5vw,30px) clamp(16px,5vw,30px) 0;background:linear-gradient(180deg,#f1efe9 0,#e4e1d9 100%);
     border-radius:10px 10px 6px 6px;box-shadow:-12px 8px 0 -3px #cfcbc2,-12px 8px 0 -2px rgba(0,0,0,.08),0 22px 36px rgba(0,0,0,.45)}
@@ -534,6 +569,29 @@
     </div>
   </div>
 </main>
+<section class="curate" id="curate" hidden>
+  <div class="cu-head">
+    <h2 data-i18n="curTitle">Zenders cureren</h2>
+    <button type="button" class="sd-close" id="cuClose" data-i18n-attr="aria-label:curClose">&#215;</button>
+  </div>
+  <p class="cu-help" data-i18n="curHelp"></p>
+  <div class="cu-bar">
+    <button type="button" class="cu-nav" id="cuPrev" data-i18n-attr="aria-label:curPrev">&#9664;</button>
+    <select id="cuCountry"></select>
+    <button type="button" class="cu-nav" id="cuNext" data-i18n-attr="aria-label:curNext">&#9654;</button>
+    <select id="cuGenre"></select>
+  </div>
+  <div class="cu-now" id="cuNow"></div>
+  <div class="cu-list" id="cuList"></div>
+  <div class="cu-foot">
+    <span id="cuCount"></span>
+    <button type="button" id="cuReset" data-i18n="curReset">Herstel dit land</button>
+    <button type="button" id="cuImport" data-i18n="curImport">Importeer</button>
+    <button type="button" class="cu-export" id="cuExport" data-i18n="curExport">Exporteer</button>
+  </div>
+  <textarea id="cuOut" hidden rows="4" spellcheck="false"></textarea>
+  <audio id="cuAudio" preload="none"></audio>
+</section>
 <dialog class="spot-dlg" id="spotDlg" data-i18n-attr="aria-label:spotTitle">
   <div class="sd-head">
     <input id="spotQ" type="search" autocomplete="off" enterkeyhint="search" data-i18n-attr="placeholder:spotSearch;aria-label:spotSearch">
@@ -559,6 +617,7 @@ const I18N = {
     waiting:'Wachten op een vliegtuig', pickRunway:'Kies een plek bij een baan', listen:'Luister',
     alt:'Hoogte', overYou:'Boven je', dist:'Afstand', speed:'Snelheid', aircraft:'Toestel',
     countryInfo:'Informatie over het land', countryMore:'Meer over het land', countryLess:'Inklappen',
+    curTitle:'Zenders cureren', curHelp:'Beluister, keur af of maak favoriet. Favorieten speelt de app eerst, afgekeurde nooit. Je keuzes werken meteen in deze browser; met Exporteer stuur je ze door zodat ze voor iedereen gelden.', curPlaysNow:'De app speelt nu:', curFav:'Favoriet', curBlock:'Afkeuren', curPlay:'Beluister', curExport:'Exporteer', curCopied:'Gekopieerd. Plak het in de chat met Claude.', curReset:'Herstel dit land', curNone:'Geen zenders gevonden.', curHint:'voorkeur', curBroken:'werkt niet', curClose:'Sluiten', curPrev:'Vorig land', curNext:'Volgend land', curMarks:'{f} favoriet, {b} afgekeurd', curFavsHere:'Favorieten', curAll:'Alle zenders (meest beluisterd)', curEdited:'aangepast', curImport:'Importeer',
     spotTitle:'Kies een plek', spotSearch:'Luchthaven, stad, land of code', spotRecent:'Recent', spotNear:'Dichtbij', spotNone:'Niets gevonden voor "{q}".', spotCount:'{n} luchthavens', spotClose:'Sluiten', km:'{n} km',
     ct_EU:'Europa', ct_NA:'Noord-Amerika', ct_SA:'Zuid-Amerika', ct_AS:'Azi\u00eb', ct_AF:'Afrika', ct_OC:'Oceani\u00eb', tabLand:'Land', tabMusic:'Muziek', demoIndex:'Democratie-index',
     radarAria:'Kaart met vliegtuigen in de buurt', zoom:'Zoom', zoomIn:'Inzoomen', zoomOut:'Uitzoomen', radarNote:'Knijp, scroll of gebruik + en \u2212 om te zoomen. Noord is boven. Tik op een baankop om erheen te gaan; geel = in gebruik.', inUse:'in gebruik', notStarted:'Nog niet gestart.',
@@ -612,6 +671,7 @@ const I18N = {
     waiting:'Waiting for a plane', pickRunway:'Choose a spot near a runway', listen:'Listen',
     alt:'Altitude', overYou:'Overhead', dist:'Distance', speed:'Speed', aircraft:'Aircraft',
     countryInfo:'About the country', countryMore:'More about the country', countryLess:'Collapse',
+    curTitle:'Curate stations', curHelp:'Listen, reject or mark as favourite. The app plays favourites first and never plays rejected ones. Your choices work right away in this browser; Export sends them on so they apply to everyone.', curPlaysNow:'The app now plays:', curFav:'Favourite', curBlock:'Reject', curPlay:'Listen', curExport:'Export', curCopied:'Copied. Paste it into the chat with Claude.', curReset:'Reset this country', curNone:'No stations found.', curHint:'preferred', curBroken:'not working', curClose:'Close', curPrev:'Previous country', curNext:'Next country', curMarks:'{f} favourite, {b} rejected', curFavsHere:'Favourites', curAll:'All stations (most listened)', curEdited:'edited', curImport:'Import',
     spotTitle:'Pick a spot', spotSearch:'Airport, city, country or code', spotRecent:'Recent', spotNear:'Nearby', spotNone:'Nothing found for "{q}".', spotCount:'{n} airports', spotClose:'Close', km:'{n} km',
     ct_EU:'Europe', ct_NA:'North America', ct_SA:'South America', ct_AS:'Asia', ct_AF:'Africa', ct_OC:'Oceania', tabLand:'Country', tabMusic:'Music', demoIndex:'Democracy index',
     radarAria:'Map of nearby aircraft', zoom:'Zoom', zoomIn:'Zoom in', zoomOut:'Zoom out', radarNote:'Pinch, scroll or use + and \u2212 to zoom. North is up. Tap a runway end to go there; yellow = in use.', inUse:'in use', notStarted:'Not started yet.',
@@ -665,6 +725,7 @@ const I18N = {
     waiting:'Warten auf ein Flugzeug', pickRunway:'W\u00e4hle einen Ort an einer Bahn', listen:'Anh\u00f6ren',
     alt:'H\u00f6he', overYou:'\u00dcber dir', dist:'Entfernung', speed:'Geschwindigkeit', aircraft:'Flugzeug',
     countryInfo:'Infos zum Land', countryMore:'Mehr zum Land', countryLess:'Einklappen',
+    curTitle:'Sender kuratieren', curHelp:'Anh\u00f6ren, ablehnen oder als Favorit markieren. Favoriten spielt die App zuerst, abgelehnte nie. Deine Auswahl gilt sofort in diesem Browser; mit Exportieren schickst du sie weiter, damit sie f\u00fcr alle gilt.', curPlaysNow:'Die App spielt jetzt:', curFav:'Favorit', curBlock:'Ablehnen', curPlay:'Anh\u00f6ren', curExport:'Exportieren', curCopied:'Kopiert. F\u00fcge es im Chat mit Claude ein.', curReset:'Dieses Land zur\u00fccksetzen', curNone:'Keine Sender gefunden.', curHint:'Vorzug', curBroken:'geht nicht', curClose:'Schlie\u00dfen', curPrev:'Voriges Land', curNext:'N\u00e4chstes Land', curMarks:'{f} Favorit, {b} abgelehnt', curFavsHere:'Favoriten', curAll:'Alle Sender (meistgeh\u00f6rt)', curEdited:'ge\u00e4ndert', curImport:'Importieren',
     spotTitle:'Ort w\u00e4hlen', spotSearch:'Flughafen, Stadt, Land, Code', spotRecent:'Zuletzt', spotNear:'In der N\u00e4he', spotNone:'Nichts gefunden f\u00fcr "{q}".', spotCount:'{n} Flugh\u00e4fen', spotClose:'Schlie\u00dfen', km:'{n} km',
     ct_EU:'Europa', ct_NA:'Nordamerika', ct_SA:'S\u00fcdamerika', ct_AS:'Asien', ct_AF:'Afrika', ct_OC:'Ozeanien', tabLand:'Land', tabMusic:'Musik', demoIndex:'Demokratieindex',
     radarAria:'Karte mit Flugzeugen in der N\u00e4he', zoom:'Zoom', zoomIn:'Hineinzoomen', zoomOut:'Herauszoomen', radarNote:'Zum Zoomen zusammenziehen, scrollen oder + und \u2212 nutzen. Norden ist oben. Tippe auf ein Bahnende, um dorthin zu wechseln; gelb = in Betrieb.', inUse:'in Betrieb', notStarted:'Noch nicht gestartet.',
@@ -2322,6 +2383,20 @@ const RADIO_HINT = {
   IT:/Rai Radio 2/i, DK:/\bP3\b/i, NO:/NRK P3/i, SE:/\bP3\b/i, FI:/YleX/i, PL:/Tr\u00f3jka|Trojka|Program III/i,
   HU:/Pet\u0151fi/i, TR:/TRT FM/i, CZ:/Radio Wave/i, IS:/R\u00e1s 2/i,
 };
+/* Gecureerde zenders per land (via de cureerpagina, ?cureer).
+   fav: [{u: stationuuid, n: naam, s: stream, i: icoon, h: website, g: tags}] gaan voor, in deze volgorde;
+   block: [stationuuid] speelt nooit. Wat je in de cureerpagina wijzigt staat eerst alleen in
+   localStorage (flyCurated); met Exporteer komt het hier terecht. */
+const CURATED = {};
+let curatedLocal = null;
+try { curatedLocal = JSON.parse(localStorage.getItem('flyCurated') || 'null'); } catch(e){}
+const curatedFor = iso => (curatedLocal || CURATED)[iso] || {fav: [], block: []};
+const radioUsable = l => (l || []).filter(s => /^https:/.test(s.url_resolved || '') && !+s.hls && !/m3u8/i.test(s.url_resolved));
+const favAsStation = f => ({name: f.n, stationuuid: f.u, url_resolved: f.s, favicon: f.i || '', homepage: f.h || '', tags: f.g || ''});
+function curFavs(cur, genre){
+  return (cur.fav || []).filter(f => genre === 'popular' || (f.g || '').toLowerCase().split(',').some(x => x.trim().includes(genre)))
+    .map(favAsStation);
+}
 const RADIO_HOSTS = ['de1', 'at1', 'nl1'];
 const radioCache = new Map();
 let radioGenre = 'popular';
@@ -2339,27 +2414,161 @@ async function findRadio(iso, genre = radioGenre){
   if (!/^[A-Z]{2}$/.test(iso)) return null;
   const key = iso + '|' + genre;
   if (radioCache.has(key)) return radioCache.get(key);
-  const usable = l => (l || []).filter(s => /^https:/.test(s.url_resolved || '') && !+s.hls && !/m3u8/i.test(s.url_resolved));
+  const cur = curatedFor(iso), blocked = new Set(cur.block);
+  const usable = l => radioUsable(l).filter(s => !blocked.has(s.stationuuid));
   let ok = [], fallback = false;
+  let pref = curFavs(cur, genre);                        // favorieten gaan altijd voor
   if (genre !== 'popular'){
     const l = await radioSearch(iso, genre);
     if (!l) return null;                                 // niet cachen: later opnieuw
     ok = usable(l);
-    if (!ok.length) fallback = true;                     // geen zender in dit genre: populaire zender
+    if (!ok.length && !pref.length) fallback = true;     // geen zender in dit genre: populaire zender
   }
-  let pref = [];
   if (genre === 'popular' || fallback){
     const l = await radioSearch(iso, '');
     if (!l) return null;
     ok = usable(l);
+    if (fallback) pref = curFavs(cur, 'popular');
     const hint = RADIO_HINT[iso];
-    pref = hint ? ok.filter(s => hint.test(s.name)) : [];
+    if (hint) pref = [...pref, ...ok.filter(s => hint.test(s.name))];
   }
-  const ordered = [...pref, ...ok.filter(s => !pref.includes(s))].slice(0, 6)
+  const seen = new Set();
+  const ordered = [...pref, ...ok].filter(s => !seen.has(s.stationuuid) && seen.add(s.stationuuid)).slice(0, 6)
     .map(s => ({name: s.name.trim(), uuid: s.stationuuid || '', src: s.url_resolved, fallback,
                 icon: /^https:/.test(s.favicon || '') ? s.favicon : '', home: /^https?:/.test(s.homepage || '') ? s.homepage : ''}));
   radioCache.set(key, ordered);
   return ordered;
+}
+/* ---------- Cureerpagina (?cureer of ?cureer=NL) ----------
+   Per land en genre de zenders die radio-browser geeft (zelfde zoekvraag als de app),
+   met beluisteren, favoriet en afkeuren. Wijzigingen gaan naar localStorage (flyCurated)
+   en werken meteen in deze browser; Exporteer geeft JSON om in CURATED te zetten. */
+let cuIso = 'NL', cuGenre = 'popular', cuPlaying = '';
+const cuBroken = new Set();
+function cuData(){
+  if (!curatedLocal) curatedLocal = JSON.parse(JSON.stringify(CURATED));
+  return curatedLocal;
+}
+function cuSave(iso){
+  const d = cuData(), c = d[iso];
+  if (c && !c.fav.length && !c.block.length) delete d[iso];
+  try { localStorage.setItem('flyCurated', JSON.stringify(d)); } catch(e){}
+  [...radioCache.keys()].filter(k => k.startsWith(iso + '|')).forEach(k => radioCache.delete(k));
+}
+function cuEntry(iso){ const d = cuData(); return d[iso] || (d[iso] = {fav: [], block: []}); }
+function cuToggle(kind, st){
+  const c = cuEntry(cuIso), u = st.stationuuid;
+  const isFav = c.fav.some(f => f.u === u), isBlock = c.block.includes(u);
+  c.fav = c.fav.filter(f => f.u !== u); c.block = c.block.filter(x => x !== u);
+  if (kind === 'fav' && !isFav) c.fav.push({u, n: st.name.trim(), s: st.url_resolved, i: /^https:/.test(st.favicon || '') ? st.favicon : '',
+    h: /^https?:/.test(st.homepage || '') ? st.homepage : '', g: st.tags || ''});
+  if (kind === 'block' && !isBlock) c.block.push(u);
+  cuSave(cuIso); cuRender();
+}
+function cuPreview(st, btn){
+  const a = $('cuAudio');
+  if (cuPlaying === st.stationuuid){ a.pause(); a.removeAttribute('src'); cuPlaying = ''; cuMarkPlaying(); return; }
+  cuPlaying = st.stationuuid; a.src = st.url_resolved;
+  a.onerror = () => { cuBroken.add(st.stationuuid); cuPlaying = ''; cuRender(); };
+  a.play().catch(err => { if (err && err.name !== 'AbortError'){ cuBroken.add(st.stationuuid); cuPlaying = ''; cuRender(); } });
+  cuMarkPlaying();
+}
+function cuMarkPlaying(){
+  $('cuList').querySelectorAll('.cu-btn.play').forEach(b => {
+    const on = b.dataset.u === cuPlaying; b.setAttribute('aria-pressed', on); b.textContent = on ? '\u25a0' : '\u25b6';
+  });
+}
+function cuRow(st){
+  const c = curatedFor(cuIso), u = st.stationuuid;
+  const fav = (c.fav || []).some(f => f.u === u), blocked = (c.block || []).includes(u);
+  const row = el('div', 'cu-row' + (blocked ? ' blocked' : ''));
+  const play = el('button', 'cu-btn play', '\u25b6'); play.type = 'button'; play.dataset.u = u; play.title = t('curPlay');
+  play.setAttribute('aria-label', `${t('curPlay')}: ${st.name}`); play.onclick = () => cuPreview(st, play);
+  const icon = /^https:/.test(st.favicon || '') ? el('img') : el('span', 'cu-ico');
+  if (icon.tagName === 'IMG'){ icon.src = st.favicon; icon.alt = ''; icon.loading = 'lazy'; icon.onerror = () => icon.replaceWith(el('span', 'cu-ico')); }
+  const main = el('span', 'cu-main'), name = el('span', 'cu-name', st.name.trim());
+  const hint = RADIO_HINT[cuIso];
+  if (hint && hint.test(st.name)) name.append(el('span', 'cu-tag', t('curHint')));
+  if (cuBroken.has(u)) name.append(el('span', 'cu-tag bad', t('curBroken')));
+  const sub = [st.tags ? st.tags.split(',').slice(0, 4).join(', ') : '', st.codec || ''].filter(Boolean).join(' \u00b7 ');
+  main.append(name, el('span', 'cu-sub', sub));
+  const fb = el('button', 'cu-btn fav', '\u2605'); fb.type = 'button'; fb.title = t('curFav'); fb.setAttribute('aria-label', `${t('curFav')}: ${st.name}`);
+  fb.setAttribute('aria-pressed', fav); fb.onclick = () => cuToggle('fav', st);
+  const bb = el('button', 'cu-btn block', '\u2715'); bb.type = 'button'; bb.title = t('curBlock'); bb.setAttribute('aria-label', `${t('curBlock')}: ${st.name}`);
+  bb.setAttribute('aria-pressed', blocked); bb.onclick = () => cuToggle('block', st);
+  row.append(play, icon, main, fb, bb);
+  return row;
+}
+let cuToken = 0;
+async function cuRender(){
+  const token = ++cuToken, iso = cuIso, genre = cuGenre;
+  try { localStorage.setItem('flyCurCountry', iso); } catch(e){}
+  const c = curatedFor(iso);
+  $('cuCount').textContent = t('curMarks', {f: fmtInt((c.fav || []).length), b: fmtInt((c.block || []).length)});
+  $('cuCountry').querySelectorAll('option').forEach(o => {
+    const n = (cuData()[o.value]?.fav.length || 0) + (cuData()[o.value]?.block.length || 0);
+    const txt = `${flagOf(o.value)} ${countryName(o.value, o.value)}${n ? ' \u00b7 ' + t('curEdited') : ''}`;
+    if (o.textContent !== txt) o.textContent = txt;
+  });
+  const list = $('cuList');
+  if (!list.childElementCount || list.dataset.key !== iso + '|' + genre){ list.innerHTML = ''; list.append(el('p', 'cu-empty', t('loading'))); }
+  const [raw, now] = await Promise.all([radioSearch(iso, genre === 'popular' ? '' : genre), findRadio(iso, genre)]);
+  if (token !== cuToken) return;
+  const keep = list.dataset.key === iso + '|' + genre ? list.scrollTop : 0;
+  list.innerHTML = ''; list.dataset.key = iso + '|' + genre;
+  // wat de app nu zou spelen
+  const nowBox = $('cuNow'); nowBox.innerHTML = '';
+  nowBox.append(el('strong', null, t('curPlaysNow')));
+  const ol = el('ol'); (now || []).forEach(s => ol.append(el('li', null, s.name))); nowBox.append(ol);
+  const favs = (c.fav || []).map(favAsStation);
+  if (favs.length){ list.append(el('div', 'cu-sec', t('curFavsHere'))); favs.forEach(s => list.append(cuRow(s))); }
+  const all = radioUsable(raw).filter(s => !favs.some(f => f.stationuuid === s.stationuuid));
+  list.append(el('div', 'cu-sec', t('curAll')));
+  if (!all.length) list.append(el('p', 'cu-empty', t('curNone')));
+  all.forEach(s => list.append(cuRow(s)));
+  list.scrollTop = keep;
+  cuMarkPlaying();
+}
+function openCurate(){
+  const want = (SHARED.get('cureer') || SHARED.get('curate') || '').toUpperCase();
+  let last = ''; try { last = localStorage.getItem('flyCurCountry') || ''; } catch(e){}
+  const isos = [...new Set([...AIRPORTS.map(a => a[3]), ...Object.keys(RADIO_HINT)])]
+    .sort((x, y) => countryName(x, x).localeCompare(countryName(y, y), LOCALE));
+  cuIso = isos.includes(want) ? want : isos.includes(last) ? last : 'NL';
+  const cs = $('cuCountry'); cs.innerHTML = '';
+  isos.forEach(i => cs.add(new Option(i, i)));
+  cs.value = cuIso;
+  const gs = $('cuGenre'); gs.innerHTML = $('genre').innerHTML; gs.value = cuGenre;
+  cs.onchange = () => { cuIso = cs.value; cuRender(); };
+  gs.onchange = () => { cuGenre = gs.value; cuRender(); };
+  const step = d => { const i = isos.indexOf(cuIso); cuIso = cs.value = isos[(i + d + isos.length) % isos.length]; cuRender(); };
+  $('cuPrev').onclick = () => step(-1);
+  $('cuNext').onclick = () => step(1);
+  $('cuReset').onclick = () => {
+    const d = cuData(); if (CURATED[cuIso]) d[cuIso] = JSON.parse(JSON.stringify(CURATED[cuIso])); else delete d[cuIso];
+    cuSave(cuIso); cuRender();
+  };
+  $('cuExport').onclick = async () => {
+    const out = $('cuOut'); out.hidden = false;
+    out.value = 'const CURATED = ' + JSON.stringify(cuData()) + ';';
+    out.select();
+    try { await navigator.clipboard.writeText(out.value); $('cuCount').textContent = t('curCopied'); } catch(e){}
+  };
+  $('cuImport').onclick = () => {
+    const out = $('cuOut');
+    if (out.hidden || !out.value.trim()){ out.hidden = false; out.value = ''; out.focus(); return; }
+    try {
+      const d = JSON.parse(out.value.trim().replace(/^const CURATED = /, '').replace(/;$/, ''));
+      curatedLocal = d; Object.keys(d).forEach(cuSave); radioCache.clear(); cuRender();
+    } catch(e){ $('cuCount').textContent = 'JSON?'; }
+  };
+  $('cuClose').onclick = () => {
+    const a = $('cuAudio'); a.pause(); a.removeAttribute('src'); cuPlaying = '';
+    $('curate').hidden = true; document.body.classList.remove('curating');
+    const u = new URL(location.href); u.searchParams.delete('cureer'); u.searchParams.delete('curate'); window.history.replaceState(null, '', u);
+  };
+  $('curate').hidden = false; document.body.classList.add('curating');
+  cuRender();
 }
 const GENRE_NAME = () => $('genre').selectedOptions[0]?.textContent.toLowerCase() || '';
 
@@ -2660,6 +2869,7 @@ setSoundMode(soundMode);
 initTabs();
 
 applyI18n();
+if (SHARED.has('cureer') || SHARED.has('curate')) openCurate();
 document.querySelector('.langs').addEventListener('click', e => { const b = e.target.closest('[data-lang]'); if (b && b.dataset.lang !== LANG) setLang(b.dataset.lang); });
 
 
