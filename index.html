@@ -646,7 +646,7 @@ const I18N = {
     searching:'Zoeken naar \u201c{q}\u201d\u2026', notFound:'Niets gevonden voor \u201c{q}\u201d. Probeer een andere naam of co\u00f6rdinaten.', searchFail:'Zoeken lukt nu niet. Probeer co\u00f6rdinaten, bijv. 52.36, 4.71.',
     noGeo:'Je browser geeft geen locatie door. Kies een plek uit de lijst.', locating:'Locatie opvragen\u2026',
     geoFail:'Locatie niet beschikbaar (geen toestemming?). Polderbaan noord gekozen; kies zelf een plek in de lijst.',
-    retrying:'Even geen update, opnieuw proberen\u2026 ({e})', feedDown:'Vluchtdata al {n} keer niet bereikbaar. Laatste fout: {e}',
+    retrying:'Vluchten worden opnieuw opgehaald\u2026', feedDown:'De vluchtgegevens zijn even niet bereikbaar. DJ Vliegtuig blijft het proberen.', radarSearching:'DJ Vliegtuig zoekt even\nnaar vluchten\u2026',
     statusLine:'{n} vliegtuigen binnen {km} km \u00b7 bijgewerkt {t}', statusLine1:'1 vliegtuig binnen {km} km \u00b7 bijgewerkt {t}',
     lookingRoute:'Route opzoeken\u2026', routeUnknown:'Route onbekend', noCallsign:'Geen vluchtnummer uitgezonden',
     nothingOver:'Even niets boven je', waitingNext:'Wachten op het volgende vliegtuig',
@@ -701,7 +701,7 @@ const I18N = {
     searching:'Searching for \u201c{q}\u201d\u2026', notFound:'Nothing found for \u201c{q}\u201d. Try another name or coordinates.', searchFail:'Search is not working right now. Try coordinates, e.g. 52.36, 4.71.',
     noGeo:'Your browser does not share a location. Choose a spot from the list.', locating:'Getting your location\u2026',
     geoFail:'Location not available (no permission?). Polderbaan north selected; choose a spot from the list.',
-    retrying:'No update for a moment, retrying\u2026 ({e})', feedDown:'Flight data unreachable {n} times in a row. Last error: {e}',
+    retrying:'Fetching flights again\u2026', feedDown:'Flight data is unavailable for a moment. DJ Vliegtuig keeps trying.', radarSearching:'DJ Vliegtuig is looking\nfor flights\u2026',
     statusLine:'{n} aircraft within {km} km \u00b7 updated {t}', statusLine1:'1 aircraft within {km} km \u00b7 updated {t}',
     lookingRoute:'Looking up route\u2026', routeUnknown:'Route unknown', noCallsign:'No flight number broadcast',
     nothingOver:'Nothing overhead right now', waitingNext:'Waiting for the next plane',
@@ -756,7 +756,7 @@ const I18N = {
     searching:'Suche nach \u201e{q}\u201c\u2026', notFound:'Nichts gefunden f\u00fcr \u201e{q}\u201c. Versuch einen anderen Namen oder Koordinaten.', searchFail:'Die Suche funktioniert gerade nicht. Versuch Koordinaten, z. B. 52.36, 4.71.',
     noGeo:'Dein Browser gibt keinen Standort weiter. W\u00e4hle einen Ort aus der Liste.', locating:'Standort wird abgefragt\u2026',
     geoFail:'Standort nicht verf\u00fcgbar (keine Erlaubnis?). Polderbaan Nord gew\u00e4hlt; w\u00e4hle selbst einen Ort aus der Liste.',
-    retrying:'Gerade kein Update, neuer Versuch\u2026 ({e})', feedDown:'Flugdaten {n}-mal nicht erreichbar. Letzter Fehler: {e}',
+    retrying:'Fl\u00fcge werden neu geladen\u2026', feedDown:'Die Flugdaten sind gerade nicht erreichbar. DJ Vliegtuig versucht es weiter.', radarSearching:'DJ Vliegtuig sucht\ngerade nach Fl\u00fcgen\u2026',
     statusLine:'{n} Flugzeuge innerhalb von {km} km \u00b7 aktualisiert {t}', statusLine1:'1 Flugzeug innerhalb von {km} km \u00b7 aktualisiert {t}',
     lookingRoute:'Route wird gesucht\u2026', routeUnknown:'Route unbekannt', noCallsign:'Keine Flugnummer gesendet',
     nothingOver:'Gerade nichts \u00fcber dir', waitingNext:'Warten auf das n\u00e4chste Flugzeug',
@@ -1209,11 +1209,12 @@ async function doTick(){
   if (!data) {
     failCount++;
     render();
-    // E\u00e9n of twee missers zijn normaal; pas na drie op rij rood tonen.
-    if (failCount < 3) return setStatus(t('retrying', {e: lastError}));
-    return setStatus(t('feedDown', {n: failCount, e: lastError}), true);
+    // Geen foutmelding met techniek: op de radar "zoekt even naar vluchten", hier een rustige regel.
+    // De echte fout staat in de console.
+    console.warn('vluchtdata:', lastError);
+    return setStatus(t(failCount < 10 ? 'retrying' : 'feedDown'));
   }
-  failCount = 0;
+  failCount = 0; flightsLoaded = true;
 
   // leeftijd van de data (incl. cache van de proxy), begrensd tegen klokverschillen
   const feedAge = data.now ? Math.min(Math.max((Date.now()-data.now)/1000, 0), 10) : 0;
@@ -2177,6 +2178,23 @@ function drawReference(ctx, C, scale, maxKm){
   ctx.restore();
 }
 
+let flightsLoaded = false;       // al eens vluchtdata gehad?
+function drawSearching(ctx, C, W, now){
+  const a = (now / 1000 * 1.6) % (Math.PI * 2), R = C - 20;
+  ctx.save();
+  ctx.fillStyle = 'rgba(160,205,180,.12)';
+  ctx.beginPath(); ctx.moveTo(C, C); ctx.arc(C, C, R, a - 0.5, a); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(160,205,180,.55)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(C, C); ctx.lineTo(C + Math.cos(a) * R, C + Math.sin(a) * R); ctx.stroke();
+  const lines = t('radarSearching').split('\n'), lh = 34, y0 = C + R * 0.42 - (lines.length - 1) * lh / 2;
+  ctx.font = '600 30px "Barlow Condensed", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = Math.max(...lines.map(l => ctx.measureText(l).width)) + 36;
+  ctx.fillStyle = 'rgba(8,16,13,.82)';
+  ctx.fillRect(C - w / 2, y0 - lh / 2 - 10, w, lines.length * lh + 20);
+  ctx.fillStyle = '#f0b33c';
+  lines.forEach((l, i) => ctx.fillText(l, C, y0 + i * lh));
+  ctx.restore();
+}
 function render(){
   const now = performance.now();
   const dt = Math.min((now - lastFrame)/1000, 0.25); lastFrame = now;
@@ -2235,6 +2253,8 @@ function render(){
     }
   });
   for (const h of display.keys()) if (!seen.has(h)) display.delete(h);
+  // nog geen of even geen vluchtdata: draaiende zoekstraal met een vriendelijke tekst
+  if (!flightsLoaded || failCount >= 2) drawSearching(ctx, C, W, now);
 }
 
 function loop(){ render(); requestAnimationFrame(loop); }
