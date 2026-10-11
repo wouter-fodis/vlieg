@@ -434,7 +434,7 @@
     <button class="btn" id="gps" type="button" data-i18n="useGps">Gebruik mijn locatie</button>
     <button class="btn primary" id="start" type="button" data-i18n="soundOn">Start met geluid</button>
     <label class="range"><span data-i18n="overhead">Boven je = binnen</span>
-      <input id="radius" type="range" min="0.5" max="5" step="0.5" value="3">
+      <input id="radius" type="range" min="0.5" max="10" step="0.5" value="5">
       <span id="radiusVal">3 km</span>
     </label>
   </div>
@@ -850,12 +850,17 @@ let viewTarget = VIEW_DEFAULT;
 try { const z = parseFloat(localStorage.getItem('flyZoom')); if (z >= VIEW_MIN && z <= VIEW_MAX) viewTarget = z; } catch(e){}
 let viewKm = viewTarget;
 const fetchNm = () => Math.max(8, Math.ceil(viewTarget / 1.852));
-const MAX_ALT_FT = 7000;     // hoger dan dit telt niet als "over je heen"
+const MAX_ALT_FT = 7000;     // bij een baankop: hoger dan dit telt niet als "over je heen"
+const FREE_RADIUS_KM = 5;    // straal bij Mijn locatie en Zelf invoeren
+// Bij een baankop tellen alleen lage toestellen; bij Mijn locatie of Zelf invoeren
+// (meestal ver van een vliegveld) telt alles wat vliegt, ook op kruishoogte.
+const atRunway = () => here.id !== 'gps' && here.id !== 'custom';
+const altOk = p => p.alt > 0 && (!atRunway() || p.alt < MAX_ALT_FT);
 const HOME_ICAO = 'EHAM';
 
 /* ---------- State ---------- */
 let here = {...DEFAULT_SPOT};
-let radiusKm = 3;
+let radiusKm = FREE_RADIUS_KM;
 let timer = null;
 let feedIdx = 0;
 let current = null;          // hex van het vliegtuig dat nu boven je is
@@ -1097,7 +1102,7 @@ async function showHere(){
 /* ---------- Zelf een locatie invoeren ---------- */
 function setCustom(lat, lon, name){
   here = {id:'custom', name, lat, lon};
-  spotSel.value = 'custom'; runSel.hidden = true; current = null; setRadius(3);
+  spotSel.value = 'custom'; runSel.hidden = true; current = null; setRadius(FREE_RADIUS_KM);
   try { localStorage.setItem('flyCustom', JSON.stringify(here)); } catch(e){}
   showHere();
   if (!timer) startPolling(); else tick();
@@ -1131,7 +1136,7 @@ function useGps(){
   spotSel.value = 'gps'; runSel.hidden = true;
   setStatus(t('locating'));
   navigator.geolocation.getCurrentPosition(p => {
-    here = {id:'gps', name:t('myLocation'), lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy}; setRadius(3);
+    here = {id:'gps', name:t('myLocation'), lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy}; setRadius(FREE_RADIUS_KM);
     showHere();
     spotSel.value = 'gps'; current = null;
     if (!timer) startPolling(); else tick();
@@ -1228,7 +1233,7 @@ function evaluateOverhead(){
   const now = performance.now();
   const cands = [];
   for (const p of lastPlanes){
-    if (!(p.alt>0 && p.alt<MAX_ALT_FT)) continue;
+    if (!altOk(p)) continue;
     const st = liveState(p, now);
     const inside = st.d <= radiusKm;
     // seconden tot het toestel de straal binnenkomt (0 = er al in)
@@ -1670,7 +1675,7 @@ setInterval(() => { evaluateOverhead(); updateMix(); }, 250);
 /* Routes (en volksliederen) alvast ophalen voor alles wat laag in de buurt vliegt */
 function prefetchRoutes(){
   const todo = lastPlanes
-    .filter(p=>p.callsign && p.alt>0 && p.alt<MAX_ALT_FT && p.d<12 && !routeCache.has(p.callsign))
+    .filter(p=>p.callsign && altOk(p) && p.d<12 && !routeCache.has(p.callsign))
     .sort((a,b)=>a.d-b.d).slice(0,4);
   todo.forEach(p => getRoute(p.callsign).then(r => {
     const t = anthemTarget(r); if (t){ countryInfo(t.iso); democracyScore((t.iso||'').toUpperCase()); countryFacts((t.iso||'').toUpperCase()); countryInfo(t.iso).then(i => worldBank(i?.iso3)); if (soundOn) findAnthem(t.country); }
@@ -2185,7 +2190,7 @@ function render(){
       d.hdg += dh*k;
     }
     const x=C+d.x*scale, y=C-d.y*scale;
-    const isTop=p.hex===current, low=p.alt>0&&p.alt<MAX_ALT_FT, flying=p.alt>0;
+    const isTop=p.hex===current, low=altOk(p), flying=p.alt>0;
 
     // spoor achter vliegende toestellen
     if (flying){
@@ -2636,7 +2641,7 @@ function updateMix(){
   const byCountry = new Map();
   if (soundOn){
     for (const p of lastPlanes){
-      if (!(p.alt>0 && p.alt<MAX_ALT_FT)) continue;
+      if (!altOk(p)) continue;
       const tgt = anthemTarget(routeCache.get(p.callsign));
       if (!tgt) continue;
       const w = planeWeight(liveState(p, now));
