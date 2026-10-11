@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DJ VLIEGTUIG RADIO</title>
+<link rel="manifest" href="proxy.php?app=manifest">
+<link rel="icon" type="image/png" sizes="192x192" href="proxy.php?app=icon&amp;s=192">
+<link rel="apple-touch-icon" href="proxy.php?app=icon&amp;s=180">
+<meta name="theme-color" content="#2c2f31">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="DJ Vliegtuig">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;1,700&family=Barlow:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -378,6 +386,12 @@
   .cu-foot .cu-export{background:var(--ink);color:var(--sign)}
   .curate textarea{margin:0 12px 10px;font:.75rem "Space Mono",monospace;border:2px solid var(--ink);border-radius:2px;padding:6px}
   .cu-empty{padding:18px 12px;color:#555}
+  /* ---------- Installeren als app (PWA) ---------- */
+  .install{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:10px 12px;background:var(--sign);color:var(--ink);border:3px solid var(--ink);border-radius:2px;font-size:.92rem;line-height:1.35}
+  .install[hidden]{display:none}
+  .install span{flex:1;min-width:0}
+  .install .btn.primary{flex:0 0 auto;min-height:40px;padding:6px 12px}
+  .install-x{flex:0 0 36px;height:36px;background:none;border:0;color:var(--ink);font:700 1.5rem/1 Barlow,sans-serif;cursor:pointer}
   /* ---------- Radar in een oude tv (jaren 60, lichte kast, aluminium paneel) ---------- */
   .tv{position:relative;max-width:560px;margin:0 auto 8px;padding:clamp(16px,5vw,30px) clamp(16px,5vw,30px) 0;background:linear-gradient(180deg,#f1efe9 0,#e4e1d9 100%);
     border-radius:10px 10px 6px 6px;box-shadow:-12px 8px 0 -3px #cfcbc2,-12px 8px 0 -2px rgba(0,0,0,.08),0 22px 36px rgba(0,0,0,.45)}
@@ -427,6 +441,11 @@
     </div>
   </div>
 
+  <div class="install" id="install" hidden>
+    <span id="installText"></span>
+    <button type="button" class="btn primary" id="installBtn" hidden data-i18n="installBtn">Installeer</button>
+    <button type="button" class="install-x" id="installX" data-i18n-attr="aria-label:spotClose">&#215;</button>
+  </div>
   <div class="controls">
     <select id="spot" data-i18n-attr="aria-label:pickSpot" hidden></select>
     <button type="button" class="btn spot-btn" id="spotBtn" aria-haspopup="dialog" data-i18n-attr="aria-label:pickSpot"><span id="spotBtnText"></span></button>
@@ -617,6 +636,7 @@ const I18N = {
     waiting:'Wachten op een vliegtuig', pickRunway:'Kies een plek bij een baan', listen:'Luister',
     alt:'Hoogte', overYou:'Boven je', dist:'Afstand', speed:'Snelheid', aircraft:'Toestel',
     countryInfo:'Informatie over het land', countryMore:'Meer over het land', countryLess:'Inklappen',
+    installBtn:'Installeer', installAndroid:'Zet DJ Vliegtuig als app op je telefoon.', installIos:'Zet DJ Vliegtuig als app op je beginscherm: tik op het deelicoon en kies "Zet op beginscherm".',
     curTitle:'Zenders cureren', curHelp:'Beluister, keur af of maak favoriet. Favorieten speelt de app eerst, afgekeurde nooit. Je keuzes werken meteen in deze browser; met Exporteer stuur je ze door zodat ze voor iedereen gelden.', curPlaysNow:'De app speelt nu:', curFav:'Favoriet', curBlock:'Afkeuren', curPlay:'Beluister', curExport:'Exporteer', curCopied:'Gekopieerd. Plak het in de chat met Claude.', curReset:'Herstel dit land', curNone:'Geen zenders gevonden.', curHint:'voorkeur', curBroken:'werkt niet', curClose:'Sluiten', curPrev:'Vorig land', curNext:'Volgend land', curMarks:'{f} favoriet, {b} afgekeurd', curFavsHere:'Favorieten', curAll:'Alle zenders (meest beluisterd)', curEdited:'aangepast', curImport:'Importeer',
     spotTitle:'Kies een plek', spotSearch:'Luchthaven, stad, land of code', spotRecent:'Recent', spotNear:'Dichtbij', spotNone:'Niets gevonden voor "{q}".', spotCount:'{n} luchthavens', spotClose:'Sluiten', km:'{n} km',
     ct_EU:'Europa', ct_NA:'Noord-Amerika', ct_SA:'Zuid-Amerika', ct_AS:'Azi\u00eb', ct_AF:'Afrika', ct_OC:'Oceani\u00eb', tabLand:'Land', tabMusic:'Muziek', demoIndex:'Democratie-index',
@@ -671,6 +691,7 @@ const I18N = {
     waiting:'Waiting for a plane', pickRunway:'Choose a spot near a runway', listen:'Listen',
     alt:'Altitude', overYou:'Overhead', dist:'Distance', speed:'Speed', aircraft:'Aircraft',
     countryInfo:'About the country', countryMore:'More about the country', countryLess:'Collapse',
+    installBtn:'Install', installAndroid:'Put DJ Vliegtuig on your phone as an app.', installIos:'Add DJ Vliegtuig to your home screen: tap the share icon and choose "Add to Home Screen".',
     curTitle:'Curate stations', curHelp:'Listen, reject or mark as favourite. The app plays favourites first and never plays rejected ones. Your choices work right away in this browser; Export sends them on so they apply to everyone.', curPlaysNow:'The app now plays:', curFav:'Favourite', curBlock:'Reject', curPlay:'Listen', curExport:'Export', curCopied:'Copied. Paste it into the chat with Claude.', curReset:'Reset this country', curNone:'No stations found.', curHint:'preferred', curBroken:'not working', curClose:'Close', curPrev:'Previous country', curNext:'Next country', curMarks:'{f} favourite, {b} rejected', curFavsHere:'Favourites', curAll:'All stations (most listened)', curEdited:'edited', curImport:'Import',
     spotTitle:'Pick a spot', spotSearch:'Airport, city, country or code', spotRecent:'Recent', spotNear:'Nearby', spotNone:'Nothing found for "{q}".', spotCount:'{n} airports', spotClose:'Close', km:'{n} km',
     ct_EU:'Europe', ct_NA:'North America', ct_SA:'South America', ct_AS:'Asia', ct_AF:'Africa', ct_OC:'Oceania', tabLand:'Country', tabMusic:'Music', demoIndex:'Democracy index',
@@ -725,6 +746,7 @@ const I18N = {
     waiting:'Warten auf ein Flugzeug', pickRunway:'W\u00e4hle einen Ort an einer Bahn', listen:'Anh\u00f6ren',
     alt:'H\u00f6he', overYou:'\u00dcber dir', dist:'Entfernung', speed:'Geschwindigkeit', aircraft:'Flugzeug',
     countryInfo:'Infos zum Land', countryMore:'Mehr zum Land', countryLess:'Einklappen',
+    installBtn:'Installieren', installAndroid:'DJ Vliegtuig als App aufs Handy holen.', installIos:'DJ Vliegtuig auf den Home-Bildschirm: tippe auf Teilen und w\u00e4hle "Zum Home-Bildschirm".',
     curTitle:'Sender kuratieren', curHelp:'Anh\u00f6ren, ablehnen oder als Favorit markieren. Favoriten spielt die App zuerst, abgelehnte nie. Deine Auswahl gilt sofort in diesem Browser; mit Exportieren schickst du sie weiter, damit sie f\u00fcr alle gilt.', curPlaysNow:'Die App spielt jetzt:', curFav:'Favorit', curBlock:'Ablehnen', curPlay:'Anh\u00f6ren', curExport:'Exportieren', curCopied:'Kopiert. F\u00fcge es im Chat mit Claude ein.', curReset:'Dieses Land zur\u00fccksetzen', curNone:'Keine Sender gefunden.', curHint:'Vorzug', curBroken:'geht nicht', curClose:'Schlie\u00dfen', curPrev:'Voriges Land', curNext:'N\u00e4chstes Land', curMarks:'{f} Favorit, {b} abgelehnt', curFavsHere:'Favoriten', curAll:'Alle Sender (meistgeh\u00f6rt)', curEdited:'ge\u00e4ndert', curImport:'Importieren',
     spotTitle:'Ort w\u00e4hlen', spotSearch:'Flughafen, Stadt, Land, Code', spotRecent:'Zuletzt', spotNear:'In der N\u00e4he', spotNone:'Nichts gefunden f\u00fcr "{q}".', spotCount:'{n} Flugh\u00e4fen', spotClose:'Schlie\u00dfen', km:'{n} km',
     ct_EU:'Europa', ct_NA:'Nordamerika', ct_SA:'S\u00fcdamerika', ct_AS:'Asien', ct_AF:'Afrika', ct_OC:'Ozeanien', tabLand:'Land', tabMusic:'Musik', demoIndex:'Demokratieindex',
@@ -2875,6 +2897,31 @@ initTabs();
 
 applyI18n();
 if (SHARED.has('cureer') || SHARED.has('curate')) openCurate();
+
+/* ---------- Installeren als app (PWA) ----------
+   Android/desktop-Chrome: eigen knop via beforeinstallprompt. iPhone: een tip (daar kan
+   het alleen via het deelmenu). Niet tonen als de app al geinstalleerd draait, en
+   niet meer na wegklikken (localStorage flyInstallHint). */
+{
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  let dismissed = false; try { dismissed = localStorage.getItem('flyInstallHint') === 'no'; } catch(e){}
+  const box = $('install'), ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  let deferred = null;
+  $('installX').onclick = () => { box.hidden = true; try { localStorage.setItem('flyInstallHint', 'no'); } catch(e){} };
+  if (!standalone && !dismissed && !SHARED.has('cureer')){
+    if (ios){ $('installText').textContent = t('installIos'); box.hidden = false; }
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault(); deferred = e;
+      $('installText').textContent = t('installAndroid'); $('installBtn').hidden = false; box.hidden = false;
+    });
+    $('installBtn').onclick = async () => {
+      if (!deferred) return;
+      deferred.prompt(); const r = await deferred.userChoice.catch(() => null); deferred = null;
+      if (r && r.outcome === 'accepted') box.hidden = true;
+    };
+  }
+  window.addEventListener('appinstalled', () => { box.hidden = true; });
+}
 document.querySelector('.langs').addEventListener('click', e => { const b = e.target.closest('[data-lang]'); if (b && b.dataset.lang !== LANG) setLang(b.dataset.lang); });
 
 
