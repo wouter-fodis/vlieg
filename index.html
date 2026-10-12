@@ -392,6 +392,29 @@
   .install span{flex:1;min-width:0}
   .install .btn.primary{flex:0 0 auto;min-height:40px;padding:6px 12px}
   .install-x{flex:0 0 36px;height:36px;background:none;border:0;color:var(--ink);font:700 1.5rem/1 Barlow,sans-serif;cursor:pointer}
+  /* ---------- Statistiekenpagina (?stats) ---------- */
+  .st-range{display:flex;gap:6px;padding:10px 12px;border-bottom:3px solid var(--ink)}
+  .st-range button{min-height:38px;padding:6px 12px;background:none;color:var(--ink);border:2px solid var(--ink);border-radius:2px;cursor:pointer;font:600 .95rem "Barlow Condensed",sans-serif}
+  .st-range button[aria-pressed="true"]{background:var(--ink);color:var(--sign)}
+  .st-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 24px}
+  .st-body a{color:var(--ink);font-weight:700}
+  .st-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+  .st-tile{background:#fff;border:2px solid var(--ink);border-radius:2px;padding:8px 10px;display:flex;flex-direction:column}
+  .st-label{font-size:.78rem;color:#555}
+  .st-tile strong{font:700 1.7rem/1.1 "Space Mono",monospace;color:var(--ink)}
+  .st-tile small{font-size:.72rem;color:#555}
+  .st-h{margin:18px 0 6px;font:700 1rem/1.2 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em}
+  .st-chart{width:100%;height:auto;display:block;background:#fff;border:2px solid var(--ink);border-radius:2px;padding:6px 6px 0}
+  .st-grid{stroke:rgba(20,20,20,.12);stroke-width:1}
+  .st-axis{font:20px "Space Mono",monospace;fill:#555}
+  .st-fill{fill:var(--ink)}
+  .st-bar:hover .st-fill{fill:#555}
+  .st-lists{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 18px}
+  .st-row{position:relative;display:flex;justify-content:space-between;gap:10px;padding:5px 8px;font-size:.9rem;border-bottom:1px solid rgba(20,20,20,.1)}
+  .st-rowbar{position:absolute;left:0;top:3px;bottom:3px;background:#dcdcd7;border-radius:0 4px 4px 0;z-index:0}
+  .st-name,.st-num{position:relative;z-index:1}
+  .st-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .st-num{font-family:"Space Mono",monospace;flex:0 0 auto}
   /* ---------- Radar in een oude tv (jaren 60), plat getekend, behalve de draaiknoppen ---------- */
   .tv{position:relative;max-width:560px;margin:0 auto 8px;padding:clamp(16px,5vw,30px) clamp(16px,5vw,30px) 0;background:#ebe8e1;
     border-radius:10px 10px 6px 6px}
@@ -584,6 +607,18 @@
     </div>
   </div>
 </main>
+<section class="curate stats" id="stats" hidden>
+  <div class="cu-head">
+    <h2 data-i18n="stTitle">Statistieken</h2>
+    <button type="button" class="sd-close" id="stClose" data-i18n-attr="aria-label:curClose">&#215;</button>
+  </div>
+  <div class="st-range" id="stRange">
+    <button type="button" data-days="7" aria-pressed="false" data-i18n="st7">7 dagen</button>
+    <button type="button" data-days="30" aria-pressed="true" data-i18n="st30">30 dagen</button>
+    <button type="button" data-days="90" aria-pressed="false" data-i18n="st90">90 dagen</button>
+  </div>
+  <div class="st-body" id="stBody"></div>
+</section>
 <section class="curate" id="curate" hidden>
   <div class="cu-head">
     <h2 data-i18n="curTitle">Zenders cureren</h2>
@@ -632,7 +667,7 @@ const I18N = {
     waiting:'Wachten op een vliegtuig', pickRunway:'Kies een plek bij een baan', listen:'Luister',
     alt:'Hoogte', overYou:'Boven je', dist:'Afstand', speed:'Snelheid', aircraft:'Toestel',
     countryInfo:'Informatie over het land', countryMore:'Meer over het land', countryLess:'Inklappen',
-    installBtn:'Installeer', installIosOther:'Wil je DJ Vliegtuig als app? Open fodis.nl/fly in Safari, tik op het deelicoon en kies "Zet op beginscherm". In deze browser kan dat niet.', installAndroid:'Zet DJ Vliegtuig als app op je telefoon.', installIos:'Zet DJ Vliegtuig als app op je beginscherm: tik op het deelicoon en kies "Zet op beginscherm".',
+    installBtn:'Installeer', stTitle:'Statistieken', st7:'7 dagen', st30:'30 dagen', st90:'90 dagen', stLogin:'Alleen voor redacteuren van fodis.nl.', stLoginLink:'Log in bij WordPress', stFail:'Statistieken konden niet worden geladen.', stVisitors:'Bezoekers', stVisitorsSub:'uniek per dag, opgeteld', stToday:'Vandaag', stViews:'Weergaven', stStarts:'Geluid gestart', stListen:'Luistertijd', stHours:'uur', stShares:'Gedeeld', stInstalls:'Ge\u00efnstalleerd', stPerDay:'Unieke bezoekers per dag', stVisitorsShort:'bezoekers', stViewsShort:'weergaven', stCountries:'DJ-landen', stSpots:'Plekken', stRefs:'Komt van', stDevices:'Apparaat', stApp:'App of browser', stLangs:'Taal', stModes:'Radio of volksliederen', stGenres:'Genres', stShareHow:'Gedeeld via', stEmpty:'Nog geen gegevens in deze periode.', installIosOther:'Wil je DJ Vliegtuig als app? Open fodis.nl/fly in Safari, tik op het deelicoon en kies "Zet op beginscherm". In deze browser kan dat niet.', installAndroid:'Zet DJ Vliegtuig als app op je telefoon.', installIos:'Zet DJ Vliegtuig als app op je beginscherm: tik op het deelicoon en kies "Zet op beginscherm".',
     curTitle:'Zenders cureren', curHelp:'Beluister, keur af of maak favoriet. Favorieten speelt de app eerst, afgekeurde nooit. Je keuzes werken meteen in deze browser; met Exporteer stuur je ze door zodat ze voor iedereen gelden.', curPlaysNow:'De app speelt nu:', curFav:'Favoriet', curBlock:'Afkeuren', curPlay:'Beluister', curExport:'Exporteer', curCopied:'Gekopieerd. Plak het in de chat met Claude.', curReset:'Herstel dit land', curNone:'Geen zenders gevonden.', curHint:'voorkeur', curBroken:'werkt niet', curClose:'Sluiten', curPrev:'Vorig land', curNext:'Volgend land', curMarks:'{f} favoriet, {b} afgekeurd', curFavsHere:'Favorieten', curAll:'Alle zenders (meest beluisterd)', curEdited:'aangepast', curImport:'Importeer',
     spotTitle:'Kies een plek', spotSearch:'Luchthaven, stad, land of code', spotRecent:'Recent', spotNear:'Dichtbij', spotNone:'Niets gevonden voor "{q}".', spotCount:'{n} luchthavens', spotClose:'Sluiten', km:'{n} km',
     ct_EU:'Europa', ct_NA:'Noord-Amerika', ct_SA:'Zuid-Amerika', ct_AS:'Azi\u00eb', ct_AF:'Afrika', ct_OC:'Oceani\u00eb', tabLand:'Land', tabMusic:'Muziek', demoIndex:'Democratie-index',
@@ -687,7 +722,7 @@ const I18N = {
     waiting:'Waiting for a plane', pickRunway:'Choose a spot near a runway', listen:'Listen',
     alt:'Altitude', overYou:'Overhead', dist:'Distance', speed:'Speed', aircraft:'Aircraft',
     countryInfo:'About the country', countryMore:'More about the country', countryLess:'Collapse',
-    installBtn:'Install', installIosOther:'Want DJ Vliegtuig as an app? Open fodis.nl/fly in Safari, tap the share icon and choose "Add to Home Screen". This browser can\'t do it.', installAndroid:'Put DJ Vliegtuig on your phone as an app.', installIos:'Add DJ Vliegtuig to your home screen: tap the share icon and choose "Add to Home Screen".',
+    installBtn:'Install', stTitle:'Statistics', st7:'7 days', st30:'30 days', st90:'90 days', stLogin:'For fodis.nl editors only.', stLoginLink:'Log in to WordPress', stFail:'Statistics could not be loaded.', stVisitors:'Visitors', stVisitorsSub:'unique per day, summed', stToday:'Today', stViews:'Page views', stStarts:'Sound started', stListen:'Listening time', stHours:'hours', stShares:'Shared', stInstalls:'Installed', stPerDay:'Unique visitors per day', stVisitorsShort:'visitors', stViewsShort:'views', stCountries:'DJ countries', stSpots:'Spots', stRefs:'Came from', stDevices:'Device', stApp:'App or browser', stLangs:'Language', stModes:'Radio or anthems', stGenres:'Genres', stShareHow:'Shared via', stEmpty:'No data in this period yet.', installIosOther:'Want DJ Vliegtuig as an app? Open fodis.nl/fly in Safari, tap the share icon and choose "Add to Home Screen". This browser can\'t do it.', installAndroid:'Put DJ Vliegtuig on your phone as an app.', installIos:'Add DJ Vliegtuig to your home screen: tap the share icon and choose "Add to Home Screen".',
     curTitle:'Curate stations', curHelp:'Listen, reject or mark as favourite. The app plays favourites first and never plays rejected ones. Your choices work right away in this browser; Export sends them on so they apply to everyone.', curPlaysNow:'The app now plays:', curFav:'Favourite', curBlock:'Reject', curPlay:'Listen', curExport:'Export', curCopied:'Copied. Paste it into the chat with Claude.', curReset:'Reset this country', curNone:'No stations found.', curHint:'preferred', curBroken:'not working', curClose:'Close', curPrev:'Previous country', curNext:'Next country', curMarks:'{f} favourite, {b} rejected', curFavsHere:'Favourites', curAll:'All stations (most listened)', curEdited:'edited', curImport:'Import',
     spotTitle:'Pick a spot', spotSearch:'Airport, city, country or code', spotRecent:'Recent', spotNear:'Nearby', spotNone:'Nothing found for "{q}".', spotCount:'{n} airports', spotClose:'Close', km:'{n} km',
     ct_EU:'Europe', ct_NA:'North America', ct_SA:'South America', ct_AS:'Asia', ct_AF:'Africa', ct_OC:'Oceania', tabLand:'Country', tabMusic:'Music', demoIndex:'Democracy index',
@@ -742,7 +777,7 @@ const I18N = {
     waiting:'Warten auf ein Flugzeug', pickRunway:'W\u00e4hle einen Ort an einer Bahn', listen:'Anh\u00f6ren',
     alt:'H\u00f6he', overYou:'\u00dcber dir', dist:'Entfernung', speed:'Geschwindigkeit', aircraft:'Flugzeug',
     countryInfo:'Infos zum Land', countryMore:'Mehr zum Land', countryLess:'Einklappen',
-    installBtn:'Installieren', installIosOther:'DJ Vliegtuig als App? \u00d6ffne fodis.nl/fly in Safari, tippe auf Teilen und w\u00e4hle "Zum Home-Bildschirm". In diesem Browser geht das nicht.', installAndroid:'DJ Vliegtuig als App aufs Handy holen.', installIos:'DJ Vliegtuig auf den Home-Bildschirm: tippe auf Teilen und w\u00e4hle "Zum Home-Bildschirm".',
+    installBtn:'Installieren', stTitle:'Statistiken', st7:'7 Tage', st30:'30 Tage', st90:'90 Tage', stLogin:'Nur f\u00fcr Redakteure von fodis.nl.', stLoginLink:'Bei WordPress anmelden', stFail:'Statistiken konnten nicht geladen werden.', stVisitors:'Besucher', stVisitorsSub:'eindeutig pro Tag, summiert', stToday:'Heute', stViews:'Aufrufe', stStarts:'Ton gestartet', stListen:'H\u00f6rzeit', stHours:'Stunden', stShares:'Geteilt', stInstalls:'Installiert', stPerDay:'Eindeutige Besucher pro Tag', stVisitorsShort:'Besucher', stViewsShort:'Aufrufe', stCountries:'DJ-L\u00e4nder', stSpots:'Orte', stRefs:'Kam von', stDevices:'Ger\u00e4t', stApp:'App oder Browser', stLangs:'Sprache', stModes:'Radio oder Hymnen', stGenres:'Genres', stShareHow:'Geteilt \u00fcber', stEmpty:'Noch keine Daten in diesem Zeitraum.', installIosOther:'DJ Vliegtuig als App? \u00d6ffne fodis.nl/fly in Safari, tippe auf Teilen und w\u00e4hle "Zum Home-Bildschirm". In diesem Browser geht das nicht.', installAndroid:'DJ Vliegtuig als App aufs Handy holen.', installIos:'DJ Vliegtuig auf den Home-Bildschirm: tippe auf Teilen und w\u00e4hle "Zum Home-Bildschirm".',
     curTitle:'Sender kuratieren', curHelp:'Anh\u00f6ren, ablehnen oder als Favorit markieren. Favoriten spielt die App zuerst, abgelehnte nie. Deine Auswahl gilt sofort in diesem Browser; mit Exportieren schickst du sie weiter, damit sie f\u00fcr alle gilt.', curPlaysNow:'Die App spielt jetzt:', curFav:'Favorit', curBlock:'Ablehnen', curPlay:'Anh\u00f6ren', curExport:'Exportieren', curCopied:'Kopiert. F\u00fcge es im Chat mit Claude ein.', curReset:'Dieses Land zur\u00fccksetzen', curNone:'Keine Sender gefunden.', curHint:'Vorzug', curBroken:'geht nicht', curClose:'Schlie\u00dfen', curPrev:'Voriges Land', curNext:'N\u00e4chstes Land', curMarks:'{f} Favorit, {b} abgelehnt', curFavsHere:'Favoriten', curAll:'Alle Sender (meistgeh\u00f6rt)', curEdited:'ge\u00e4ndert', curImport:'Importieren',
     spotTitle:'Ort w\u00e4hlen', spotSearch:'Flughafen, Stadt, Land, Code', spotRecent:'Zuletzt', spotNear:'In der N\u00e4he', spotNone:'Nichts gefunden f\u00fcr "{q}".', spotCount:'{n} Flugh\u00e4fen', spotClose:'Schlie\u00dfen', km:'{n} km',
     ct_EU:'Europa', ct_NA:'Nordamerika', ct_SA:'S\u00fcdamerika', ct_AS:'Asien', ct_AF:'Afrika', ct_OC:'Ozeanien', tabLand:'Land', tabMusic:'Musik', demoIndex:'Demokratieindex',
@@ -919,6 +954,7 @@ function applySpot(id){
   if (!sp) return;
   const ap = airportOf(sp.ap);
   here = {...sp, name: ap ? `${ap[2]} \u00b7 ${sp.name}` : sp.name}; showHere();
+  track('spot', {spot: sp.ap});
   setRadius(1);                       // baankop: alleen wat echt over de kop komt
   current = null; tick();
 }
@@ -1070,6 +1106,7 @@ function setRadius(km){
 }
 $('start').onclick = () => {
   soundOn = !soundOn;
+  if (soundOn) track('start', {mode: soundMode, genre: soundMode === 'radio' ? radioGenre : ''});
   $('start').textContent = soundOn ? t('soundOff') : t('soundOn');
   if (!soundOn && pinned) backToLive();
   if (soundOn) unlockAudio();
@@ -1119,7 +1156,7 @@ async function showHere(){
 
 /* ---------- Zelf een locatie invoeren ---------- */
 function setCustom(lat, lon, name){
-  here = {id:'custom', name, lat, lon};
+  here = {id:'custom', name, lat, lon}; track('spot', {spot: 'custom'});
   spotSel.value = 'custom'; runSel.hidden = true; current = null; setRadius(FREE_RADIUS_KM);
   try { localStorage.setItem('flyCustom', JSON.stringify(here)); } catch(e){}
   showHere();
@@ -1154,6 +1191,7 @@ function useGps(){
   spotSel.value = 'gps'; runSel.hidden = true;
   setStatus(t('locating'));
   navigator.geolocation.getCurrentPosition(p => {
+    track('spot', {spot: 'gps'});
     here = {id:'gps', name:t('myLocation'), lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy}; setRadius(FREE_RADIUS_KM);
     showHere();
     spotSel.value = 'gps'; current = null;
@@ -1684,6 +1722,7 @@ async function showCountry(tgt, hex){
 }
 
 function onNewPlane(p, route){
+  const tg = anthemTarget(route); if (tg && tg.iso) track('plane', {country: String(tg.iso).toUpperCase()});
   showRoute(p, route);
   showCountry(anthemTarget(route), p.hex);
   addHistory(p, route);
@@ -2924,7 +2963,7 @@ if (SHARED.has('cureer') || SHARED.has('curate')) openCurate();
   const box = $('install'), ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   let deferred = null;
   $('installX').onclick = () => { box.hidden = true; try { localStorage.setItem('flyInstallHint', 'no'); } catch(e){} };
-  if (!standalone && !dismissed && !SHARED.has('cureer')){
+  if (!standalone && !dismissed && !SHARED.has('cureer') && !SHARED.has('stats')){
     if (ios){
       // alleen Safari zelf biedt "Zet op beginscherm" betrouwbaar aan; Chrome, Firefox, Edge en in-app-browsers niet altijd
       const safari = /Safari\//.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(navigator.userAgent);
@@ -2991,10 +3030,12 @@ function shareMessage(){
   return lines.join('\n');
 }
 $('shareWa').onclick = () => {
+  track('share', {share: 'whatsapp'});
   const text = `${shareMessage()}\n\n${shareLink()}`;
   window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
 };
 $('share').onclick = async () => {
+  track('share', {share: navigator.share ? 'deelmenu' : 'link'});
   const url = shareLink();
   if (navigator.share){
     try { await navigator.share({title: document.title, text: shareMessage(), url}); return; }
@@ -3005,6 +3046,126 @@ $('share').onclick = async () => {
   catch(e){ setStatus(url); }
   setTimeout(() => { label.textContent = t('share'); }, 2000);
 };
+
+
+/* ---------- Statistieken (eigen teller in proxy.php, geen cookies) ----------
+   track(gebeurtenis, kenmerken) stuurt een klein bericht naar proxy.php?hit.
+   Niet op de stats- en cureerpagina en niet lokaal. Bekijken: ?stats (WordPress-login). */
+var TRACK = !SHARED.has('stats') && !SHARED.has('cureer') && !SHARED.has('curate') && !/^(localhost|127\.|\[::1\])/.test(location.hostname);
+function track(e, props){
+  if (!TRACK) return;
+  try {
+    const body = JSON.stringify({e, ...(props || {})});
+    if (navigator.sendBeacon) navigator.sendBeacon('proxy.php?hit', new Blob([body], {type: 'text/plain'}));
+    else fetch('proxy.php?hit', {method: 'POST', body, keepalive: true}).catch(() => {});
+  } catch(err){}
+}
+{
+  const ua = navigator.userAgent;
+  const device = /iP(hone|od)/.test(ua) ? 'iphone' : /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'ipad'
+    : /Android/.test(ua) ? 'android' : 'desktop';
+  const app = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true ? 'app' : 'browser';
+  let ref = 'direct';
+  try { if (document.referrer){ const h = new URL(document.referrer).hostname.replace(/^www\./, ''); if (h !== location.hostname.replace(/^www\./, '')) ref = h; } } catch(e){}
+  if (ref === 'direct' && (SHARED.has('spot') || SHARED.has('at'))) ref = 'gedeelde-link';
+  track('view', {lang: LANG, device, app, ref});
+  setInterval(() => { if (soundOn && !document.hidden) track('minute'); }, 60000);   // luistertijd
+  window.addEventListener('appinstalled', () => track('install'));
+}
+
+/* --- Statistiekenpagina (?stats) --- */
+let stDays = 30;
+async function loadStats(){
+  const box = $('stBody'); box.innerHTML = ''; box.append(el('p', 'cu-empty', t('loading')));
+  let r, j;
+  try { r = await fetch('proxy.php?stats=' + stDays, {cache: 'no-store', credentials: 'same-origin'}); j = await r.json(); }
+  catch(e){ box.innerHTML = ''; box.append(el('p', 'cu-empty', t('stFail'))); return; }
+  box.innerHTML = '';
+  if (r.status === 403){
+    const p = el('p', 'cu-empty', t('stLogin') + ' ');
+    const a = el('a', null, t('stLoginLink')); a.href = j.login || '/wp-admin/'; p.append(a); box.append(p); return;
+  }
+  if (!r.ok){ box.append(el('p', 'cu-empty', t('stFail'))); return; }
+  renderStats(box, j);
+}
+function renderStats(box, j){
+  const days = j.days || [], sum = k => days.reduce((a, d) => a + (+(d.c || {})[k] || 0), 0);
+  const today = days[days.length - 1] || {uv: 0, c: {}};
+  // kerncijfers
+  const tiles = el('div', 'st-tiles');
+  [[t('stVisitors'), fmtInt(days.reduce((a, d) => a + d.uv, 0)), t('stVisitorsSub')],
+   [t('stToday'), fmtInt(today.uv), ''],
+   [t('stViews'), fmtInt(sum('view')), ''],
+   [t('stStarts'), fmtInt(sum('start')), ''],
+   [t('stListen'), dec(sum('minute') / 60, 1), t('stHours')],
+   [t('stShares'), fmtInt(sum('share')), ''],
+   [t('stInstalls'), fmtInt(sum('install')), '']].forEach(([label, val, sub]) => {
+    const tile = el('div', 'st-tile'); tile.append(el('span', 'st-label', label), el('strong', null, val));
+    if (sub) tile.append(el('small', null, sub));
+    tiles.append(tile);
+  });
+  box.append(tiles);
+  // unieke bezoekers per dag
+  box.append(el('h3', 'st-h', t('stPerDay')));
+  const W = 640, H = 200, pad = 44, max = Math.max(1, ...days.map(d => d.uv));
+  const bw = (W - pad) / days.length, ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H + 34}`); svg.setAttribute('class', 'st-chart');
+  svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', t('stPerDay'));
+  const mk = (tag, attrs) => { const n = document.createElementNS(ns, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
+  (max >= 4 ? [0, 0.5, 1] : [0, 1]).forEach(f => {
+    const y = H - f * (H - 10);
+    svg.append(mk('line', {x1: pad, x2: W, y1: y, y2: y, class: 'st-grid'}));
+    const lab = mk('text', {x: pad - 8, y: y + 7, class: 'st-axis', 'text-anchor': 'end'}); lab.textContent = fmtInt(Math.round(max * f)); svg.append(lab);   // as: 0, (helft), max
+  });
+  days.forEach((d, i) => {
+    const h = d.uv / max * (H - 10), x = pad + i * bw + 1, w = Math.max(bw - 2, 1);
+    const g = mk('g', {class: 'st-bar'});
+    g.append(mk('rect', {x: pad + i * bw, y: 0, width: bw, height: H, fill: 'transparent'}));   // groter raakvlak
+    if (h > 0) g.append(mk('rect', {x, y: H - h, width: w, height: h, rx: Math.min(4, w / 2), class: 'st-fill'}));
+    const tip = mk('title', {}); tip.textContent = `${new Date(d.day + 'T12:00').toLocaleDateString(LOCALE, {weekday: 'short', day: 'numeric', month: 'short'})}: ${fmtInt(d.uv)} ${t('stVisitorsShort')}, ${fmtInt(+(d.c || {}).view || 0)} ${t('stViewsShort')}`;
+    g.append(tip); svg.append(g);
+    if (i === 0 || i === days.length - 1 || (days.length > 14 && i % 7 === 0 && i > 3 && i < days.length - 5)){
+      const end = i === days.length - 1, first = i === 0;
+      const lab = mk('text', {x: end ? W - 2 : first ? pad : x + w / 2, y: H + 26, class: 'st-axis', 'text-anchor': end ? 'end' : first ? 'start' : 'middle'});
+      lab.textContent = new Date(d.day + 'T12:00').toLocaleDateString(LOCALE, {day: 'numeric', month: 'short'}); svg.append(lab);
+    }
+  });
+  box.append(svg);
+  // toplijsten
+  const dims = j.dims || {};
+  const nameOf = {
+    country: v => `${flagOf(v)} ${countryName(v, v)}`,
+    spot: v => { const a = airportOf(v); return a ? `${flagOf(a[3])} ${a[2]}` : v === 'gps' ? t('myLocation') : v === 'custom' ? t('enterOwn') : v; },
+    lang: v => ({nl: 'Nederlands', en: 'English', de: 'Deutsch'})[v] || v,
+    genre: v => { const o = [...$('genre').options].find(x => x.value === v); return o ? o.textContent : v; },
+  };
+  const grid = el('div', 'st-lists');
+  [['country', t('stCountries')], ['spot', t('stSpots')], ['ref', t('stRefs')], ['device', t('stDevices')], ['app', t('stApp')],
+   ['lang', t('stLangs')], ['mode', t('stModes')], ['genre', t('stGenres')], ['share', t('stShareHow')]].forEach(([k, label]) => {
+    const vals = Object.entries(dims[k] || {}); if (!vals.length) return;
+    const card = el('div', 'st-list'); card.append(el('h3', 'st-h', label));
+    const top = Math.max(...vals.map(v => v[1]));
+    vals.slice(0, 10).forEach(([v, n]) => {
+      const row = el('div', 'st-row'), bar = el('span', 'st-rowbar'); bar.style.width = (n / top * 100) + '%';
+      row.append(bar, el('span', 'st-name', (nameOf[k] || (x => x))(v)), el('span', 'st-num', fmtInt(n)));
+      card.append(row);
+    });
+    grid.append(card);
+  });
+  if (!grid.childElementCount) grid.append(el('p', 'cu-empty', t('stEmpty')));
+  box.append(grid);
+}
+function openStats(){
+  $('stats').hidden = false; document.body.classList.add('curating');
+  $('stRange').onclick = e => { const b = e.target.closest('[data-days]'); if (!b) return;
+    stDays = +b.dataset.days; $('stRange').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); loadStats(); };
+  $('stClose').onclick = () => {
+    $('stats').hidden = true; document.body.classList.remove('curating');
+    const u = new URL(location.href); u.searchParams.delete('stats'); window.history.replaceState(null, '', u);
+  };
+  loadStats();
+}
+if (SHARED.has('stats')) openStats();
 
 /* ---------- Go ---------- */
 requestAnimationFrame(loop);

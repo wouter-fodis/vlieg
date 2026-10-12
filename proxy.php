@@ -127,6 +127,106 @@ if (isset($_GET['icy']) && !defined('ICY_TEST')) {
 header('Cache-Control: no-store');
 
 // ---------------------------------------------------------------------------
+// Gebruikersstatistieken (eigen teller, geen cookies, geen IP-adressen bewaard)
+//   POST ?hit   {e: gebeurtenis, ...kenmerken}  -> telt mee in het bestand van vandaag
+//   GET  ?stats=30                              -> overzicht, alleen voor ingelogde
+//                                                 WordPress-redacteuren van fodis.nl
+// Unieke bezoekers: hash van IP + browser met een zout dat per dag wisselt. Zodra
+// een dag voorbij is, worden zout en hashes weggegooid en blijft alleen het aantal
+// over. Bestanden staan buiten public_html (domains/fodis.nl/fly-stats/).
+// ---------------------------------------------------------------------------
+function stats_dir() {
+    foreach ([dirname(__DIR__, 2) . '/fly-stats', __DIR__ . '/stats-data'] as $d) {
+        if (is_dir($d) || @mkdir($d, 0750, true)) {
+            if (strpos($d, '/stats-data') !== false && !is_file("$d/.htaccess")) {
+                @file_put_contents("$d/.htaccess", "Require all denied\nDeny from all\n");   // reserve: binnen de webmap
+            }
+            if (is_writable($d)) return $d;
+        }
+    }
+    return null;
+}
+function stats_compact($dir, $today) {
+    // oude dagen: zout en hashes weg, alleen het aantal unieke bezoekers bewaren
+    foreach (glob("$dir/*.json") ?: [] as $f) {
+        if (basename($f, '.json') >= $today) continue;
+        $s = json_decode((string)@file_get_contents($f), true);
+        if (!is_array($s) || !isset($s['salt'])) continue;
+        $s['uv'] = count($s['v'] ?? []);
+        unset($s['salt'], $s['v']);
+        @file_put_contents($f, json_encode($s), LOCK_EX);
+    }
+}
+if (isset($_GET['hit'])) {
+    date_default_timezone_set('Europe/Amsterdam');
+    $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    $in = json_decode((string)file_get_contents('php://input', false, null, 0, 2048), true);
+    $EVENTS = ['view', 'start', 'spot', 'plane', 'share', 'minute', 'install'];
+    $DIMS = ['lang', 'device', 'app', 'ref', 'spot', 'country', 'mode', 'genre', 'share'];
+    if (!is_array($in) || !in_array($in['e'] ?? '', $EVENTS, true) || preg_match('/bot|crawl|spider|headless|lighthouse|preview/i', $ua)) {
+        http_response_code(204); exit;
+    }
+    $dir = stats_dir();
+    if (!$dir) { http_response_code(204); exit; }
+    $day = date('Y-m-d');
+    $f = "$dir/$day.json";
+    $new = !is_file($f);
+    $fp = fopen($f, 'c+');
+    if ($fp && flock($fp, LOCK_EX)) {
+        $s = json_decode(stream_get_contents($fp), true);
+        if (!is_array($s)) $s = ['salt' => bin2hex(random_bytes(16)), 'v' => [], 'c' => [], 'd' => []];
+        $vid = substr(hash('sha256', $s['salt'] . '|' . ($_SERVER['REMOTE_ADDR'] ?? '') . '|' . $ua), 0, 12);
+        $s['v'][$vid] = 1;
+        $e = $in['e'];
+        $s['c'][$e] = ($s['c'][$e] ?? 0) + 1;
+        foreach ($DIMS as $k) {
+            if (!isset($in[$k])) continue;
+            $val = substr(preg_replace('/[^A-Za-z0-9_.\-]/', '', (string)$in[$k]), 0, 40);
+            if ($val === '') continue;
+            if (!isset($s['d'][$k][$val]) && count($s['d'][$k] ?? []) >= 300) $val = 'overig';
+            $s['d'][$k][$val] = ($s['d'][$k][$val] ?? 0) + 1;
+        }
+        ftruncate($fp, 0); rewind($fp);
+        fwrite($fp, json_encode($s));
+        fflush($fp); flock($fp, LOCK_UN);
+    }
+    if ($fp) fclose($fp);
+    if ($new) stats_compact($dir, $day);
+    http_response_code(204); exit;
+}
+if (isset($_GET['stats'])) {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    $wp = null;
+    foreach ([dirname(__DIR__) . '/wp-load.php', dirname(__DIR__, 2) . '/wp-load.php'] as $p) if (is_file($p)) { $wp = $p; break; }
+    if (!$wp) { http_response_code(500); echo json_encode(['error' => 'nowp']); exit; }
+    require $wp;                                              // WordPress: wie is er ingelogd?
+    date_default_timezone_set('Europe/Amsterdam');
+    if (!function_exists('current_user_can') || !current_user_can('edit_pages')) {
+        http_response_code(403);
+        echo json_encode(['error' => 'login', 'login' => wp_login_url(home_url('/fly/?stats'))]);
+        exit;
+    }
+    $n = max(1, min(366, (int)$_GET['stats']));
+    $dir = stats_dir();
+    $days = []; $dims = [];
+    for ($i = $n - 1; $i >= 0; $i--) {
+        $day = date('Y-m-d', strtotime("-$i days"));
+        $s = $dir && is_file("$dir/$day.json") ? json_decode((string)file_get_contents("$dir/$day.json"), true) : null;
+        $row = ['day' => $day, 'uv' => 0, 'c' => (object)[]];
+        if (is_array($s)) {
+            $row['uv'] = isset($s['v']) ? count($s['v']) : ($s['uv'] ?? 0);
+            $row['c'] = (object)($s['c'] ?? []);
+            foreach ($s['d'] ?? [] as $k => $vals) foreach ($vals as $v => $cnt) $dims[$k][$v] = ($dims[$k][$v] ?? 0) + $cnt;
+        }
+        $days[] = $row;
+    }
+    foreach ($dims as $k => $vals) { arsort($vals); $dims[$k] = array_slice($vals, 0, 25, true); }
+    echo json_encode(['days' => $days, 'dims' => (object)$dims, 'store' => $dir ? basename($dir) : null]);
+    exit;
+}
+
+// ---------------------------------------------------------------------------
 // Installeerbare app (PWA): manifest en iconen. Ze staan hier in plaats van in
 // losse bestanden, omdat het deployscript alleen index.html en proxy.php uitrolt.
 //   ?app=manifest        -> web app manifest
