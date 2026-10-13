@@ -161,7 +161,7 @@ if (isset($_GET['hit'])) {
     date_default_timezone_set('Europe/Amsterdam');
     $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
     $in = json_decode((string)file_get_contents('php://input', false, null, 0, 2048), true);
-    $EVENTS = ['view', 'start', 'spot', 'plane', 'share', 'minute', 'install'];
+    $EVENTS = ['view', 'start', 'spot', 'plane', 'share', 'minute', 'install', 'spotify'];
     $DIMS = ['lang', 'device', 'app', 'ref', 'spot', 'country', 'mode', 'genre', 'share'];
     if (!is_array($in) || !in_array($in['e'] ?? '', $EVENTS, true) || preg_match('/bot|crawl|spider|headless|lighthouse|preview/i', $ua)) {
         http_response_code(204); exit;
