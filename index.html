@@ -388,6 +388,34 @@
   .cu-foot .cu-export{background:var(--ink);color:var(--sign)}
   .curate textarea{margin:0 12px 10px;font:.75rem "Space Mono",monospace;border:2px solid var(--ink);border-radius:2px;padding:6px}
   .cu-empty{padding:18px 12px;color:#555}
+  /* ---------- Rustige kop: titel met menu rechts; apps, delen en taal in het menu ---------- */
+  .brand-tools{display:none}
+  .brand{flex-wrap:nowrap}
+  .brand h1{min-width:0;font-size:clamp(1.45rem,7.2vw,2.1rem);white-space:nowrap}
+  .menu-wrap{position:relative;flex:0 0 auto}
+  .menu-btn{width:44px;height:44px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;background:none;border:2px solid var(--sign);border-radius:2px;cursor:pointer;padding:0}
+  .menu-btn i{display:block;width:20px;height:2px;background:var(--sign);transition:transform .2s,opacity .2s}
+  .menu-btn[aria-expanded="true"]{background:var(--sign)}
+  .menu-btn[aria-expanded="true"] i{background:var(--ink)}
+  .menu-btn[aria-expanded="true"] i:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  .menu-btn[aria-expanded="true"] i:nth-child(2){opacity:0}
+  .menu-btn[aria-expanded="true"] i:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+  .menu{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(320px,calc(100vw - 32px));background:var(--sign);color:var(--ink);border:3px solid var(--ink);border-radius:2px;padding:6px;box-shadow:0 14px 30px rgba(0,0,0,.35)}
+  .menu[hidden]{display:none}
+  .menu .apps{display:flex;flex-direction:column;gap:2px;margin:0 0 6px;padding:0;background:none;border:0;box-shadow:none}
+  .menu .apps a{padding:8px 10px;border-radius:2px}
+  .menu .apps a strong{font-size:1.05rem}
+  .menu .apps a small{font-size:.75rem}
+  .menu-row{display:flex;align-items:center;gap:6px;padding:8px 10px;border-top:1px solid rgba(20,20,20,.15)}
+  .menu-h{flex:1;font:600 .8rem/1 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.06em;color:#555}
+  .menu-link{background:none;border:0;color:var(--ink);font:600 .95rem Barlow,sans-serif;padding:6px 8px;min-height:36px;cursor:pointer;border-radius:2px}
+  .menu-link:hover{background:#e3e3de}
+  .menu .langs{border:0;gap:2px}
+  .menu .langs button{color:#777;padding:6px 7px;font:600 .9rem "Space Mono",monospace;background:none;border-radius:2px}
+  .menu .langs button[aria-pressed="true"]{color:var(--ink);background:none;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:2px}
+  .menu .langs button:hover{color:var(--ink)}
+  /* deelknoppen onderaan */
+  .foot{display:flex;gap:8px;justify-content:center;margin:28px 0 8px;padding-top:18px;border-top:1px solid var(--line)}
   /* ---------- Installeren als app (PWA) ---------- */
   .install{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:10px 12px;background:var(--sign);color:var(--ink);border:3px solid var(--ink);border-radius:2px;font-size:.92rem;line-height:1.35}
   .install[hidden]{display:none}
@@ -447,18 +475,27 @@
 <body>
 <main>
   <header class="top">
-  <nav class="apps" data-i18n-attr="aria-label:appsNav">
-    <a href="/fly/" aria-current="page"><strong>RADIO</strong><small data-i18n="tagRadio">Vlieg mee met DJ VLIEGTUIG - Radio from all over the place</small></a>
-    <a href="/dj-vliegtuig-discovery/"><strong>DISCOVER</strong><small data-i18n="tagDiscover">Stap in bij DJ VLIEGTUIG en ontdek de muziek van de wereld</small></a>
-  </nav>
   <div class="brand">
     <h1>DJ VLIEGTUIG <span class="sub">RADIO</span></h1>
-    <div class="brand-tools">
-    <button class="btn share-btn" id="share" type="button" data-i18n-attr="title:shareTitle">&#8599; <span data-i18n="share">Deel</span></button>
-    <button class="btn share-btn wa-btn" id="shareWa" type="button" data-i18n-attr="title:shareWaTitle">WhatsApp</button>
-    <div class="langs" role="group" data-i18n-attr="aria-label:language">
-      <button type="button" data-lang="nl">NL</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="de">DE</button>
-    </div>
+    <div class="menu-wrap">
+      <button type="button" class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu" data-i18n-attr="aria-label:menu"><i></i><i></i><i></i></button>
+      <div class="menu" id="menu" hidden>
+        <nav class="apps" data-i18n-attr="aria-label:appsNav">
+          <a href="/fly/" aria-current="page"><strong>RADIO</strong><small data-i18n="tagRadio">Vlieg mee met DJ VLIEGTUIG - Radio from all over the place</small></a>
+          <a href="/dj-vliegtuig-discovery/"><strong>DISCOVER</strong><small data-i18n="tagDiscover">Stap in bij DJ VLIEGTUIG en ontdek de muziek van de wereld</small></a>
+        </nav>
+        <div class="menu-row">
+          <span class="menu-h" data-i18n="menuShare">Delen</span>
+          <button type="button" class="menu-link" data-share="link" data-i18n-attr="title:shareTitle">&#8599; <span data-i18n="share">Deel</span></button>
+          <button type="button" class="menu-link" data-share="wa" data-i18n-attr="title:shareWaTitle">WhatsApp</button>
+        </div>
+        <div class="menu-row">
+          <span class="menu-h" data-i18n="language">Taal</span>
+          <div class="langs" role="group" data-i18n-attr="aria-label:language">
+            <button type="button" data-lang="nl">NL</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="de">DE</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -608,6 +645,10 @@
       </section>
     </div>
   </div>
+  <footer class="foot">
+    <button class="btn share-btn" data-share="link" type="button" data-i18n-attr="title:shareTitle">&#8599; <span data-i18n="share">Deel</span></button>
+    <button class="btn share-btn wa-btn" data-share="wa" type="button" data-i18n-attr="title:shareWaTitle">WhatsApp</button>
+  </footer>
 </main>
 <section class="curate stats" id="stats" hidden>
   <div class="cu-head">
@@ -708,7 +749,7 @@ const I18N = {
     txtRadio:'Zet geluid aan: elk land krijgt zijn radiozender. De vliegtuigen zijn de dj en schuiven de mixer naar het land dat het dichtst bij is.',
     txtRadioIOS:'Zet geluid aan: de radiozender van het land van het dichtstbijzijnde vliegtuig speelt. Op iPhone en iPad schakelt hij direct over, zonder fade.',
     end:'kop', d_n:'noord', d_s:'zuid', d_e:'oost', d_w:'west', d_ne:'noordoost', d_sw:'zuidwest', language:'Taal', welcomeHost:'Welkom {c}, het land van {x}!', runway:'Baan', d_se:'zuidoost', d_nw:'noordwest', pickRunwayAria:'Kies een baankop',
-    appsNav:'DJ VLIEGTUIG-apps',
+    appsNav:'DJ VLIEGTUIG-apps', menu:'Menu', menuShare:'Delen',
     tagRadio:'Vlieg mee met DJ VLIEGTUIG - Radio from all over the place',
     tagDiscover:'Stap in bij DJ VLIEGTUIG en ontdek de muziek van de wereld',
     share:'Deel',
@@ -763,7 +804,7 @@ const I18N = {
     txtRadio:'Turn the sound on: every country gets its radio station. The planes are the DJ and slide the mixer to the country that is closest.',
     txtRadioIOS:'Turn the sound on: the radio station of the closest plane\u2019s country plays. On iPhone and iPad it switches straight away, without a fade.',
     end:'end', d_n:'north', d_s:'south', d_e:'east', d_w:'west', d_ne:'northeast', d_sw:'southwest', language:'Language', welcomeHost:'Welcome {c}, the land of {x}!', runway:'Runway', d_se:'southeast', d_nw:'northwest', pickRunwayAria:'Choose a runway end',
-    appsNav:'DJ VLIEGTUIG apps',
+    appsNav:'DJ VLIEGTUIG apps', menu:'Menu', menuShare:'Share',
     tagRadio:'Fly along with DJ VLIEGTUIG - Radio from all over the place',
     tagDiscover:'Step aboard DJ VLIEGTUIG and discover the music of the world',
     share:'Share',
@@ -818,7 +859,7 @@ const I18N = {
     txtRadio:'Schalte den Ton ein: Jedes Land bekommt seinen Radiosender. Die Flugzeuge sind der DJ und schieben den Mixer zum Land, das am n\u00e4chsten ist.',
     txtRadioIOS:'Schalte den Ton ein: Der Radiosender des Landes des n\u00e4chsten Flugzeugs l\u00e4uft. Auf iPhone und iPad schaltet er sofort um, ohne \u00dcberblendung.',
     end:'Schwelle', d_n:'Nord', d_s:'S\u00fcd', d_e:'Ost', d_w:'West', d_ne:'Nordost', d_sw:'S\u00fcdwest', language:'Sprache', welcomeHost:'Willkommen {c}, dem Land von {x}!', runway:'Bahn', d_se:'S\u00fcdost', d_nw:'Nordwest', pickRunwayAria:'Bahnende w\u00e4hlen',
-    appsNav:'DJ VLIEGTUIG-Apps',
+    appsNav:'DJ VLIEGTUIG-Apps', menu:'Men\u00fc', menuShare:'Teilen',
     tagRadio:'Flieg mit DJ VLIEGTUIG - Radio von \u00fcberall her',
     tagDiscover:'Steig ein bei DJ VLIEGTUIG und entdecke die Musik der Welt',
     share:'Teilen',
@@ -3044,23 +3085,35 @@ function shareMessage(){
   }
   return lines.join('\n');
 }
-$('shareWa').onclick = () => {
+// deelknoppen staan onderaan de pagina en in het menu (data-share="link" of "wa")
+function shareWa(){
   track('share', {share: 'whatsapp'});
   const text = `${shareMessage()}\n\n${shareLink()}`;
   window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
-};
-$('share').onclick = async () => {
+}
+async function shareLinkBtn(b){
   track('share', {share: navigator.share ? 'deelmenu' : 'link'});
   const url = shareLink();
   if (navigator.share){
     try { await navigator.share({title: document.title, text: shareMessage(), url}); return; }
     catch(e){ if (e.name === 'AbortError') return; }
   }
-  const b = $('share'), label = b.querySelector('span');
-  try { await navigator.clipboard.writeText(url); label.textContent = t('linkCopied'); }
+  const label = b.querySelector('span');
+  try { await navigator.clipboard.writeText(url); if (label) label.textContent = t('linkCopied'); }
   catch(e){ setStatus(url); }
-  setTimeout(() => { label.textContent = t('share'); }, 2000);
+  setTimeout(() => { if (label) label.textContent = t('share'); }, 2000);
+}
+document.querySelectorAll('[data-share]').forEach(b => {
+  b.onclick = () => { closeMenu(); return b.dataset.share === 'wa' ? shareWa() : shareLinkBtn(b); };
+});
+/* ---------- Menu rechtsboven: apps, delen, taal ---------- */
+function closeMenu(){ $('menu').hidden = true; $('menuBtn').setAttribute('aria-expanded', 'false'); }
+$('menuBtn').onclick = e => {
+  e.stopPropagation();
+  const open = $('menu').hidden; $('menu').hidden = !open; $('menuBtn').setAttribute('aria-expanded', open);
 };
+document.addEventListener('click', e => { if (!$('menu').hidden && !e.target.closest('.menu-wrap')) closeMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('menu').hidden){ closeMenu(); $('menuBtn').focus(); } });
 
 
 /* ---------- Statistieken (eigen teller in proxy.php, geen cookies) ----------
