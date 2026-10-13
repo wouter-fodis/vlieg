@@ -952,7 +952,9 @@ const FREE_RADIUS_KM = 5;    // straal bij Mijn locatie en Zelf invoeren
 // Bij een baankop tellen alleen lage toestellen; bij Mijn locatie of Zelf invoeren
 // (meestal ver van een vliegveld) telt alles wat vliegt, ook op kruishoogte.
 const atRunway = () => here.id !== 'gps' && here.id !== 'custom';
-const altOk = p => p.alt > 0 && (!atRunway() || p.alt < MAX_ALT_FT);
+// in de lucht: ook een negatieve baro-hoogte (Schiphol ligt onder zeeniveau), niet 'ground'
+const inAir = p => p.alt_baro !== 'ground' && p.alt != null && (p.alt > 0 || p.gs > 50);
+const altOk = p => inAir(p) && (!atRunway() || p.alt < MAX_ALT_FT);
 const HOME_ICAO = 'EHAM';
 
 /* ---------- State ---------- */
@@ -1144,21 +1146,26 @@ function renderSpotList(){
     spotSel.value = b.dataset.act; spotSel.onchange();
   };
 }
-/* Willekeurige luchthaven, altijd op een baan die nu in gebruik is.
-   We trekken luchthavens in willekeurige volgorde (niet de huidige), drie tegelijk, en halen
-   per luchthaven de vluchten op. Een baankop telt als in gebruik als er een toestel in de
-   aanvliegroute of uitvliegroute zit: tot 8 km buiten de kop, hooguit 0,7 km naast het
-   verlengde van de middenlijn, in de richting van de baan, onder 12.000 ft en niet sneller
-   dan 260 kn. Geen hoogtegrens ten opzichte van de baan, want we kennen de hoogte van de
-   luchthaven niet (Denver, Mexico-Stad). De kop met de meeste toestellen wint.
-   Luchthavens waar het nu dag is gaan voor. Na 18 zonder verkeer: de eerste, met een willekeurige kop. */
+/* Willekeurige luchthaven, altijd op een baan die nu in gebruik is, bij voorkeur een drukke.
+   Volgorde: luchthavens waar het nu dag is (7-23 uur zonnetijd) met twee of meer banen,
+   dan de rest waar het dag is, dan de nacht; binnen elke groep willekeurig, nooit de huidige.
+   We halen twee luchthavens tegelijk op (elk via een andere bron, zodat geen bron ons afremt),
+   tot 12 luchthavens. Per luchthaven:
+   - activeEnds: per baankop het aantal toestellen in de aan- of uitvliegroute: tot 8 km buiten
+     de kop, hooguit 0,7 km naast het verlengde van de middenlijn, in de lijn van de baan,
+     onder 12.000 ft, 60 tot 260 kn. Geen grens ten opzichte van de baanhoogte (die kennen
+     we niet: Denver, Mexico-Stad).
+   - drukte: alle vliegende toestellen onder 10.000 ft in de buurt.
+   Score = 5 x toestellen op de beste kop + drukte. We stoppen vroeg bij een duidelijk drukke
+   (2+ op de kop en 6+ in de buurt), anders na 6 met minstens een treffer. Hoogste score wint.
+   Nergens iemand op een kop: de drukste luchthaven, op de kop waar het laagste toestel het
+   dichtst bij is; geen data: een willekeurige kop. */
 let randomBusy = false;
 function activeEnds(icao, planes){
   const score = new Map();
   for (const p of planes){
     if (p.lat == null || p.lon == null || p.track == null) continue;
-    const alt = altFt(p);
-    if (!(alt > 0 && alt < 12000) || !(p.gs > 60 && p.gs < 260)) continue;
+    if (!inAir(p) || !(p.alt < 12000) || !(p.gs > 60 && p.gs < 260)) continue;
     const tr = p.track * Math.PI / 180, tx = Math.sin(tr), ty = Math.cos(tr);
     for (const sp of SPOTS){
       if (sp.ap !== icao) continue;
@@ -1170,14 +1177,16 @@ function activeEnds(icao, planes){
       score.set(sp.id, (score.get(sp.id) || 0) + 1);
     }
   }
-  return [...score.entries()].sort((x, y) => y[1] - x[1]).map(e => e[0]);
+  return [...score.entries()].sort((x, y) => y[1] - x[1]);           // [[spot-id, aantal], ...]
 }
-async function planesAt(a){
+async function planesAt(a, feed){
   for (let i = 0; i < FEEDS.length; i++){
-    try { const d = await getJSON(FEEDS[(feedIdx + i) % FEEDS.length](a[4].toFixed(4), a[5].toFixed(4), 10)); return d.ac || []; }
-    catch(e){ /* volgende bron */ }
+    try {
+      const d = await getJSON(FEEDS[(feed + i) % FEEDS.length](a[4].toFixed(4), a[5].toFixed(4), 10));
+      return (d.ac || []).map(p => ({...p, alt: altFt(p)}));
+    } catch(e){ /* volgende bron */ }
   }
-  return [];
+  return null;                                                        // geen data (niet hetzelfde als geen verkeer)
 }
 function goSpot(a, spotId, active){
   addRecent(a[0]);
@@ -1189,23 +1198,38 @@ async function randomAirport(){
   if (randomBusy) return;
   randomBusy = true;
   const cur = spotSel.value.startsWith('ap:') ? spotSel.value.slice(3) : null;
-  const all = AIRPORTS.filter(a => a[0] !== cur && SPOTS.some(s => s.ap === a[0]));
+  const ends = icao => SPOTS.filter(s => s.ap === icao);
+  const all = AIRPORTS.filter(a => a[0] !== cur && ends(a[0]).length);
   for (let i = all.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
-  // eerst luchthavens waar het nu ongeveer tussen 7 en 23 uur is (zonnetijd uit de lengtegraad)
   const utcH = new Date().getUTCHours() + new Date().getUTCMinutes() / 60;
   const awake = a => { const h = ((utcH + a[5] / 15) % 24 + 24) % 24; return h >= 7 && h < 23; };
-  const pool = [...all.filter(awake), ...all.filter(a => !awake(a))];
+  const rank = a => awake(a) ? (ends(a[0]).length >= 4 ? 0 : 1) : 2;  // 4 koppen = 2 banen
+  const pool = [0, 1, 2].flatMap(g => all.filter(a => rank(a) === g));
   $('spotBtnText').textContent = '\u{1F3B2} ' + t('randomSearching');
   try {
-    for (let n = 0; n < 18; n += 3){
-      const batch = pool.slice(n, n + 3);
-      const found = await Promise.all(batch.map(async a => ({a, ends: activeEnds(a[0], await planesAt(a))})));
-      const hit = found.find(f => f.ends.length);
-      if (hit){ goSpot(hit.a, hit.ends[0], true); return; }
+    const seen = [];                                                  // {a, best: [id, n] | undefined, busy, planes}
+    for (let n = 0; n < 12; n += 2){
+      const got = await Promise.all(pool.slice(n, n + 2).map(async (a, i) => {
+        const planes = await planesAt(a, (feedIdx + i) % FEEDS.length);
+        if (!planes) return null;
+        const busy = planes.filter(p => inAir(p) && p.alt < 10000).length;
+        return {a, best: activeEnds(a[0], planes)[0], busy, planes};
+      }));
+      seen.push(...got.filter(Boolean));
+      const hits = seen.filter(x => x.best);
+      if (hits.some(x => x.best[1] >= 2 && x.busy >= 6) || (hits.length && n + 2 >= 6)) break;
     }
-    const a = pool[0];                                                // niets gevonden: gewoon een willekeurige kop
-    const ends = SPOTS.filter(s => s.ap === a[0]);
-    goSpot(a, ends[Math.floor(Math.random() * ends.length)].id, false);
+    const score = x => 5 * x.best[1] + x.busy;
+    const hit = seen.filter(x => x.best).sort((x, y) => score(y) - score(x))[0];
+    if (hit) return goSpot(hit.a, hit.best[0], true);
+    const busiest = seen.sort((x, y) => y.busy - x.busy)[0];
+    if (busiest && busiest.busy){                                     // geen kop met verkeer: drukste plek, kop bij het laagste toestel
+      const low = busiest.planes.filter(p => inAir(p) && p.alt < 10000 && p.lat != null).sort((x, y) => x.alt - y.alt)[0];
+      const sp = ends(busiest.a[0]).sort((x, y) => distKm(low.lat, low.lon, x.lat, x.lon) - distKm(low.lat, low.lon, y.lat, y.lon))[0];
+      return goSpot(busiest.a, sp.id, false);
+    }
+    const a = pool[0], e = ends(a[0]);                                // geen data: willekeurige kop
+    goSpot(a, e[Math.floor(Math.random() * e.length)].id, false);
   } finally { randomBusy = false; syncSpotBtn(); }
 }
 syncSpotBtn();
@@ -2388,7 +2412,7 @@ function render(){
       d.hdg += dh*k;
     }
     const x=C+d.x*scale, y=C-d.y*scale;
-    const isTop=p.hex===current, low=altOk(p), flying=p.alt>0;
+    const isTop=p.hex===current, low=altOk(p), flying=inAir(p);
 
     // spoor achter vliegende toestellen
     if (flying){
@@ -2430,7 +2454,7 @@ let radarHits = [];
 function trackRunways(){
   const now = Date.now();
   for (const p of lastPlanes){
-    if (!(p.alt > 0 && p.alt < 2500) || !(p.gs > 60) || p.track == null) continue;
+    if (!(inAir(p) && p.alt < 2500) || !(p.gs > 60) || p.track == null) continue;
     const tr = p.track * Math.PI / 180, tx = Math.sin(tr), ty = Math.cos(tr);
     for (const sp of SPOTS){
       if (Math.abs(sp.lat - p.lat) > 0.03 || Math.abs(sp.lon - p.lon) > 0.05) continue;
