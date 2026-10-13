@@ -330,7 +330,7 @@
   .sd-head{display:flex;gap:8px;padding:12px 12px 8px;padding-top:max(12px,env(safe-area-inset-top))}
   .sd-head input{flex:1;min-width:0;min-height:46px;padding:10px 12px;font:600 1.05rem Barlow,sans-serif;color:var(--ink);background:#fff;border:2px solid var(--ink);border-radius:2px}
   .sd-close{flex:0 0 46px;min-height:46px;background:var(--ink);color:var(--sign);border:0;border-radius:2px;font:700 1.6rem/1 Barlow,sans-serif;cursor:pointer}
-  .sd-quick{display:flex;gap:6px;padding:0 12px 8px}
+  .sd-quick{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 8px}
   .sd-quick button,.sd-chips button,.sd-jump button{background:none;color:var(--ink);border:2px solid var(--ink);border-radius:2px;cursor:pointer;
     font:600 .95rem/1 "Barlow Condensed",sans-serif;padding:8px 10px;min-height:38px;white-space:nowrap}
   .sd-chips{display:flex;gap:6px;overflow-x:auto;padding:0 12px 10px;scrollbar-width:none;border-bottom:3px solid var(--ink)}
@@ -693,6 +693,7 @@
   <div class="sd-quick">
     <button type="button" data-act="gps" data-i18n="myLocation">Mijn locatie</button>
     <button type="button" data-act="custom" data-i18n="enterOwn">Zelf invoeren</button>
+    <button type="button" data-act="random"><span aria-hidden="true">&#127922;</span> <span data-i18n="randomAp">Willekeurig</span></button>
   </div>
   <div class="sd-chips" id="spotChips"></div>
   <div class="sd-jump" id="spotJump" hidden></div>
@@ -720,7 +721,7 @@ const I18N = {
     playAnthem:'Speel volkslied', stop:'Stop', backLive:'Terug naar live', backLiveSub:'DJ Vliegtuig neemt het weer over',
     onAir:'Nu op de radio', playlist:'Speellijst', playlistEmpty:'Nog niets afgespeeld. Zet het geluid aan.',
     history:'Eerder overgekomen', nothingYet:'Nog niets.',
-    myLocation:'Mijn locatie', enterOwn:'Zelf invoeren\u2026', map:'kaart', kmFrom:'{d} km van {s}', ownCoords:'Eigen co\u00f6rdinaten',
+    myLocation:'Mijn locatie', enterOwn:'Zelf invoeren\u2026', randomAp:'Willekeurige luchthaven', map:'kaart', kmFrom:'{d} km van {s}', ownCoords:'Eigen co\u00f6rdinaten',
     searching:'Zoeken naar \u201c{q}\u201d\u2026', notFound:'Niets gevonden voor \u201c{q}\u201d. Probeer een andere naam of co\u00f6rdinaten.', searchFail:'Zoeken lukt nu niet. Probeer co\u00f6rdinaten, bijv. 52.36, 4.71.',
     noGeo:'Je browser geeft geen locatie door. Kies een plek uit de lijst.', locating:'Locatie opvragen\u2026',
     geoFail:'Locatie niet beschikbaar (geen toestemming?). Polderbaan noord gekozen; kies zelf een plek in de lijst.',
@@ -775,7 +776,7 @@ const I18N = {
     playAnthem:'Play anthem', stop:'Stop', backLive:'Back to live', backLiveSub:'DJ Vliegtuig takes over again',
     onAir:'On the radio now', playlist:'Playlist', playlistEmpty:'Nothing played yet. Turn the sound on.',
     history:'Recently overhead', nothingYet:'Nothing yet.',
-    myLocation:'My location', enterOwn:'Enter a location\u2026', map:'map', kmFrom:'{d} km from {s}', ownCoords:'Custom coordinates',
+    myLocation:'My location', enterOwn:'Enter a location\u2026', randomAp:'Random airport', map:'map', kmFrom:'{d} km from {s}', ownCoords:'Custom coordinates',
     searching:'Searching for \u201c{q}\u201d\u2026', notFound:'Nothing found for \u201c{q}\u201d. Try another name or coordinates.', searchFail:'Search is not working right now. Try coordinates, e.g. 52.36, 4.71.',
     noGeo:'Your browser does not share a location. Choose a spot from the list.', locating:'Getting your location\u2026',
     geoFail:'Location not available (no permission?). Polderbaan north selected; choose a spot from the list.',
@@ -830,7 +831,7 @@ const I18N = {
     playAnthem:'Hymne abspielen', stop:'Stopp', backLive:'Zur\u00fcck zu live', backLiveSub:'DJ Vliegtuig \u00fcbernimmt wieder',
     onAir:'Jetzt im Radio', playlist:'Playlist', playlistEmpty:'Noch nichts gespielt. Schalte den Ton ein.',
     history:'Zuletzt \u00fcberflogen', nothingYet:'Noch nichts.',
-    myLocation:'Mein Standort', enterOwn:'Selbst eingeben\u2026', map:'Karte', kmFrom:'{d} km von {s}', ownCoords:'Eigene Koordinaten',
+    myLocation:'Mein Standort', enterOwn:'Selbst eingeben\u2026', randomAp:'Zuf\u00e4lliger Flughafen', map:'Karte', kmFrom:'{d} km von {s}', ownCoords:'Eigene Koordinaten',
     searching:'Suche nach \u201e{q}\u201c\u2026', notFound:'Nichts gefunden f\u00fcr \u201e{q}\u201c. Versuch einen anderen Namen oder Koordinaten.', searchFail:'Die Suche funktioniert gerade nicht. Versuch Koordinaten, z. B. 52.36, 4.71.',
     noGeo:'Dein Browser gibt keinen Standort weiter. W\u00e4hle einen Ort aus der Liste.', locating:'Standort wird abgefragt\u2026',
     geoFail:'Standort nicht verf\u00fcgbar (keine Erlaubnis?). Polderbaan Nord gew\u00e4hlt; w\u00e4hle selbst einen Ort aus der Liste.',
@@ -1138,8 +1139,20 @@ function renderSpotList(){
   };
   dlg.querySelector('.sd-quick').onclick = e => {
     const b = e.target.closest('[data-act]'); if (!b) return;
-    close(); spotSel.value = b.dataset.act; spotSel.onchange();
+    close();
+    if (b.dataset.act === 'random') return randomAirport();
+    spotSel.value = b.dataset.act; spotSel.onchange();
   };
+}
+/* Willekeurige luchthaven: elke grote luchthaven even veel kans (niet de huidige),
+   en dan ook een willekeurige baankop, zodat je overal ter wereld kunt meeluisteren. */
+function randomAirport(){
+  const cur = spotSel.value.startsWith('ap:') ? spotSel.value.slice(3) : null;
+  let a; do { a = AIRPORTS[Math.floor(Math.random() * AIRPORTS.length)]; } while (a[0] === cur && AIRPORTS.length > 1);
+  addRecent(a[0]);
+  spotSel.value = 'ap:' + a[0]; $('customForm').hidden = true; fillRunways(a[0]);
+  const opts = [...runSel.options].map(o => o.value);
+  if (opts.length){ const r = opts[Math.floor(Math.random() * opts.length)]; runSel.value = r; applySpot(r); }
 }
 syncSpotBtn();
 $('gps').onclick = useGps;
