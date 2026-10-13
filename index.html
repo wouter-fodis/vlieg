@@ -721,7 +721,7 @@ const I18N = {
     playAnthem:'Speel volkslied', stop:'Stop', backLive:'Terug naar live', backLiveSub:'DJ Vliegtuig neemt het weer over',
     onAir:'Nu op de radio', playlist:'Speellijst', playlistEmpty:'Nog niets afgespeeld. Zet het geluid aan.',
     history:'Eerder overgekomen', nothingYet:'Nog niets.',
-    myLocation:'Mijn locatie', enterOwn:'Zelf invoeren\u2026', randomAp:'Willekeurige luchthaven', map:'kaart', kmFrom:'{d} km van {s}', ownCoords:'Eigen co\u00f6rdinaten',
+    myLocation:'Mijn locatie', enterOwn:'Zelf invoeren\u2026', randomAp:'Willekeurige luchthaven', randomSearching:'Zoekt een baan in gebruik\u2026', map:'kaart', kmFrom:'{d} km van {s}', ownCoords:'Eigen co\u00f6rdinaten',
     searching:'Zoeken naar \u201c{q}\u201d\u2026', notFound:'Niets gevonden voor \u201c{q}\u201d. Probeer een andere naam of co\u00f6rdinaten.', searchFail:'Zoeken lukt nu niet. Probeer co\u00f6rdinaten, bijv. 52.36, 4.71.',
     noGeo:'Je browser geeft geen locatie door. Kies een plek uit de lijst.', locating:'Locatie opvragen\u2026',
     geoFail:'Locatie niet beschikbaar (geen toestemming?). Polderbaan noord gekozen; kies zelf een plek in de lijst.',
@@ -776,7 +776,7 @@ const I18N = {
     playAnthem:'Play anthem', stop:'Stop', backLive:'Back to live', backLiveSub:'DJ Vliegtuig takes over again',
     onAir:'On the radio now', playlist:'Playlist', playlistEmpty:'Nothing played yet. Turn the sound on.',
     history:'Recently overhead', nothingYet:'Nothing yet.',
-    myLocation:'My location', enterOwn:'Enter a location\u2026', randomAp:'Random airport', map:'map', kmFrom:'{d} km from {s}', ownCoords:'Custom coordinates',
+    myLocation:'My location', enterOwn:'Enter a location\u2026', randomAp:'Random airport', randomSearching:'Finding a runway in use\u2026', map:'map', kmFrom:'{d} km from {s}', ownCoords:'Custom coordinates',
     searching:'Searching for \u201c{q}\u201d\u2026', notFound:'Nothing found for \u201c{q}\u201d. Try another name or coordinates.', searchFail:'Search is not working right now. Try coordinates, e.g. 52.36, 4.71.',
     noGeo:'Your browser does not share a location. Choose a spot from the list.', locating:'Getting your location\u2026',
     geoFail:'Location not available (no permission?). Polderbaan north selected; choose a spot from the list.',
@@ -831,7 +831,7 @@ const I18N = {
     playAnthem:'Hymne abspielen', stop:'Stopp', backLive:'Zur\u00fcck zu live', backLiveSub:'DJ Vliegtuig \u00fcbernimmt wieder',
     onAir:'Jetzt im Radio', playlist:'Playlist', playlistEmpty:'Noch nichts gespielt. Schalte den Ton ein.',
     history:'Zuletzt \u00fcberflogen', nothingYet:'Noch nichts.',
-    myLocation:'Mein Standort', enterOwn:'Selbst eingeben\u2026', randomAp:'Zuf\u00e4lliger Flughafen', map:'Karte', kmFrom:'{d} km von {s}', ownCoords:'Eigene Koordinaten',
+    myLocation:'Mein Standort', enterOwn:'Selbst eingeben\u2026', randomAp:'Zuf\u00e4lliger Flughafen', randomSearching:'Suche eine Bahn in Betrieb\u2026', map:'Karte', kmFrom:'{d} km von {s}', ownCoords:'Eigene Koordinaten',
     searching:'Suche nach \u201e{q}\u201c\u2026', notFound:'Nichts gefunden f\u00fcr \u201e{q}\u201c. Versuch einen anderen Namen oder Koordinaten.', searchFail:'Die Suche funktioniert gerade nicht. Versuch Koordinaten, z. B. 52.36, 4.71.',
     noGeo:'Dein Browser gibt keinen Standort weiter. W\u00e4hle einen Ort aus der Liste.', locating:'Standort wird abgefragt\u2026',
     geoFail:'Standort nicht verf\u00fcgbar (keine Erlaubnis?). Polderbaan Nord gew\u00e4hlt; w\u00e4hle selbst einen Ort aus der Liste.',
@@ -1144,15 +1144,69 @@ function renderSpotList(){
     spotSel.value = b.dataset.act; spotSel.onchange();
   };
 }
-/* Willekeurige luchthaven: elke grote luchthaven even veel kans (niet de huidige),
-   en dan ook een willekeurige baankop, zodat je overal ter wereld kunt meeluisteren. */
-function randomAirport(){
-  const cur = spotSel.value.startsWith('ap:') ? spotSel.value.slice(3) : null;
-  let a; do { a = AIRPORTS[Math.floor(Math.random() * AIRPORTS.length)]; } while (a[0] === cur && AIRPORTS.length > 1);
+/* Willekeurige luchthaven, altijd op een baan die nu in gebruik is.
+   We trekken luchthavens in willekeurige volgorde (niet de huidige), drie tegelijk, en halen
+   per luchthaven de vluchten op. Een baankop telt als in gebruik als er een toestel in de
+   aanvliegroute of uitvliegroute zit: tot 8 km buiten de kop, hooguit 0,7 km naast het
+   verlengde van de middenlijn, in de richting van de baan, onder 12.000 ft en niet sneller
+   dan 260 kn. Geen hoogtegrens ten opzichte van de baan, want we kennen de hoogte van de
+   luchthaven niet (Denver, Mexico-Stad). De kop met de meeste toestellen wint.
+   Luchthavens waar het nu dag is gaan voor. Na 18 zonder verkeer: de eerste, met een willekeurige kop. */
+let randomBusy = false;
+function activeEnds(icao, planes){
+  const score = new Map();
+  for (const p of planes){
+    if (p.lat == null || p.lon == null || p.track == null) continue;
+    const alt = altFt(p);
+    if (!(alt > 0 && alt < 12000) || !(p.gs > 60 && p.gs < 260)) continue;
+    const tr = p.track * Math.PI / 180, tx = Math.sin(tr), ty = Math.cos(tr);
+    for (const sp of SPOTS){
+      if (sp.ap !== icao) continue;
+      const k = 111.32 * Math.cos(sp.lat * Math.PI / 180);
+      const dx = (p.lon - sp.lon) * k, dy = (p.lat - sp.lat) * 110.57;   // km oost, noord
+      const along = dx * sp.ux + dy * sp.uy, side = Math.abs(dx * sp.uy - dy * sp.ux);
+      if (along < -0.5 || along > 8 || side > 0.7) continue;
+      if (Math.abs(tx * sp.ux + ty * sp.uy) < 0.9) continue;          // niet in de lijn van de baan
+      score.set(sp.id, (score.get(sp.id) || 0) + 1);
+    }
+  }
+  return [...score.entries()].sort((x, y) => y[1] - x[1]).map(e => e[0]);
+}
+async function planesAt(a){
+  for (let i = 0; i < FEEDS.length; i++){
+    try { const d = await getJSON(FEEDS[(feedIdx + i) % FEEDS.length](a[4].toFixed(4), a[5].toFixed(4), 10)); return d.ac || []; }
+    catch(e){ /* volgende bron */ }
+  }
+  return [];
+}
+function goSpot(a, spotId, active){
   addRecent(a[0]);
   spotSel.value = 'ap:' + a[0]; $('customForm').hidden = true; fillRunways(a[0]);
-  const opts = [...runSel.options].map(o => o.value);
-  if (opts.length){ const r = opts[Math.floor(Math.random() * opts.length)]; runSel.value = r; applySpot(r); }
+  if (active) rwyActive.set(spotId, Date.now());                      // meteen "in gebruik" in de keuzelijst
+  runSel.value = spotId; applySpot(spotId);
+}
+async function randomAirport(){
+  if (randomBusy) return;
+  randomBusy = true;
+  const cur = spotSel.value.startsWith('ap:') ? spotSel.value.slice(3) : null;
+  const all = AIRPORTS.filter(a => a[0] !== cur && SPOTS.some(s => s.ap === a[0]));
+  for (let i = all.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+  // eerst luchthavens waar het nu ongeveer tussen 7 en 23 uur is (zonnetijd uit de lengtegraad)
+  const utcH = new Date().getUTCHours() + new Date().getUTCMinutes() / 60;
+  const awake = a => { const h = ((utcH + a[5] / 15) % 24 + 24) % 24; return h >= 7 && h < 23; };
+  const pool = [...all.filter(awake), ...all.filter(a => !awake(a))];
+  $('spotBtnText').textContent = '\u{1F3B2} ' + t('randomSearching');
+  try {
+    for (let n = 0; n < 18; n += 3){
+      const batch = pool.slice(n, n + 3);
+      const found = await Promise.all(batch.map(async a => ({a, ends: activeEnds(a[0], await planesAt(a))})));
+      const hit = found.find(f => f.ends.length);
+      if (hit){ goSpot(hit.a, hit.ends[0], true); return; }
+    }
+    const a = pool[0];                                                // niets gevonden: gewoon een willekeurige kop
+    const ends = SPOTS.filter(s => s.ap === a[0]);
+    goSpot(a, ends[Math.floor(Math.random() * ends.length)].id, false);
+  } finally { randomBusy = false; syncSpotBtn(); }
 }
 syncSpotBtn();
 $('gps').onclick = useGps;
